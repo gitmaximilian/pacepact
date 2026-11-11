@@ -2,14 +2,15 @@
   "name": "pacepact",
   "version": "0.1.0",
   "private": true,
-  "description": "Pacepact – a running tracker for goals, groups and race preparation.",
+  "description": "Pacepact \u2013 a running tracker for goals, groups and race preparation.",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
+    "build:next": "next build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "lint": "tsc --noEmit",

@@ -58,7 +58,7 @@ Checks:
 ```bash
 npm run lint    # TypeScript
 npm test        # unit tests (node:test)
-npm run build
+npm run build   # OpenNext build for Workers (runs `next build` via `npm run build:next`)
 ```
 
 After changing `src/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/`, then apply it
@@ -80,8 +80,9 @@ One-time setup:
 Afterwards, every `npm run deploy` publishes a new version.
 
 Automatic deploys (set up for production): Cloudflare dashboard → Workers & Pages → `pacepact` → Settings → Builds →
-Connect → repository `gitmaximilian/pacepact`, branch `main`, build command `npx opennextjs-cloudflare build`,
-deploy command `npx opennextjs-cloudflare deploy`. Every push to `main` then goes live. Database migrations are not
+Connect → repository `gitmaximilian/pacepact`, branch `main`, build command `npm run build` (runs the OpenNext
+build), deploy command `npx wrangler deploy` (Cloudflare's defaults). Every push to `main` then goes live.
+GitHub Actions only runs type check, tests and a build (`.github/workflows/ci.yml`). Database migrations are not
 applied by the build; run `npm run db:migrate:remote` before pushing a schema change.
 
 Plan note: Pacepact is built for the Workers Free plan (10 ms CPU per request). Sign-in uses passkeys, whose
