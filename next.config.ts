@@ -1,3 +1,4 @@
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -8,7 +9,6 @@ const securityHeaders = [
 ];
 
 const config: NextConfig = {
-  serverExternalPackages: ["@electric-sql/pglite"],
   poweredByHeader: false,
   experimental: { serverActions: { bodySizeLimit: "15mb" } },
   async headers() {
@@ -17,3 +17,6 @@ const config: NextConfig = {
 };
 
 export default config;
+
+// Gives `next dev` access to the local D1 database and other bindings.
+initOpenNextCloudflareForDev();

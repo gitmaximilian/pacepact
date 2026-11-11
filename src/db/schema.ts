@@ -1,57 +1,54 @@
-import {
-  boolean,
-  date,
-  doublePrecision,
-  index,
-  integer,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
+/** Cloudflare D1 (SQLite). Timestamps are stored as epoch milliseconds. */
+
+const id = () =>
+  text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID());
+const ts = (name: string) => integer(name, { mode: "timestamp_ms" });
+const now = () => new Date();
+
+export const users = sqliteTable("users", {
+  id: id(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   locale: text("locale").notNull().default("en"),
   /** Explicit consent to store heart-rate data (health data, Art. 9 GDPR). Null = no consent. */
-  hrConsentAt: timestamp("hr_consent_at", { withTimezone: true }),
+  hrConsentAt: ts("hr_consent_at"),
   /** When the user confirmed being at least 14 and having read the privacy notice. */
-  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  termsAcceptedAt: ts("terms_accepted_at"),
   /** Updated at most once a day; accounts inactive for two years are deleted. */
-  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastActiveAt: ts("last_active_at").notNull().$defaultFn(now),
+  createdAt: ts("created_at").notNull().$defaultFn(now),
 });
 
-export const sessions = pgTable(
+export const sessions = sqliteTable(
   "sessions",
   {
     id: text("id").primaryKey(), // sha256 of the session token
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    expiresAt: ts("expires_at").notNull(),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
 
-export const goals = pgTable(
+export const goals = sqliteTable(
   "goals",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    id: id(),
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     raceName: text("race_name").notNull(),
-    raceDate: date("race_date", { mode: "string" }).notNull(),
-    distanceKm: doublePrecision("distance_km").notNull(),
+    raceDate: text("race_date").notNull(), // YYYY-MM-DD
+    distanceKm: real("distance_km").notNull(),
     targetSeconds: integer("target_seconds"),
-    active: boolean("active").notNull().default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
   },
   (t) => [index("goals_user_idx").on(t.userId)],
 );
@@ -59,25 +56,25 @@ export const goals = pgTable(
 export const RUN_TYPES = ["run1", "run2", "run3", "test", "other"] as const;
 export type RunType = (typeof RUN_TYPES)[number];
 
-export const runs = pgTable(
+export const runs = sqliteTable(
   "runs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    id: id(),
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    startedAt: ts("started_at").notNull(),
     runType: text("run_type").$type<RunType>().notNull().default("other"),
-    distanceKm: doublePrecision("distance_km").notNull(),
+    distanceKm: real("distance_km").notNull(),
     durationSec: integer("duration_sec").notNull(),
     avgHr: integer("avg_hr"),
     maxHr: integer("max_hr"),
     effort: integer("effort"),
-    walkBreaks: boolean("walk_breaks").notNull().default(false),
+    walkBreaks: integer("walk_breaks", { mode: "boolean" }).notNull().default(false),
     notes: text("notes"),
     source: text("source").notNull().default("manual"),
     externalId: text("external_id"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
   },
   (t) => [
     index("runs_user_started_idx").on(t.userId, t.startedAt),
@@ -85,46 +82,46 @@ export const runs = pgTable(
   ],
 );
 
-export const groups = pgTable("groups", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const groups = sqliteTable("groups", {
+  id: id(),
   name: text("name").notNull(),
   inviteCode: text("invite_code").notNull().unique(),
-  ownerId: uuid("owner_id")
+  ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: ts("created_at").notNull().$defaultFn(now),
 });
 
-export const groupMembers = pgTable(
+export const groupMembers = sqliteTable(
   "group_members",
   {
-    groupId: uuid("group_id")
+    groupId: text("group_id")
       .notNull()
       .references(() => groups.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: text("role").$type<"owner" | "member">().notNull().default("member"),
-    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+    joinedAt: ts("joined_at").notNull().$defaultFn(now),
   },
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_members_user_idx").on(t.userId)],
 );
 
-export const connections = pgTable(
+export const connections = sqliteTable(
   "connections",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    id: id(),
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     provider: text("provider").notNull(),
     externalUserId: text("external_user_id"),
     accessTokenEnc: text("access_token_enc").notNull(),
     refreshTokenEnc: text("refresh_token_enc"),
-    expiresAt: timestamp("expires_at", { withTimezone: true }),
-    lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+    expiresAt: ts("expires_at"),
+    lastSyncAt: ts("last_sync_at"),
     lastError: text("last_error"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
   },
   (t) => [
     uniqueIndex("connections_user_provider_uq").on(t.userId, t.provider),
@@ -132,15 +129,15 @@ export const connections = pgTable(
   ],
 );
 
-export const apiTokens = pgTable("api_tokens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
+export const apiTokens = sqliteTable("api_tokens", {
+  id: id(),
+  userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   tokenHash: text("token_hash").notNull().unique(),
   label: text("label").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  createdAt: ts("created_at").notNull().$defaultFn(now),
+  lastUsedAt: ts("last_used_at"),
 });
 
 export type User = typeof users.$inferSelect;

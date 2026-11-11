@@ -1,43 +1,26 @@
-import path from "node:path";
-import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
-import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
-import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
-import { migrate as migratePostgres } from "drizzle-orm/postgres-js/migrator";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
-type Db = ReturnType<typeof drizzlePostgres<typeof schema>>;
+export type Db = ReturnType<typeof drizzle<typeof schema>>;
 
-const migrationsFolder = path.join(process.cwd(), "drizzle");
+const cache = new WeakMap<object, Db>();
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __pacepactDb: Promise<Db> | undefined;
-}
-
-async function connect(): Promise<Db> {
-  const url = process.env.DATABASE_URL?.trim();
-  if (url && !url.startsWith("pglite:")) {
-    const postgres = (await import("postgres")).default;
-    const client = postgres(url, { max: 10 });
-    const db = drizzlePostgres(client, { schema });
-    if (process.env.AUTO_MIGRATE !== "false") await migratePostgres(db, { migrationsFolder });
-    return db;
+/**
+ * Drizzle client for the D1 binding `DB`. In `next dev` the binding comes from
+ * Wrangler's local D1 (see next.config.ts); in production from the Worker.
+ * Migrations are applied with `wrangler d1 migrations apply`.
+ */
+export async function getDb(): Promise<Db> {
+  const { env } = await getCloudflareContext({ async: true });
+  const binding = (env as { DB?: D1Database }).DB;
+  if (!binding) throw new Error("D1 binding DB is missing. Check wrangler.jsonc.");
+  let db = cache.get(binding);
+  if (!db) {
+    db = drizzle(binding, { schema });
+    cache.set(binding, db);
   }
-  // Embedded Postgres (WASM) for local development and tests.
-  const { PGlite } = await import("@electric-sql/pglite");
-  const dataDir = url?.startsWith("pglite:")
-    ? url.slice("pglite:".length) || undefined
-    : path.join(process.cwd(), ".data", "pglite");
-  const client = dataDir === "memory" ? new PGlite() : new PGlite(dataDir);
-  const db = drizzlePglite(client, { schema });
-  await migratePglite(db, { migrationsFolder });
-  return db as unknown as Db;
-}
-
-/** Lazily connected, migrated database shared across the server process. */
-export function getDb(): Promise<Db> {
-  globalThis.__pacepactDb ??= connect();
-  return globalThis.__pacepactDb;
+  return db;
 }
 
 export { schema };

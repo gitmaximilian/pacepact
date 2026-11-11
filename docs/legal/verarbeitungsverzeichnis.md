@@ -16,9 +16,9 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Betroffene | Registrierte Nutzerinnen und Nutzer ab 14 Jahren (§ 4 Abs. 4 DSG) |
 | Datenkategorien | Name (frei wählbar), E-Mail, Passwort-Hash (scrypt), Sprache, Zeitpunkte (Erstellung, Bestätigung der Hinweise, letzte Nutzung); SHA-256-Hash des Sitzungs-Tokens mit Ablauf; Ziele (Rennen, Datum, Distanz, Zielzeit); Läufe (Zeitpunkt, Art, Distanz, Dauer, Anstrengung 1–10, Gehpausen, Notizen, Quelle, externe Aktivitäts-ID) |
 | Nicht verarbeitet | GPS-Strecken (nur Distanz/Dauer werden berechnet), Gewicht, Körperfett, Tracking, Werbung, IP-Adressen (dauerhaft) |
-| Empfänger | Hoster als Auftragsverarbeiter (geplant: Cloudflare, Inc. – Workers/D1) |
+| Empfänger | Cloudflare, Inc. als Auftragsverarbeiter (Workers, D1) |
 | Drittlandübermittlung | Datenbank mit Gerichtsbarkeit „EU“. Mögliche Zugriffe aus den USA: EU-US Data Privacy Framework bzw. Standardvertragsklauseln im DPA des Hosters |
-| Löschfristen | Sofort bei Löschung durch Nutzer (Wiederherstellungspunkte des Hosters max. 7 Tage); automatisch nach 2 Jahren ohne Nutzung; Sitzungen nach 30 Tagen |
+| Löschfristen | Sofort bei Löschung durch Nutzer (D1 Time Travel: Wiederherstellungspunkte 7 Tage im Gratis-, 30 Tage im Paid-Tarif); automatisch nach 2 Jahren ohne Nutzung; Sitzungen nach 30 Tagen |
 | TOMs | siehe `toms.md` |
 
 ## Verarbeitung 2: Pulsdaten (Gesundheitsdaten, Art. 9 DSGVO)
@@ -66,5 +66,5 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 
 ## Auftragsverarbeitung
 
-Geplant: Cloudflare Data Processing Addendum – gilt automatisch mit den Cloudflare-Nutzungsbedingungen: https://www.cloudflare.com/cloudflare-customer-dpa/
+Cloudflare Data Processing Addendum – gilt automatisch mit den Cloudflare-Nutzungsbedingungen: https://www.cloudflare.com/cloudflare-customer-dpa/
 Wird ein anderer Hoster gewählt, dessen DPA hier eintragen und `src/lib/legal.ts` anpassen.

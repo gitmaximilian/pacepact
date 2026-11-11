@@ -30,16 +30,21 @@ sync those watches to Strava or upload FIT files.
 ## Stack
 
 - Next.js 16 (App Router, server actions), React 19, TypeScript
-- Drizzle ORM on PostgreSQL. Without `DATABASE_URL`, an embedded PGlite database in `./.data` is used, so local development needs no database server.
+- Runs on Cloudflare Workers via the OpenNext adapter (`@opennextjs/cloudflare`), like
+  [Rookie](https://github.com/gitmaximilian/rookie-chess) on the same domain
+- Cloudflare D1 (SQLite) with EU jurisdiction, accessed through Drizzle ORM
 - Self-hosted fonts (no requests to Google Fonts)
 
 ## Local development
 
 ```bash
 npm ci
-cp .env.example .env.local   # optional; everything works without integrations
-npm run dev                  # http://localhost:3000
+cp .env.example .dev.vars        # optional; everything works without integrations
+npm run db:migrate:local         # creates the local D1 database in .wrangler/
+npm run dev                      # http://localhost:3000
 ```
+
+`npm run preview` builds the Worker and runs it in the real Workers runtime (workerd) on your machine.
 
 Checks:
 
@@ -49,13 +54,34 @@ npm test        # unit tests (node:test)
 npm run build
 ```
 
-After changing `src/db/schema.ts`, run `npm run db:generate` and commit the new file in `drizzle/`.
-Migrations run automatically on start (set `AUTO_MIGRATE=false` to disable this for Postgres).
+After changing `src/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/`, then apply it
+locally and remotely (`npm run db:migrate:local`, `npm run db:migrate:remote`).
+
+## Deployment (Cloudflare)
+
+One-time setup:
+
+1. `npx wrangler login`
+2. Create the database in the EU: `npx wrangler d1 create pacepact --jurisdiction eu`.
+   Put the printed `database_id` into `wrangler.jsonc`.
+3. Apply migrations: `npm run db:migrate:remote`
+4. Set secrets: `npx wrangler secret put ENCRYPTION_KEY` (32 random bytes, base64), plus the client IDs and secrets of
+   every service you want to offer (see below).
+5. Deploy: `npm run deploy`. The route in `wrangler.jsonc` attaches `pacepact.maximilianauer.at` as a custom domain;
+   because `maximilianauer.at` is on Cloudflare, DNS and HTTPS are set up automatically.
+
+Afterwards, every `npm run deploy` publishes a new version. Workers Builds (Cloudflare dashboard → the Worker →
+Settings → Builds → connect the GitHub repository, deploy command `npm run deploy`) can deploy each push to `main`
+automatically.
+
+Plan note: secure password hashing (scrypt) needs about 20–50 ms of CPU per sign-in or sign-up, and page rendering
+around 10 ms. The Workers Free plan allows 10 ms of CPU per request, so sign-in can fail with error 1102 there.
+Use the Workers Paid plan for reliable operation.
 
 ## Configuration
 
-See `.env.example`. In production you need at least `APP_URL`, `DATABASE_URL` and `ENCRYPTION_KEY`
-(32 random bytes, base64; it encrypts provider tokens at rest).
+See `.env.example`. In production you need at least `ENCRYPTION_KEY` (32 random bytes, base64; it encrypts
+provider tokens at rest). `APP_URL` is set in `wrangler.jsonc`.
 
 ### Connecting services
 
@@ -108,7 +134,7 @@ Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`
 - Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
 - Runs imported from Strava are never shown to other group members (Strava API terms).
 - The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.
-  It currently assumes hosting on Cloudflare (Workers and D1, EU). Update that file if the hosting differs.
+  It describes the hosting on Cloudflare (Workers and D1, EU). Update that file if the hosting changes.
 - Internal GDPR documents (German) are in `docs/legal/`: record of processing activities, technical and organisational
   measures, data breach procedure, DPIA threshold assessment, third-party API checklist and a section for the
   privacy policy on maximilianauer.at.

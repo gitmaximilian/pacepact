@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
 
 /** New or deleted activities. Strava expects a 200 within two seconds. */
 export async function POST(req: NextRequest) {
-  const event = await req.json().catch(() => null);
+  // Untrusted input: every field is checked before use.
+  const event = (await req.json().catch(() => null)) as Record<string, any> | null;
   if (!event || event.owner_id == null) return NextResponse.json({ ok: true });
   const expectedSub = process.env.STRAVA_SUBSCRIPTION_ID;
   if (expectedSub && String(event.subscription_id) !== expectedSub) return NextResponse.json({ ok: true });

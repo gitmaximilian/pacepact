@@ -89,7 +89,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
     [
       "Speicherdauer",
       <ul key="s">
-        <li>Bis du Läufe oder dein Konto löschst. Die Löschung ist sofort und endgültig; technische Wiederherstellungspunkte des Hosters laufen nach spätestens 7 Tagen ab.</li>
+        <li>Bis du Läufe oder dein Konto löschst. Die Löschung ist sofort und endgültig; technische Wiederherstellungspunkte des Hosters laufen nach spätestens {LEGAL.restoreDays} Tagen ab.</li>
         <li>Konten ohne Nutzung seit {years} Jahren werden automatisch gelöscht.</li>
         <li>Anmeldungen laufen nach 30 Tagen ab.</li>
         <li>Pulswerte werden beim Widerruf der Einwilligung sofort gelöscht.</li>
@@ -192,7 +192,7 @@ const en: typeof de = {
     [
       "Retention",
       <ul key="s">
-        <li>Until you delete runs or your account. Deletion is immediate and final; the host&apos;s technical restore points expire after 7 days at the latest.</li>
+        <li>Until you delete runs or your account. Deletion is immediate and final; the host&apos;s technical restore points expire after {LEGAL.restoreDays} days at the latest.</li>
         <li>Accounts unused for {years} years are deleted automatically.</li>
         <li>Sign-ins expire after 30 days.</li>
         <li>Heart-rate values are deleted immediately when you withdraw consent.</li>

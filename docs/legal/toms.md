@@ -19,7 +19,7 @@
 - Tokens von Drittdiensten: AES-256-GCM mit eigenem Schlüssel (`ENCRYPTION_KEY`), getrennt von der Datenbank.
 - Zugriff auf Daten nur über die eigene Sitzung (Nutzer-ID aus der Sitzung, nie aus Anfrageparametern); Gruppenseiten prüfen die Mitgliedschaft.
 - Schutz vor Cross-Site-Anfragen: Server Actions mit Origin-Prüfung, OAuth mit `state` und PKCE (Fitbit).
-- Begrenzung von Anmeldeversuchen (pro E-Mail und IP) und der Ingest-API.
+- Begrenzung von Anmeldeversuchen (pro E-Mail und IP) und der Ingest-API. Hinweis: Der Zähler liegt im Arbeitsspeicher einer Worker-Instanz und ist daher nur ein Grundschutz; bei Bedarf Cloudflare-Rate-Limiting-Regeln für `/signin` ergänzen.
 - Sicherheits-Header: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`.
 - Zugriff auf Hoster-Konto: nur Verantwortlicher, Zwei-Faktor-Anmeldung aktivieren.
 
@@ -30,7 +30,7 @@
 
 ## Verfügbarkeit und Belastbarkeit
 
-- Redundante Infrastruktur des Hosters; Wiederherstellungspunkte der Datenbank (bei D1: Time Travel, 7 Tage).
+- Redundante Infrastruktur des Hosters; Wiederherstellungspunkte der Datenbank (D1 Time Travel: 7 Tage im Gratis-, 30 Tage im Paid-Tarif).
 - Nutzer können jederzeit einen vollständigen Export herunterladen.
 
 ## Löschung und Betroffenenrechte

@@ -18,6 +18,8 @@ export const LEGAL = {
     dpa: "https://www.cloudflare.com/cloudflare-customer-dpa/",
   },
   minAge: 14,
+  /** D1 Time Travel keeps restore points for 7 days (Free) or 30 days (Paid); state the upper bound. */
+  restoreDays: 30,
 } as const;
 
 export const INACTIVE_ACCOUNT_DAYS = 730;
