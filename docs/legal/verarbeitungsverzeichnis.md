@@ -14,8 +14,8 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Zweck | Lauftracker: Konto, Ziele, Trainingsplan, Erfassung und Auswertung von Läufen |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsverhältnisses) |
 | Betroffene | Registrierte Nutzerinnen und Nutzer ab 14 Jahren (§ 4 Abs. 4 DSG) |
-| Datenkategorien | Name (frei wählbar), E-Mail, Passwort-Hash (scrypt), Sprache, Zeitpunkte (Erstellung, Bestätigung der Hinweise, letzte Nutzung); SHA-256-Hash des Sitzungs-Tokens mit Ablauf; Ziele (Rennen, Datum, Distanz, Zielzeit); Läufe (Zeitpunkt, Art, Distanz, Dauer, Anstrengung 1–10, Gehpausen, Notizen, Quelle, externe Aktivitäts-ID) |
-| Nicht verarbeitet | GPS-Strecken (nur Distanz/Dauer werden berechnet), Gewicht, Körperfett, Tracking, Werbung, IP-Adressen (dauerhaft) |
+| Datenkategorien | Zufällige Konto-ID, Name (frei wählbar), Sprache, Zeitpunkte (Erstellung, Bestätigung der Hinweise, letzte Nutzung); Trainingseinstellungen (Ausgangslage, Läufe pro Woche, Krafttraining ja/nein); Passkey (Kennung, öffentlicher Schlüssel, Signaturzähler, Übertragungsart, Zeitpunkte); Anmelde-Challenges (5 Minuten); SHA-256-Hash des Sitzungs-Tokens mit Ablauf; Ziele (Rennen, Datum, Distanz, Zielzeit); Läufe (Zeitpunkt, Art, Distanz, Dauer, Anstrengung 1–10, Gehpausen, Notizen, Quelle, externe Aktivitäts-ID) |
+| Nicht verarbeitet | E-Mail-Adresse, Passwort, Biometrie (bleibt auf dem Gerät), GPS-Strecken (nur Distanz/Dauer werden berechnet), Gewicht, Körperfett, Tracking, Werbung, IP-Adressen (dauerhaft) |
 | Empfänger | Cloudflare, Inc. als Auftragsverarbeiter (Workers, D1) |
 | Drittlandübermittlung | Datenbank mit Gerichtsbarkeit „EU“. Mögliche Zugriffe aus den USA: EU-US Data Privacy Framework bzw. Standardvertragsklauseln im DPA des Hosters |
 | Löschfristen | Sofort bei Löschung durch Nutzer (D1 Time Travel: Wiederherstellungspunkte 7 Tage im Gratis-, 30 Tage im Paid-Tarif); automatisch nach 2 Jahren ohne Nutzung; Sitzungen nach 30 Tagen |
@@ -40,7 +40,7 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Zweck | Gemeinsames Training: Team-Kennzahlen, Verlauf, Fortschritt gegenüber dem eigenen Start |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (vom Nutzer gewählte Funktion; Beitritt nur aktiv per Code) |
 | Für andere Mitglieder sichtbar | Name; Datum, Art, Distanz, Dauer, Pace der Läufe; daraus berechnete Kennzahlen |
-| Nicht sichtbar | Notizen, Puls, E-Mail, Ziele; von Strava importierte Läufe (Strava-API-Bedingungen) |
+| Nicht sichtbar | Notizen, Puls, Ziele, Trainingseinstellungen; von Strava importierte Läufe (Strava-API-Bedingungen) |
 | Löschung | Austritt beendet die Sichtbarkeit sofort; leere Gruppen werden gelöscht; bei Kontolöschung geht die Gruppenleitung an das älteste Mitglied |
 
 ## Verarbeitung 4: Verbindungen zu Drittdiensten und persönliche API

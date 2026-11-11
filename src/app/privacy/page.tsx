@@ -18,6 +18,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
     [
       "Kurz gesagt",
       <ul key="s">
+        <li>Anmeldung nur per Passkey: keine E-Mail-Adresse, kein Passwort.</li>
         <li>Wir speichern nur, was für Konto, Ziele, Läufe und Gruppen nötig ist. Kein Tracking, keine Werbung, kein Verkauf von Daten, keine extern geladenen Schriften.</li>
         <li>Deinen Puls speichern wir nur, wenn du ausdrücklich einwilligst. Du kannst jederzeit widerrufen, dann löschen wir alle Pulswerte.</li>
         <li>Du kannst deine Daten jederzeit herunterladen und dein Konto sofort löschen.</li>
@@ -33,8 +34,10 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
     [
       "Welche Daten wir speichern",
       <ul key="s">
-        <li><b>Konto:</b> Name (frei wählbar, auch ein Spitzname), E-Mail-Adresse, Passwort nur als scrypt-Hash, Sprache, Zeitpunkte von Erstellung, Bestätigung der Hinweise und letzter Nutzung.</li>
-        <li><b>Anmeldung:</b> nur eine Prüfsumme (SHA-256) des Sitzungs-Tokens mit Ablaufdatum.</li>
+        <li><b>Konto:</b> eine zufällige Konto-ID, Name (frei wählbar, auch ein Spitzname), Sprache, Zeitpunkte von Erstellung, Bestätigung der Hinweise und letzter Nutzung.</li>
+        <li><b>Trainingseinstellungen aus der Begrüßung:</b> deine Ausgangslage (z. B. „30 Minuten locker gehen“), Läufe pro Woche und ob du Krafttraining machst.</li>
+        <li><b>Passkey:</b> die Kennung deines Passkeys, der zugehörige öffentliche Schlüssel, ein Signaturzähler, die Übertragungsart und Zeitpunkte. Dein privater Schlüssel und biometrische Daten (Face ID, Touch ID) verlassen nie dein Gerät.</li>
+        <li><b>Anmeldung:</b> nur eine Prüfsumme (SHA-256) des Sitzungs-Tokens mit Ablaufdatum; während der Anmeldung eine einmalige Challenge für 5 Minuten.</li>
         <li><b>Ziele:</b> Rennen, Datum, Distanz, Zielzeit.</li>
         <li><b>Läufe:</b> Zeitpunkt, Art (Run 1/2/3, Test), Distanz, Dauer, Anstrengung 1–10, Gehpausen, deine Notizen, Quelle (z. B. Datei oder Strava) und die ID der Aktivität beim Anbieter. GPS-Strecken speichern wir nicht: Beim Import berechnen wir nur Distanz und Dauer.</li>
         <li><b>Puls (nur mit Einwilligung):</b> Durchschnitts- und Maximalpuls je Lauf.</li>
@@ -55,7 +58,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Was andere in deinen Gruppen sehen",
       <p key="s">
         Mitglieder einer Gruppe sehen deinen Namen sowie Datum, Art, Distanz, Dauer und Pace deiner Läufe und daraus berechnete
-        Kennzahlen. Sie sehen <b>nicht</b> deine Notizen, deinen Puls, deine E-Mail-Adresse oder deine Ziele. Von Strava
+        Kennzahlen. Sie sehen <b>nicht</b> deine Notizen, deinen Puls, deine Ziele oder deine Trainingseinstellungen. Von Strava
         importierte Läufe sind nur für dich sichtbar. Wenn du eine Gruppe verlässt, sehen ihre Mitglieder deine Läufe nicht mehr.
       </p>,
     ],
@@ -72,8 +75,10 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Cookies",
       <p key="s">
         Nur technisch notwendige Cookies, keine Analyse- oder Werbe-Cookies (§ 165 Abs. 3 TKG 2021): <code>pp_session</code>{" "}
-        (Anmeldung, 30 Tage), <code>pp_locale</code> (deine Sprachwahl, 1 Jahr) und <code>pp_oauth</code> (nur während du
-        einen Dienst verbindest, 10 Minuten).
+        (Anmeldung, 30 Tage), <code>pp_locale</code> (deine Sprachwahl, 1 Jahr), <code>pp_challenge</code> (nur während der
+        Anmeldung, 5 Minuten) und <code>pp_oauth</code> (nur während du einen Dienst verbindest, 10 Minuten). Im Speicher deines
+        Browsers merken wir uns nur, wenn du „Nicht jetzt“ bei der App-Installation wählst, damit wir 30 Tage nicht erneut fragen.
+        Passkeys verwaltet dein Betriebssystem (z. B. iCloud-Schlüsselbund); dafür gelten die Bedingungen des Anbieters.
       </p>,
     ],
     [
@@ -121,6 +126,7 @@ const en: typeof de = {
     [
       "In short",
       <ul key="s">
+        <li>Sign-in with passkeys only: no email address, no password.</li>
         <li>We store only what your account, goals, runs and groups need. No tracking, no advertising, no selling of data, no externally loaded fonts.</li>
         <li>We store your heart rate only if you explicitly consent. You can withdraw at any time; we then delete all heart-rate values.</li>
         <li>You can download your data at any time and delete your account instantly.</li>
@@ -136,8 +142,10 @@ const en: typeof de = {
     [
       "What we store",
       <ul key="s">
-        <li><b>Account:</b> name (any name or nickname), email address, password only as a scrypt hash, language, and when the account was created, the notice confirmed and last used.</li>
-        <li><b>Sign-in:</b> only a checksum (SHA-256) of the session token and its expiry.</li>
+        <li><b>Account:</b> a random account ID, name (any name or nickname), language, and when the account was created, the notice confirmed and last used.</li>
+        <li><b>Training setup from the welcome flow:</b> your starting point (e.g. “30 easy minutes work”), runs per week and whether you do strength training.</li>
+        <li><b>Passkey:</b> your passkey&apos;s ID, its public key, a signature counter, the transport type and timestamps. Your private key and biometric data (Face ID, Touch ID) never leave your device.</li>
+        <li><b>Sign-in:</b> only a checksum (SHA-256) of the session token and its expiry; during sign-in a one-time challenge for 5 minutes.</li>
         <li><b>Goals:</b> race, date, distance, target time.</li>
         <li><b>Runs:</b> time, type (Run 1/2/3, test), distance, duration, effort 1–10, walk breaks, your notes, source (e.g. file or Strava) and the activity ID at the provider. We do not store GPS tracks: imports only calculate distance and duration.</li>
         <li><b>Heart rate (only with consent):</b> average and maximum heart rate per run.</li>
@@ -158,7 +166,7 @@ const en: typeof de = {
       "What others in your groups see",
       <p key="s">
         Group members see your name and the date, type, distance, duration and pace of your runs, plus figures calculated from
-        them. They do <b>not</b> see your notes, heart rate, email address or goals. Runs imported from Strava are visible to you
+        them. They do <b>not</b> see your notes, heart rate, goals or training setup. Runs imported from Strava are visible to you
         only. When you leave a group, its members no longer see your runs.
       </p>,
     ],
@@ -175,8 +183,10 @@ const en: typeof de = {
       "Cookies",
       <p key="s">
         Only strictly necessary cookies, no analytics or advertising cookies: <code>pp_session</code> (sign-in, 30 days),{" "}
-        <code>pp_locale</code> (your language choice, 1 year) and <code>pp_oauth</code> (only while you connect a service,
-        10 minutes).
+        <code>pp_locale</code> (your language choice, 1 year), <code>pp_challenge</code> (only during sign-in, 5 minutes) and{" "}
+        <code>pp_oauth</code> (only while you connect a service, 10 minutes). In your browser&apos;s storage we only remember
+        when you choose “Not now” for installing the app, so we do not ask again for 30 days. Passkeys are managed by your
+        operating system (e.g. iCloud Keychain); the provider&apos;s terms apply.
       </p>,
     ],
     [

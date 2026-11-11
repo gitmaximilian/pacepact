@@ -3,16 +3,11 @@ import type { ReactNode } from "react";
 import { setLocale, signOut } from "./actions";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { LEGAL } from "@/lib/legal";
+import { InstallPrompt } from "./install-prompt";
+import { installLabels } from "./install-labels";
+import { Logo } from "./logo";
 
-/** Two interlocking track ovals: you and your group. */
-export function Logo({ size = 32, mono = false }: { size?: number; mono?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <rect x="5" y="17" width="34" height="30" rx="15" fill="none" stroke={mono ? "currentColor" : "#FFFFFF"} strokeWidth="6" />
-      <rect x="25" y="17" width="34" height="30" rx="15" fill="none" stroke="#FFD23F" strokeWidth="6" />
-    </svg>
-  );
-}
+export { Logo } from "./logo";
 
 export function LangSwitch({ locale, back }: { locale: Locale; back: string }) {
   return (
@@ -70,6 +65,7 @@ export function Shell({
         <div className="wrap stack">{children}</div>
       </main>
       <LegalFooter t={t} />
+      <InstallPrompt labels={installLabels(t)} />
     </>
   );
 }

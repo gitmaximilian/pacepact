@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { currentPhase, PHASES, run2Prescription } from "@/lib/plan";
+import { currentPhase, PHASES, run2Prescription, tempoUnlock, weeklyLanes } from "@/lib/plan";
 import { activeGoal, userRuns } from "@/lib/queries";
 import { summarize } from "@/lib/stats";
 import { Shell } from "../components";
@@ -18,12 +18,20 @@ export default async function PlanPage() {
   const user = await requireUser();
   const { t, locale } = await getT();
   const [goal, runs] = await Promise.all([activeGoal(user.id), userRuns(user.id)]);
-  const reached = summarize(runs).reached30MinContinuous;
+  const unlock = tempoUnlock(summarize(runs).reached30MinContinuous, user.experience);
+  const reached = !!unlock;
+  const lanes = weeklyLanes(user.runsPerWeek);
+  const laneName = { run1: t.plan.run1, run2: t.plan.run2, run3: t.plan.run3, run4: t.plan.run4 };
   const now = goal ? currentPhase(goal.raceDate) : null;
   return (
     <Shell t={t} locale={locale} active="/plan">
       <h1>{t.plan.title}</h1>
       <p className="muted">{t.plan.intro}</p>
+      <p className="row" style={{ gap: 8 }}>
+        {lanes.map((l) => <span key={l} className="pill">{laneName[l]}</span>)}
+        {lanes.includes("run4") ? <span className="small muted">{t.plan.run4Same}</span> : null}
+      </p>
+      {user.strength ? <p className="small muted">{t.plan.strengthHint}</p> : null}
       {!goal ? <p className="flash ok">{t.plan.needGoal}</p> : null}
       <div className="table-wrap">
         <table>

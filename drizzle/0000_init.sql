@@ -9,6 +9,15 @@ CREATE TABLE `api_tokens` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `api_tokens_token_hash_unique` ON `api_tokens` (`token_hash`);--> statement-breakpoint
+CREATE TABLE `challenges` (
+	`id` text PRIMARY KEY NOT NULL,
+	`challenge` text NOT NULL,
+	`purpose` text NOT NULL,
+	`user_id` text,
+	`pending` text,
+	`expires_at` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `connections` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -59,6 +68,18 @@ CREATE TABLE `groups` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `groups_invite_code_unique` ON `groups` (`invite_code`);--> statement-breakpoint
+CREATE TABLE `passkeys` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`public_key` text NOT NULL,
+	`counter` integer DEFAULT 0 NOT NULL,
+	`transports` text DEFAULT '[]' NOT NULL,
+	`created_at` integer NOT NULL,
+	`last_used_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `passkeys_user_idx` ON `passkeys` (`user_id`);--> statement-breakpoint
 CREATE TABLE `runs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -89,14 +110,14 @@ CREATE TABLE `sessions` (
 CREATE INDEX `sessions_user_idx` ON `sessions` (`user_id`);--> statement-breakpoint
 CREATE TABLE `users` (
 	`id` text PRIMARY KEY NOT NULL,
-	`email` text NOT NULL,
 	`name` text NOT NULL,
-	`password_hash` text NOT NULL,
 	`locale` text DEFAULT 'en' NOT NULL,
 	`hr_consent_at` integer,
 	`terms_accepted_at` integer,
 	`last_active_at` integer NOT NULL,
+	`onboarded_at` integer,
+	`experience` text,
+	`runs_per_week` integer DEFAULT 3 NOT NULL,
+	`strength` integer DEFAULT false NOT NULL,
 	`created_at` integer NOT NULL
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);

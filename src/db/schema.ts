@@ -11,9 +11,8 @@ const now = () => new Date();
 
 export const users = sqliteTable("users", {
   id: id(),
-  email: text("email").notNull().unique(),
+  /** Display name, freely chosen (a nickname is fine). No email, no password: sign-in is passkey-only. */
   name: text("name").notNull(),
-  passwordHash: text("password_hash").notNull(),
   locale: text("locale").notNull().default("en"),
   /** Explicit consent to store heart-rate data (health data, Art. 9 GDPR). Null = no consent. */
   hrConsentAt: ts("hr_consent_at"),
@@ -21,8 +20,19 @@ export const users = sqliteTable("users", {
   termsAcceptedAt: ts("terms_accepted_at"),
   /** Updated at most once a day; accounts inactive for two years are deleted. */
   lastActiveAt: ts("last_active_at").notNull().$defaultFn(now),
+  /** Set when the welcome flow was finished or skipped. */
+  onboardedAt: ts("onboarded_at"),
+  /** Self-reported starting point: "new" (run/walk), "easy30" (30 easy minutes) or "regular". */
+  experience: text("experience").$type<Experience>(),
+  /** Planned runs per week (2–4). */
+  runsPerWeek: integer("runs_per_week").notNull().default(3),
+  /** Does strength training on the side (affects plan hints). */
+  strength: integer("strength", { mode: "boolean" }).notNull().default(false),
   createdAt: ts("created_at").notNull().$defaultFn(now),
 });
+
+export const EXPERIENCE = ["new", "easy30", "regular"] as const;
+export type Experience = (typeof EXPERIENCE)[number];
 
 export const sessions = sqliteTable(
   "sessions",
@@ -35,6 +45,35 @@ export const sessions = sqliteTable(
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
+
+/** WebAuthn credentials (passkeys). Only public keys are stored. */
+export const passkeys = sqliteTable(
+  "passkeys",
+  {
+    id: text("id").primaryKey(), // credential ID (base64url)
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    publicKey: text("public_key").notNull(), // base64url
+    counter: integer("counter").notNull().default(0),
+    transports: text("transports").notNull().default("[]"),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
+    lastUsedAt: ts("last_used_at"),
+  },
+  (t) => [index("passkeys_user_idx").on(t.userId)],
+);
+
+/** One-time WebAuthn challenges, valid for five minutes. */
+export const challenges = sqliteTable("challenges", {
+  id: text("id").primaryKey(),
+  challenge: text("challenge").notNull(),
+  /** "register" (new account), "add" (extra passkey for an existing account) or "login". */
+  purpose: text("purpose").$type<"register" | "add" | "login">().notNull(),
+  userId: text("user_id"),
+  /** Sign-up details kept until the passkey is verified (JSON: name, locale, hrConsent). */
+  pending: text("pending"),
+  expiresAt: ts("expires_at").notNull(),
+});
 
 export const goals = sqliteTable(
   "goals",

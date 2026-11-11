@@ -52,3 +52,25 @@ export function isLighterWeek(raceDate: string, now = new Date()): boolean {
   const w = weeksToRace(raceDate, now);
   return w > 2 && w % 4 === 0;
 }
+
+export type Lane = "run1" | "run2" | "run3" | "run4";
+
+/**
+ * Which runs make up a week. Three is the default (Run 1, 2, 3). Two drops the
+ * tempo run; four adds a second easy run (Run 4) – the long run stays last.
+ */
+export function weeklyLanes(runsPerWeek: number): Lane[] {
+  if (runsPerWeek <= 2) return ["run1", "run3"];
+  if (runsPerWeek >= 4) return ["run1", "run2", "run4", "run3"];
+  return ["run1", "run2", "run3"];
+}
+
+/**
+ * Whether tempo work may start. A measured 30-minute run without walk breaks
+ * counts first; otherwise the runner's own statement from the welcome flow.
+ */
+export function tempoUnlock(measured30: boolean, experience: string | null | undefined): "measured" | "reported" | null {
+  if (measured30) return "measured";
+  if (experience === "easy30" || experience === "regular") return "reported";
+  return null;
+}

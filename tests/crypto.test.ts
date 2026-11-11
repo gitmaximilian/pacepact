@@ -1,12 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decrypt, encrypt, hashPassword, inviteCode, verifyPassword } from "../src/lib/crypto.ts";
-
-test("password hashing round-trip", async () => {
-  const h = await hashPassword("correct horse battery");
-  assert.ok(await verifyPassword("correct horse battery", h));
-  assert.ok(!(await verifyPassword("wrong password!", h)));
-});
+import { decrypt, encrypt, inviteCode } from "../src/lib/crypto.ts";
 
 test("token encryption round-trip and tamper detection", () => {
   const c = encrypt("secret-access-token");

@@ -20,3 +20,19 @@ test("tempo in Run 2 stays locked until 30 continuous easy minutes", () => {
   assert.equal(run2Prescription(build1, false)?.kind, "easy");
   assert.deepEqual(run2Prescription(build1, true), { kind: "tempo", reps: 3, repMinutes: 5 });
 });
+
+import { tempoUnlock, weeklyLanes } from "../src/lib/plan.ts";
+
+test("runs per week map to lanes, long run always last", () => {
+  assert.deepEqual(weeklyLanes(2), ["run1", "run3"]);
+  assert.deepEqual(weeklyLanes(3), ["run1", "run2", "run3"]);
+  assert.deepEqual(weeklyLanes(4), ["run1", "run2", "run4", "run3"]);
+});
+
+test("tempo unlock: measured beats self-reported, beginners stay locked", () => {
+  assert.equal(tempoUnlock(true, "new"), "measured");
+  assert.equal(tempoUnlock(false, "easy30"), "reported");
+  assert.equal(tempoUnlock(false, "regular"), "reported");
+  assert.equal(tempoUnlock(false, "new"), null);
+  assert.equal(tempoUnlock(false, null), null);
+});

@@ -8,11 +8,18 @@ Planned address: `https://pacepact.maximilianauer.at`
 
 ## Features
 
-- **Accounts:** open sign-up with email and password (scrypt hashes, HTTP-only session cookies).
+- **Accounts:** open sign-up with passkeys only (Face ID, Touch ID, Windows Hello, phone). No email, no password.
+  Users can add more passkeys in Settings.
+- **Welcome flow:** four questions after sign-up (goal and date, starting point, runs per week, strength training)
+  that set up the plan. It can be repeated from Settings.
+- **Install as app:** web app manifest and icons; Android/Chrome gets a real install button, iPhone/iPad a short
+  "Share → Add to Home Screen" guide (as in Rookie).
 - **Languages:** English by default, German selectable on every page and saved per account.
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.
-- **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Phases are counted back from race day.
-  Tempo work in Run 2 only unlocks after a 30-minute easy run without walk breaks, never because of the calendar.
+- **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Two runs a week drop
+  Run 2; four add an easy Run 4. Phases are counted back from race day.
+  Tempo work in Run 2 unlocks after a logged 30-minute run without walk breaks or, until then, based on the runner's own
+  statement in the welcome flow (shown as "reported", not "measured"). Never because of the calendar.
 - **Runs:** manual entry (distance, duration, heart rate, effort 1–10, walk breaks, notes) and a list where the run type can be changed.
 - **Import:**
   - Files: GPX, TCX, FIT and CSV. The CSV import understands English and German headers, including the old team spreadsheet.
@@ -74,9 +81,12 @@ Afterwards, every `npm run deploy` publishes a new version. Workers Builds (Clou
 Settings → Builds → connect the GitHub repository, deploy command `npm run deploy`) can deploy each push to `main`
 automatically.
 
-Plan note: secure password hashing (scrypt) needs about 20–50 ms of CPU per sign-in or sign-up, and page rendering
-around 10 ms. The Workers Free plan allows 10 ms of CPU per request, so sign-in can fail with error 1102 there.
-Use the Workers Paid plan for reliable operation.
+Plan note: Pacepact is built for the Workers Free plan (10 ms CPU per request). Sign-in uses passkeys, whose
+verification is cheap; page rendering measured around 10 ms locally, so occasional CPU-limit errors (1102) are
+possible on Free. If they happen, Workers Paid removes the limit without code changes.
+
+Local preview note: because `wrangler.jsonc` has a custom-domain route, run the local Worker with
+`npx wrangler dev --local-upstream localhost:8787` so the Origin check of the passkey API sees the local address.
 
 ## Configuration
 
@@ -124,13 +134,15 @@ Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`
 
 ## Privacy and security
 
-- Passwords: scrypt with a random salt. Sessions: random tokens, stored only as SHA-256 hashes.
+- Sign-in: passkeys (WebAuthn) only; the server stores public keys, one-time challenges expire after 5 minutes.
+  Sessions: random tokens, stored only as SHA-256 hashes.
 - Provider tokens are encrypted with AES-256-GCM. Pacepact only reads activities and never posts anything back.
-- Sign-in attempts and the ingest API are rate-limited per server process.
+- The passkey API checks the Origin header; sign-in and the ingest API are rate-limited per Worker instance.
 - Users can delete their account and all data under Settings. Groups they own are handed to another member.
 - Heart rate is health data (Art. 9 GDPR). It is only stored with explicit, separate consent; without consent,
   heart-rate values are dropped before saving. Withdrawing consent deletes all stored heart rates.
 - Sign-up requires confirming a minimum age of 14 (Austria, § 4 (4) DSG) and having read the privacy notice.
+  No email address is collected.
 - Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
 - Runs imported from Strava are never shown to other group members (Strava API terms).
 - The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.

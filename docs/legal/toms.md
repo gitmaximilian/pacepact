@@ -4,7 +4,7 @@
 
 ## Datenminimierung (Art. 5, 25 DSGVO)
 
-- Name ist frei wählbar (Spitzname möglich); keine Telefonnummer, keine Adresse, kein Geburtsdatum.
+- Anmeldung ausschließlich per Passkey (WebAuthn): keine E-Mail, kein Passwort. Name ist frei wählbar (Spitzname möglich); keine Telefonnummer, keine Adresse, kein Geburtsdatum.
 - Puls nur mit ausdrücklicher Einwilligung; ohne Einwilligung verwirft `src/lib/runs-store.ts` Pulswerte vor dem Speichern.
 - Keine GPS-Strecken: GPX/TCX/FIT-Importe speichern nur Summenwerte (Distanz, Dauer, Puls).
 - Gruppen sehen nur Lauf-Kennzahlen, keine Notizen, keinen Puls, keine Strava-Läufe.
@@ -13,7 +13,7 @@
 ## Vertraulichkeit
 
 - Übertragung nur per HTTPS (TLS) über den Hoster.
-- Passwörter: scrypt (N=16384, r=8, p=1) mit zufälligem Salt; Vergleich in konstanter Zeit.
+- Passkeys sind phishing-resistent; der Server speichert nur öffentliche Schlüssel. Anmelde-Challenges sind einmalig verwendbar und laufen nach 5 Minuten ab. Origin-Prüfung bei allen Anmelde-Anfragen.
 - Sitzungs-Tokens: 256 Bit zufällig, nur als SHA-256-Hash gespeichert; Cookie `HttpOnly`, `Secure` (Produktion), `SameSite=Lax`, 30 Tage.
 - API-Tokens: nur als SHA-256-Hash gespeichert, werden einmalig angezeigt.
 - Tokens von Drittdiensten: AES-256-GCM mit eigenem Schlüssel (`ENCRYPTION_KEY`), getrennt von der Datenbank.
@@ -35,7 +35,7 @@
 
 ## Löschung und Betroffenenrechte
 
-- „Konto und alle Daten löschen“ entfernt sofort alle Zeilen (Konto, Sitzungen, Ziele, Läufe, Verbindungen, Tokens, Mitgliedschaften).
+- „Konto und alle Daten löschen“ entfernt sofort alle Zeilen (Konto, Passkeys, Sitzungen, Ziele, Läufe, Verbindungen, Tokens, Mitgliedschaften).
 - „Meine Daten herunterladen“ (`/api/export`) liefert alle gespeicherten Daten ohne Geheimnisse.
 - Widerruf der Puls-Einwilligung löscht alle Pulswerte sofort.
 - Automatische Löschung von Konten nach 2 Jahren ohne Nutzung (Prüfung höchstens stündlich beim Seitenaufruf).

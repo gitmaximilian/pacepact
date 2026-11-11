@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
-import { currentPhase, isLighterWeek, run2Prescription, weeksToRace } from "@/lib/plan";
+import { currentPhase, isLighterWeek, run2Prescription, tempoUnlock, weeklyLanes, weeksToRace } from "@/lib/plan";
+import { redirect } from "next/navigation";
 import { activeGoal, param, userRuns, type SearchParams } from "@/lib/queries";
 import { summarize, weeklyKm } from "@/lib/stats";
 import { Flash, LaneNo, Shell, Stat } from "../components";
@@ -13,6 +14,7 @@ export const metadata = { title: "Today" };
 
 export default async function Dashboard({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser();
+  if (!user.onboardedAt) redirect("/welcome");
   const { t, locale } = await getT();
   const sp = await searchParams;
   const [goal, runs] = await Promise.all([activeGoal(user.id), userRuns(user.id)]);
@@ -22,6 +24,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
   const phase = goal ? currentPhase(goal.raceDate) : null;
   const targetPace = goal?.targetSeconds ? paceSecPerKm(goal.targetSeconds, goal.distanceKm) : null;
   const continuousMin = Math.floor(s.longestContinuousSec / 60);
+  const unlock = tempoUnlock(s.reached30MinContinuous, user.experience);
 
   return (
     <Shell t={t} locale={locale} active="/dashboard">
@@ -84,9 +87,20 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
             <Link className="small" href="/plan">{t.nav.plan} →</Link>
           </div>
           {isLighterWeek(goal!.raceDate) ? <p className="flash ok">{t.dashboard.lighterWeek}</p> : null}
-          <div className="lane-tile"><LaneNo type="run1" /><span>{describeEasy(t, phase.run1)}</span></div>
-          <div className="lane-tile"><LaneNo type="run2" /><span>{describeRun2(t, run2Prescription(phase, s.reached30MinContinuous), phase.run2?.kind === "tempo" && !s.reached30MinContinuous)}</span></div>
-          <div className="lane-tile"><LaneNo type="run3" /><span>{describeEasy(t, phase.run3)}</span></div>
+          {weeklyLanes(user.runsPerWeek).map((lane) => (
+            <div key={lane} className="lane-tile">
+              <LaneNo type={lane} />
+              <span>
+                {lane === "run2"
+                  ? describeRun2(t, run2Prescription(phase, !!unlock), phase.run2?.kind === "tempo" && !unlock)
+                  : describeEasy(t, lane === "run3" ? phase.run3 : phase.run1)}
+              </span>
+            </div>
+          ))}
+          {unlock && phase.run2?.kind === "tempo" ? (
+            <p className="small muted">{unlock === "measured" ? t.plan.unlockMeasured : t.plan.unlockReported}</p>
+          ) : null}
+          {user.strength ? <p className="small muted">{t.plan.strengthHint}</p> : null}
         </section>
       ) : null}
 

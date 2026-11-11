@@ -8,7 +8,7 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   const db = await getDb();
-  const [goals, runs, memberships, connections, tokens] = await Promise.all([
+  const [goals, runs, memberships, connections, tokens, keys] = await Promise.all([
     db.select().from(schema.goals).where(eq(schema.goals.userId, user.id)),
     db.select().from(schema.runs).where(eq(schema.runs.userId, user.id)),
     db
@@ -29,10 +29,14 @@ export async function GET() {
       .select({ label: schema.apiTokens.label, createdAt: schema.apiTokens.createdAt, lastUsedAt: schema.apiTokens.lastUsedAt })
       .from(schema.apiTokens)
       .where(eq(schema.apiTokens.userId, user.id)),
+    db
+      .select({ id: schema.passkeys.id, createdAt: schema.passkeys.createdAt, lastUsedAt: schema.passkeys.lastUsedAt })
+      .from(schema.passkeys)
+      .where(eq(schema.passkeys.userId, user.id)),
   ]);
-  const { passwordHash: _omit, ...account } = user;
+  const account = user;
   const body = JSON.stringify(
-    { exportedAt: new Date().toISOString(), account, goals, runs, groups: memberships, connections, apiTokens: tokens },
+    { exportedAt: new Date().toISOString(), account, goals, runs, groups: memberships, connections, apiTokens: tokens, passkeys: keys },
     null,
     2,
   );

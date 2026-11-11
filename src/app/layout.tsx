@@ -10,9 +10,12 @@ import { getLocale } from "@/lib/i18n/server";
 export const metadata: Metadata = {
   title: { default: "Pacepact", template: "%s · Pacepact" },
   description: "Set a race goal, follow a simple plan, log runs automatically and train together in groups.",
+  applicationName: "Pacepact",
+  appleWebApp: { capable: true, title: "Pacepact", statusBarStyle: "default" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
-export const viewport: Viewport = { themeColor: "#143a80", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#143a80", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();

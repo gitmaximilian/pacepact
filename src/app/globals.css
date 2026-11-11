@@ -153,3 +153,29 @@ td.num { font-size: 1.15rem; }
 footer { padding-block: 24px; color: var(--muted); font-size: 0.85rem; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Welcome flow */
+.eyebrow { font-family: var(--f-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.9rem; color: var(--muted); }
+.wizard { gap: 20px; }
+.wizard fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.wizard legend { padding: 0; margin-bottom: 4px; }
+.choices { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.choice { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 2px solid var(--line); border-radius: var(--radius); background: var(--surface); cursor: pointer; min-width: 0; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-title { font-family: var(--f-display); font-weight: 800; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.choice-desc { font-size: 0.88rem; color: var(--muted); }
+.choice:hover { border-color: var(--track); }
+.choice.on { border-color: var(--track); box-shadow: inset 0 0 0 1px var(--track); background: color-mix(in srgb, var(--track) 7%, var(--surface)); }
+.choice:has(input:focus-visible) { outline: 3px solid var(--signal); outline-offset: 2px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Install prompt */
+.install-banner { position: fixed; z-index: 30; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 10px 30px rgba(15, 26, 51, 0.18); }
+@media (min-width: 768px) { .install-banner { left: auto; right: 24px; bottom: 24px; max-width: 460px; } }
+.install-banner .text { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 0.9rem; }
+.install-banner .x { background: none; border: 0; color: var(--muted); font-size: 1.4rem; cursor: pointer; padding: 4px 8px; }
+.sheet-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(8, 14, 30, 0.45); }
+.sheet { position: fixed; z-index: 41; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto; background: var(--surface); border-radius: 18px 18px 0 0; padding: 22px max(20px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.sheet ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.sheet li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; }
+.sheet .ico { width: 40px; height: 40px; border-radius: 10px; background: color-mix(in srgb, var(--track) 12%, var(--surface)); color: var(--track); display: grid; place-items: center; font-weight: 800; }

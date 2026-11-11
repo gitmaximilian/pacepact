@@ -1,17 +1,16 @@
 "use server";
 
 import { and, asc, eq, ne } from "drizzle-orm";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { getDb, schema } from "@/db";
-import { RUN_TYPES } from "@/db/schema";
-import { createSession, destroySession, rateLimit, requireUser } from "@/lib/auth";
-import { hashPassword, inviteCode, randomToken, sha256, verifyPassword } from "@/lib/crypto";
+import { EXPERIENCE, RUN_TYPES } from "@/db/schema";
+import { destroySession, rateLimit, requireUser } from "@/lib/auth";
+import { inviteCode, randomToken, sha256 } from "@/lib/crypto";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
 import { ImportError, parseActivityFile } from "@/lib/import";
-import { parseDuration } from "@/lib/pace";
+import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
 import { getOAuthProvider } from "@/lib/providers/registry";
 import { syncConnection } from "@/lib/providers/sync";
 import { storeRuns } from "@/lib/runs-store";
@@ -20,56 +19,20 @@ const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 /* --------------------------------- Auth ---------------------------------- */
 
-const SignUp = z.object({
-  name: z.string().min(1).max(60),
-  email: z.email().max(200),
-  password: z.string().min(10).max(200),
-});
-
-export async function signUp(fd: FormData) {
-  const parsed = SignUp.safeParse({ name: str(fd, "name"), email: str(fd, "email").toLowerCase(), password: String(fd.get("password") ?? "") });
-  if (!parsed.success) redirect("/signup?error=input");
-  // Age (14+, § 4 Abs. 4 DSG) and privacy notice must be confirmed; heart-rate consent is optional.
-  if (fd.get("terms") !== "on") redirect("/signup?error=terms");
-  const hrConsent = fd.get("hrConsent") === "on";
-  const db = await getDb();
-  const existing = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, parsed.data.email)).limit(1);
-  if (existing.length) redirect("/signup?error=exists");
-  const locale = (await cookies()).get(LOCALE_COOKIE)?.value;
-  const [user] = await db
-    .insert(schema.users)
-    .values({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      passwordHash: await hashPassword(parsed.data.password),
-      locale: isLocale(locale) ? locale : "en",
-      termsAcceptedAt: new Date(),
-      hrConsentAt: hrConsent ? new Date() : null,
-    })
-    .returning();
-  await createSession(user.id);
-  redirect("/goal");
-}
-
-export async function signIn(fd: FormData) {
-  const email = str(fd, "email").toLowerCase();
-  const password = String(fd.get("password") ?? "");
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (!rateLimit(`signin:${email}`) || !rateLimit(`signin-ip:${ip}`, 30)) redirect("/signin?error=rate");
-  const db = await getDb();
-  const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
-  // Always run a hash comparison so response time does not reveal whether the email exists.
-  const ok = user
-    ? await verifyPassword(password, user.passwordHash)
-    : (await verifyPassword(password, "scrypt$AAAAAAAAAAAAAAAAAAAAAA==$" + "A".repeat(86)), false);
-  if (!user || !ok) redirect("/signin?error=invalid");
-  await createSession(user.id);
-  redirect("/dashboard");
-}
-
 export async function signOut() {
   await destroySession();
   redirect("/");
+}
+
+/** Removes a passkey. The last passkey cannot be removed (the account would be unreachable). */
+export async function deletePasskey(fd: FormData) {
+  const user = await requireUser();
+  const db = await getDb();
+  const all = await db.select({ id: schema.passkeys.id }).from(schema.passkeys).where(eq(schema.passkeys.userId, user.id));
+  if (all.length > 1) {
+    await db.delete(schema.passkeys).where(and(eq(schema.passkeys.id, str(fd, "id")), eq(schema.passkeys.userId, user.id)));
+  }
+  redirect("/settings");
 }
 
 /* -------------------------------- Locale --------------------------------- */
@@ -103,6 +66,59 @@ export async function setHrConsent(fd: FormData) {
   await db.update(schema.users).set({ hrConsentAt: null }).where(eq(schema.users.id, user.id));
   await db.update(schema.runs).set({ avgHr: null, maxHr: null }).where(eq(schema.runs.userId, user.id));
   redirect("/settings?hr=withdrawn");
+}
+
+/* ------------------------------- Welcome --------------------------------- */
+
+const GOAL_KM: Record<string, number> = { half: HALF_MARATHON_KM, marathon: MARATHON_KM, tenK: 10, fiveK: 5, fitness: 5 };
+
+/** Saves the welcome flow: goal, starting point, runs per week and strength training. */
+export async function completeOnboarding(fd: FormData) {
+  const user = await requireUser();
+  const goal = str(fd, "goal");
+  const experience = str(fd, "experience");
+  const runsPerWeek = Number(str(fd, "runsPerWeek"));
+  const raceDate = str(fd, "raceDate");
+  const target = str(fd, "target");
+  const targetSeconds = target && goal !== "fitness" ? parseDuration(target) : null;
+  const today = new Date().toISOString().slice(0, 10);
+  if (
+    !(goal in GOAL_KM) ||
+    !(EXPERIENCE as readonly string[]).includes(experience) ||
+    ![2, 3, 4].includes(runsPerWeek) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(raceDate) ||
+    raceDate <= today ||
+    (target && goal !== "fitness" && !targetSeconds)
+  ) {
+    redirect("/welcome?error=input");
+  }
+  const db = await getDb();
+  await db
+    .update(schema.users)
+    .set({
+      onboardedAt: new Date(),
+      experience: experience as (typeof EXPERIENCE)[number],
+      runsPerWeek,
+      strength: str(fd, "strength") === "yes",
+    })
+    .where(eq(schema.users.id, user.id));
+  await db.update(schema.goals).set({ active: false }).where(eq(schema.goals.userId, user.id));
+  await db.insert(schema.goals).values({
+    userId: user.id,
+    raceName: str(fd, "raceName").slice(0, 120) || "Pacepact",
+    raceDate,
+    distanceKm: GOAL_KM[goal],
+    targetSeconds,
+    active: true,
+  });
+  redirect("/dashboard?welcome=1");
+}
+
+export async function skipOnboarding() {
+  const user = await requireUser();
+  const db = await getDb();
+  await db.update(schema.users).set({ onboardedAt: new Date() }).where(eq(schema.users.id, user.id));
+  redirect("/dashboard");
 }
 
 /* --------------------------------- Goal ---------------------------------- */
