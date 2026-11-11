@@ -61,6 +61,7 @@ export const en = {
     thisPhase: "This week's plan",
     lighterWeek: "Lighter week: keep every run short and easy.",
     runs: "runs",
+    weeklyKm: "Weekly km · last 12 weeks",
   },
   goal: {
     title: "Your goal",
@@ -152,6 +153,8 @@ export const en = {
     km28: "km · 28 d",
     runs28: "runs · 28 d",
     notEnough: "needs 6 runs",
+    owner: "admin",
+    member: "member",
   },
   connections: {
     title: "Connections",
