@@ -18,6 +18,12 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   locale: text("locale").notNull().default("en"),
+  /** Explicit consent to store heart-rate data (health data, Art. 9 GDPR). Null = no consent. */
+  hrConsentAt: timestamp("hr_consent_at", { withTimezone: true }),
+  /** When the user confirmed being at least 14 and having read the privacy notice. */
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  /** Updated at most once a day; accounts inactive for two years are deleted. */
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

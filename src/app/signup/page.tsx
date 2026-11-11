@@ -2,14 +2,14 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { param, type SearchParams } from "@/lib/queries";
 import { signUp } from "../actions";
-import { Flash, LangSwitch, Logo } from "../components";
+import { Flash, LangSwitch, LegalFooter, Logo } from "../components";
 
 export const metadata = { title: "Create account" };
 
 export default async function SignUpPage({ searchParams }: { searchParams: SearchParams }) {
   const { t, locale } = await getT();
   const error = param(await searchParams, "error");
-  const msg = error === "exists" ? t.auth.errExists : error ? t.auth.errInput : null;
+  const msg = error === "exists" ? t.auth.errExists : error === "terms" ? t.auth.errTerms : error ? t.auth.errInput : null;
   return (
     <>
       <div className="track gutter" style={{ paddingBlock: 18 }}>
@@ -30,11 +30,20 @@ export default async function SignUpPage({ searchParams }: { searchParams: Searc
               <input id="password" name="password" type="password" autoComplete="new-password" minLength={10} required />
               <span className="hint">{t.auth.passwordHint}</span>
             </div>
+            <label className="check" style={{ alignItems: "flex-start" }}>
+              <input type="checkbox" name="terms" required />
+              <span>{t.auth.terms} <Link href="/privacy" target="_blank">{t.legal.privacy}</Link></span>
+            </label>
+            <label className="check" style={{ alignItems: "flex-start" }}>
+              <input type="checkbox" name="hrConsent" />
+              <span className="small">{t.auth.hrConsent}</span>
+            </label>
             <button className="btn signal">{t.auth.submitSignUp}</button>
           </form>
           <p className="small muted">{t.auth.haveAccount} <Link href="/signin">{t.nav.signIn}</Link></p>
         </div>
       </main>
+      <LegalFooter t={t} />
     </>
   );
 }

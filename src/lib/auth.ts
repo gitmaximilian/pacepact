@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq, gt, lt } from "drizzle-orm";
+import { INACTIVE_ACCOUNT_DAYS } from "./legal";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -14,8 +15,7 @@ export async function createSession(userId: string) {
   const token = randomToken();
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 86400_000);
   await db.insert(schema.sessions).values({ id: sha256(token), userId, expiresAt });
-  // Opportunistic cleanup of expired sessions.
-  await db.delete(schema.sessions).where(lt(schema.sessions.expiresAt, new Date()));
+  await cleanup(true);
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -23,6 +23,19 @@ export async function createSession(userId: string) {
     path: "/",
     expires: expiresAt,
   });
+}
+
+let lastCleanup = 0;
+
+/** Deletes expired sessions and accounts unused for two years. Runs at most hourly unless forced. */
+export async function cleanup(force = false) {
+  if (!force && Date.now() - lastCleanup < 3600_000) return;
+  lastCleanup = Date.now();
+  const db = await getDb();
+  await db.delete(schema.sessions).where(lt(schema.sessions.expiresAt, new Date()));
+  await db
+    .delete(schema.users)
+    .where(lt(schema.users.lastActiveAt, new Date(Date.now() - INACTIVE_ACCOUNT_DAYS * 86400_000)));
 }
 
 export async function destroySession() {
@@ -39,6 +52,7 @@ export async function destroySession() {
 export const currentUser = cache(async () => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
+  await cleanup();
   const db = await getDb();
   const rows = await db
     .select({ user: schema.users })
@@ -46,7 +60,11 @@ export const currentUser = cache(async () => {
     .innerJoin(schema.users, eq(schema.users.id, schema.sessions.userId))
     .where(and(eq(schema.sessions.id, sha256(token)), gt(schema.sessions.expiresAt, new Date())))
     .limit(1);
-  return rows[0]?.user ?? null;
+  const user = rows[0]?.user ?? null;
+  if (user && user.lastActiveAt.getTime() < Date.now() - 86400_000) {
+    await db.update(schema.users).set({ lastActiveAt: new Date() }).where(eq(schema.users.id, user.id));
+  }
+  return user;
 });
 
 export async function requireUser() {

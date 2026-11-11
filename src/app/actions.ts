@@ -29,6 +29,9 @@ const SignUp = z.object({
 export async function signUp(fd: FormData) {
   const parsed = SignUp.safeParse({ name: str(fd, "name"), email: str(fd, "email").toLowerCase(), password: String(fd.get("password") ?? "") });
   if (!parsed.success) redirect("/signup?error=input");
+  // Age (14+, § 4 Abs. 4 DSG) and privacy notice must be confirmed; heart-rate consent is optional.
+  if (fd.get("terms") !== "on") redirect("/signup?error=terms");
+  const hrConsent = fd.get("hrConsent") === "on";
   const db = await getDb();
   const existing = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, parsed.data.email)).limit(1);
   if (existing.length) redirect("/signup?error=exists");
@@ -40,6 +43,8 @@ export async function signUp(fd: FormData) {
       email: parsed.data.email,
       passwordHash: await hashPassword(parsed.data.password),
       locale: isLocale(locale) ? locale : "en",
+      termsAcceptedAt: new Date(),
+      hrConsentAt: hrConsent ? new Date() : null,
     })
     .returning();
   await createSession(user.id);
@@ -81,6 +86,23 @@ export async function setLocale(fd: FormData) {
   }
   const back = str(fd, "back");
   redirect(back.startsWith("/") && !back.startsWith("//") ? back : "/");
+}
+
+/* ------------------------- Heart-rate consent ---------------------------- */
+
+/** Grants or withdraws consent (Art. 9 Abs. 2 lit. a, Art. 7 Abs. 3 DSGVO). Withdrawal deletes stored heart rates. */
+export async function setHrConsent(fd: FormData) {
+  const user = await requireUser();
+  const db = await getDb();
+  if (str(fd, "consent") === "grant") {
+    // Consent must be an explicit, separate act (Art. 9 Abs. 2 lit. a DSGVO).
+    if (fd.get("confirm") !== "on") redirect("/settings");
+    await db.update(schema.users).set({ hrConsentAt: new Date() }).where(eq(schema.users.id, user.id));
+    redirect("/settings?hr=granted");
+  }
+  await db.update(schema.users).set({ hrConsentAt: null }).where(eq(schema.users.id, user.id));
+  await db.update(schema.runs).set({ avgHr: null, maxHr: null }).where(eq(schema.runs.userId, user.id));
+  redirect("/settings?hr=withdrawn");
 }
 
 /* --------------------------------- Goal ---------------------------------- */

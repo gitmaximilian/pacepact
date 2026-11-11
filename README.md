@@ -102,7 +102,16 @@ Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`
 - Provider tokens are encrypted with AES-256-GCM. Pacepact only reads activities and never posts anything back.
 - Sign-in attempts and the ingest API are rate-limited per server process.
 - Users can delete their account and all data under Settings. Groups they own are handed to another member.
-- Heart rate is health data. A privacy notice is needed before the public launch.
+- Heart rate is health data (Art. 9 GDPR). It is only stored with explicit, separate consent; without consent,
+  heart-rate values are dropped before saving. Withdrawing consent deletes all stored heart rates.
+- Sign-up requires confirming a minimum age of 14 (Austria, § 4 (4) DSG) and having read the privacy notice.
+- Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
+- Runs imported from Strava are never shown to other group members (Strava API terms).
+- The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.
+  It currently assumes hosting on Cloudflare (Workers and D1, EU). Update that file if the hosting differs.
+- Internal GDPR documents (German) are in `docs/legal/`: record of processing activities, technical and organisational
+  measures, data breach procedure, DPIA threshold assessment, third-party API checklist and a section for the
+  privacy policy on maximilianauer.at.
 
 ## License
 

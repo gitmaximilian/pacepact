@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
@@ -46,7 +46,8 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
       runType: schema.runs.runType,
     })
     .from(schema.runs)
-    .where(inArray(schema.runs.userId, ids))
+    // Strava API terms: Strava data may only be shown to the athlete it belongs to.
+    .where(and(inArray(schema.runs.userId, ids), ne(schema.runs.source, "strava")))
     .orderBy(desc(schema.runs.startedAt));
   const since = new Date(Date.now() - 28 * 86400_000);
   const recent = runs.filter((r) => r.startedAt >= since);
@@ -68,7 +69,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
 
       <section className="stack" style={{ gap: 12 }}>
         <h2>{t.groups.progress}</h2>
-        <p className="small muted">{t.groups.progressHint}</p>
+        <p className="small muted">{t.groups.progressHint} {t.groups.stravaNote}</p>
         <div className="table-wrap">
           <table>
             <thead><tr><th>{t.groups.members}</th><th>{t.groups.km28}</th><th>{t.groups.runs28}</th><th>Δ {t.runs.pace}</th></tr></thead>

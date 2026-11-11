@@ -60,6 +60,7 @@ export default async function PlanPage() {
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           <li>{t.plan.r1}</li><li>{t.plan.r2}</li><li>{t.plan.r3}</li><li>{t.plan.r4}</li>
         </ul>
+        <p className="small muted">{t.plan.disclaimer}</p>
       </section>
     </Shell>
   );

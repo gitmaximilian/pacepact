@@ -26,6 +26,9 @@ export const en = {
     f4d: "Invite friends with a code. Everyone is measured against their own start, not against the fastest runner.",
   },
   auth: {
+    terms: "I am at least 14 years old and have read the privacy notice.",
+    hrConsent: "Optional: store my heart rate. Heart rate is health data; I explicitly consent to Pacepact storing it for my training analysis (Art. 9(2)(a) GDPR). I can withdraw this at any time in Settings.",
+    errTerms: "Please confirm that you are at least 14 and have read the privacy notice.",
     signInTitle: "Welcome back",
     signUpTitle: "Create your account",
     name: "Name",
@@ -81,6 +84,7 @@ export const en = {
     errDate: "Pick a race day in the future.",
   },
   runs: {
+    hrOff: "Heart rate is not stored because you have not consented. You can change this in Settings.",
     title: "Runs",
     add: "Log a run",
     date: "Date",
@@ -111,6 +115,7 @@ export const en = {
   },
   runTypes: { run1: "Run 1 · easy", run2: "Run 2 · easy/tempo", run3: "Run 3 · long", test: "Test", other: "Other" },
   plan: {
+    disclaimer: "This plan is general guidance, not medical advice. If you have health problems, talk to a doctor before you start.",
     title: "Plan",
     intro: "Three runs a week in any order. Leave at least one rest day between hard sessions and keep easy runs conversational (about 3–4 out of 10).",
     phase: "Phase",
@@ -131,6 +136,7 @@ export const en = {
     needGoal: "Set a goal to see dates for each phase.",
   },
   groups: {
+    stravaNote: "Runs imported from Strava are only visible to their owner and are not counted here (Strava API terms).",
     title: "Groups",
     create: "Create a group",
     name: "Group name",
@@ -175,6 +181,18 @@ export const en = {
     shortcutText: "Create a personal API token in Settings and send runs to {url}. Use it from an Apple Shortcut, an Android automation or any automation tool.",
   },
   settings: {
+    privacy: "Privacy",
+    hrTitle: "Heart rate (health data)",
+    hrOn: "You consented on {date}. Heart rate from imports and manual entries is stored.",
+    hrOffText: "Heart rate is not stored. Imports keep distance and time only.",
+    hrGrant: "Give consent and store heart rate",
+    hrGrantText: "I explicitly consent to Pacepact storing my heart rate for my training analysis (Art. 9(2)(a) GDPR). I can withdraw at any time.",
+    hrWithdraw: "Withdraw consent and delete all heart rates",
+    hrGranted: "Consent saved. Heart rate is stored from now on.",
+    hrWithdrawn: "Consent withdrawn. All stored heart rates were deleted.",
+    exportTitle: "Download my data",
+    exportText: "A JSON file with your account, goals, runs, groups and connections. Passwords and tokens are never included.",
+    exportButton: "Download (JSON)",
     title: "Settings",
     language: "Language",
     saveLanguage: "Save language",
@@ -190,6 +208,7 @@ export const en = {
     deleteConfirm: "Type DELETE to confirm",
     example: "Example request",
   },
+  legal: { privacy: "Privacy", imprint: "Legal notice" },
   common: { save: "Save", cancel: "Cancel", km: "km", min: "min", bpm: "bpm", back: "Back" },
 };
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { setLocale, signOut } from "./actions";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { LEGAL } from "@/lib/legal";
 
 /** Two interlocking track ovals: you and your group. */
 export function Logo({ size = 32, mono = false }: { size?: number; mono?: boolean }) {
@@ -68,7 +69,22 @@ export function Shell({
       <main className="gutter">
         <div className="wrap stack">{children}</div>
       </main>
+      <LegalFooter t={t} />
     </>
+  );
+}
+
+export function LegalFooter({ t }: { t: Dictionary }) {
+  return (
+    <footer className="gutter">
+      <div className="wrap row" style={{ justifyContent: "space-between" }}>
+        <span>Pacepact · {t.meta.tagline}</span>
+        <span className="row" style={{ gap: 16 }}>
+          <Link href="/privacy">{t.legal.privacy}</Link>
+          <a href={LEGAL.legalUrl} rel="noopener">{t.legal.imprint}</a>
+        </span>
+      </div>
+    </footer>
   );
 }
 

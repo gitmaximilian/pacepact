@@ -19,11 +19,20 @@ export async function GET(req: NextRequest) {
 /** New or deleted activities. Strava expects a 200 within two seconds. */
 export async function POST(req: NextRequest) {
   const event = await req.json().catch(() => null);
-  if (!event || event.object_type !== "activity" || event.owner_id == null) return NextResponse.json({ ok: true });
+  if (!event || event.owner_id == null) return NextResponse.json({ ok: true });
   const expectedSub = process.env.STRAVA_SUBSCRIPTION_ID;
   if (expectedSub && String(event.subscription_id) !== expectedSub) return NextResponse.json({ ok: true });
 
   const db = await getDb();
+  // The athlete revoked access at Strava: delete the stored tokens.
+  if (event.object_type === "athlete" && String(event.updates?.authorized) === "false") {
+    await db
+      .delete(schema.connections)
+      .where(and(eq(schema.connections.provider, "strava"), eq(schema.connections.externalUserId, String(event.owner_id))));
+    return NextResponse.json({ ok: true });
+  }
+  if (event.object_type !== "activity") return NextResponse.json({ ok: true });
+
   const [conn] = await db
     .select()
     .from(schema.connections)

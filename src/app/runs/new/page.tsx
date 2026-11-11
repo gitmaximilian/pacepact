@@ -8,7 +8,7 @@ import { Flash, Shell } from "../../components";
 export const metadata = { title: "Log a run" };
 
 export default async function NewRunPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireUser();
+  const user = await requireUser();
   const { t, locale } = await getT();
   const error = param(await searchParams, "error");
   const today = new Date().toISOString().slice(0, 10);
@@ -30,10 +30,15 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
         <div className="fields">
           <div className="field"><label htmlFor="distanceKm">{t.runs.distance}</label><input id="distanceKm" name="distanceKm" inputMode="decimal" placeholder="5.0" required /></div>
           <div className="field"><label htmlFor="duration">{t.runs.duration}</label><input id="duration" name="duration" inputMode="numeric" placeholder="32:30" required /></div>
-          <div className="field"><label htmlFor="avgHr">{t.runs.avgHr}</label><input id="avgHr" name="avgHr" type="number" min={25} max={250} /></div>
-          <div className="field"><label htmlFor="maxHr">{t.runs.maxHr}</label><input id="maxHr" name="maxHr" type="number" min={25} max={250} /></div>
+          {user.hrConsentAt ? (
+            <>
+              <div className="field"><label htmlFor="avgHr">{t.runs.avgHr}</label><input id="avgHr" name="avgHr" type="number" min={25} max={250} /></div>
+              <div className="field"><label htmlFor="maxHr">{t.runs.maxHr}</label><input id="maxHr" name="maxHr" type="number" min={25} max={250} /></div>
+            </>
+          ) : null}
           <div className="field"><label htmlFor="effort">{t.runs.effort}</label><input id="effort" name="effort" type="number" min={1} max={10} /></div>
         </div>
+        {user.hrConsentAt ? null : <p className="small muted">{t.runs.hrOff}</p>}
         <label className="check"><input type="checkbox" name="walkBreaks" /> {t.runs.walkBreaks}</label>
         <div className="field"><label htmlFor="notes">{t.runs.notes}</label><textarea id="notes" name="notes" maxLength={1000} /></div>
         <div><button className="btn signal">{t.runs.save}</button></div>

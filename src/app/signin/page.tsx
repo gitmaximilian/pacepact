@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getT } from "@/lib/i18n/server";
 import { param, type SearchParams } from "@/lib/queries";
 import { signIn } from "../actions";
-import { Flash, LangSwitch, Logo } from "../components";
+import { Flash, LangSwitch, LegalFooter, Logo } from "../components";
 
 export const metadata = { title: "Sign in" };
 
@@ -30,6 +30,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
           <p className="small muted">{t.auth.noAccount} <Link href="/signup">{t.nav.signUp}</Link></p>
         </div>
       </main>
+      <LegalFooter t={t} />
     </>
   );
 }

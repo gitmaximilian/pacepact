@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { LangSwitch, Logo } from "./components";
+import { LangSwitch, LegalFooter, Logo } from "./components";
 
 export default async function Landing() {
   if (await currentUser()) redirect("/dashboard");
@@ -42,7 +42,7 @@ export default async function Landing() {
           ))}
         </div>
       </main>
-      <footer className="gutter"><div className="wrap">Pacepact · {t.meta.tagline}</div></footer>
+      <LegalFooter t={t} />
     </>
   );
 }

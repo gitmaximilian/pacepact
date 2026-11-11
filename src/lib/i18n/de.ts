@@ -28,6 +28,9 @@ export const de: Dictionary = {
     f4d: "Lade Freunde mit einem Code ein. Alle werden an ihrem eigenen Start gemessen, nicht am schnellsten Läufer.",
   },
   auth: {
+    terms: "Ich bin mindestens 14 Jahre alt und habe die Datenschutzhinweise gelesen.",
+    hrConsent: "Optional: Meinen Puls speichern. Der Puls ist ein Gesundheitsdatum; ich willige ausdrücklich ein, dass Pacepact ihn für meine Trainingsauswertung speichert (Art. 9 Abs. 2 lit. a DSGVO). Ich kann das jederzeit in den Einstellungen widerrufen.",
+    errTerms: "Bitte bestätige, dass du mindestens 14 bist und die Datenschutzhinweise gelesen hast.",
     signInTitle: "Willkommen zurück",
     signUpTitle: "Konto erstellen",
     name: "Name",
@@ -83,6 +86,7 @@ export const de: Dictionary = {
     errDate: "Wähl einen Renntag in der Zukunft.",
   },
   runs: {
+    hrOff: "Der Puls wird nicht gespeichert, weil du nicht eingewilligt hast. Das kannst du in den Einstellungen ändern.",
     title: "Läufe",
     add: "Lauf eintragen",
     date: "Datum",
@@ -113,6 +117,7 @@ export const de: Dictionary = {
   },
   runTypes: { run1: "Run 1 · locker", run2: "Run 2 · locker/Tempo", run3: "Run 3 · lang", test: "Test", other: "Sonstiges" },
   plan: {
+    disclaimer: "Dieser Plan ist eine allgemeine Orientierung und keine medizinische Beratung. Bei gesundheitlichen Beschwerden sprich vor dem Start mit einer Ärztin oder einem Arzt.",
     title: "Plan",
     intro: "Drei Läufe pro Woche in beliebiger Reihenfolge. Zwischen harten Einheiten mindestens einen Ruhetag lassen, lockere Läufe im Gesprächstempo (etwa 3–4 von 10).",
     phase: "Phase",
@@ -133,6 +138,7 @@ export const de: Dictionary = {
     needGoal: "Setz ein Ziel, um die Daten jeder Phase zu sehen.",
   },
   groups: {
+    stravaNote: "Von Strava importierte Läufe sieht nur die jeweilige Person selbst; sie werden hier nicht mitgezählt (Strava-API-Bedingungen).",
     title: "Gruppen",
     create: "Gruppe erstellen",
     name: "Gruppenname",
@@ -177,6 +183,18 @@ export const de: Dictionary = {
     shortcutText: "Erstell in den Einstellungen einen persönlichen API-Token und sende Läufe an {url}. Nutzbar mit Apple-Kurzbefehlen, Android-Automationen oder jedem Automationstool.",
   },
   settings: {
+    privacy: "Datenschutz",
+    hrTitle: "Puls (Gesundheitsdaten)",
+    hrOn: "Du hast am {date} eingewilligt. Der Puls aus Importen und Eingaben wird gespeichert.",
+    hrOffText: "Der Puls wird nicht gespeichert. Importe übernehmen nur Distanz und Zeit.",
+    hrGrant: "Einwilligen und Puls speichern",
+    hrGrantText: "Ich willige ausdrücklich ein, dass Pacepact meinen Puls für meine Trainingsauswertung speichert (Art. 9 Abs. 2 lit. a DSGVO). Ich kann jederzeit widerrufen.",
+    hrWithdraw: "Einwilligung widerrufen und alle Pulswerte löschen",
+    hrGranted: "Einwilligung gespeichert. Der Puls wird ab jetzt gespeichert.",
+    hrWithdrawn: "Einwilligung widerrufen. Alle gespeicherten Pulswerte wurden gelöscht.",
+    exportTitle: "Meine Daten herunterladen",
+    exportText: "Eine JSON-Datei mit Konto, Zielen, Läufen, Gruppen und Verbindungen. Passwörter und Tokens sind nie enthalten.",
+    exportButton: "Herunterladen (JSON)",
     title: "Einstellungen",
     language: "Sprache",
     saveLanguage: "Sprache speichern",
@@ -192,5 +210,6 @@ export const de: Dictionary = {
     deleteConfirm: "Zum Bestätigen DELETE eintippen",
     example: "Beispiel-Anfrage",
   },
+  legal: { privacy: "Datenschutz", imprint: "Impressum" },
   common: { save: "Speichern", cancel: "Abbrechen", km: "km", min: "Min.", bpm: "bpm", back: "Zurück" },
 };
