@@ -8,7 +8,7 @@
 - Puls nur mit ausdrücklicher Einwilligung; ohne Einwilligung verwirft `src/lib/runs-store.ts` Pulswerte vor dem Speichern.
 - Keine GPS-Strecken: GPX/TCX/FIT-Importe speichern nur Summenwerte (Distanz, Dauer, Puls).
 - Gruppen sehen nur Lauf-Kennzahlen, keine Notizen, keinen Puls, keine Strava-Läufe.
-- Kein Tracking, keine Analyse-Tools, keine Werbung, Schriften selbst gehostet.
+- Kein Tracking, keine Analyse-Tools, keine Werbung, Schriften selbst gehostet. Cloudflare Web Analytics ist für die Zone maximilianauer.at automatisch aktiv; Pacepact setzt auf allen HTML-Seiten `Cache-Control: no-transform` (`worker.ts`), damit Cloudflare dort kein Messskript einbaut.
 
 ## Vertraulichkeit
 
