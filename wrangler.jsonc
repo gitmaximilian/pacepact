@@ -2,6 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pacepact",
   "main": ".open-next/worker.js",
+  // Builds the Worker with OpenNext before every `wrangler deploy`, so deploys work with
+  // Cloudflare's default build settings (`npx wrangler deploy`) as well as the OpenNext commands.
+  "build": { "command": "npx opennextjs-cloudflare build" },
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
