@@ -26,11 +26,16 @@ export function sha256(input: string): string {
   return createHash("sha256").update(input).digest("hex");
 }
 
+let devKey: Buffer | undefined;
+
 function encryptionKey(): Buffer {
   const raw = process.env.ENCRYPTION_KEY;
   if (!raw) {
     if (process.env.NODE_ENV === "production") throw new Error("ENCRYPTION_KEY is required in production");
-    return createHash("sha256").update("pacepact-dev-only-key").digest();
+    // Development only: a random key per process. Provider connections must be
+    // re-created after a restart; set ENCRYPTION_KEY in .dev.vars to avoid that.
+    devKey ??= randomBytes(32);
+    return devKey;
   }
   const key = Buffer.from(raw, "base64");
   if (key.length < 32) throw new Error("ENCRYPTION_KEY must be at least 32 bytes (base64)");
