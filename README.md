@@ -77,9 +77,12 @@ One-time setup:
 5. Deploy: `npm run deploy`. The route in `wrangler.jsonc` attaches `pacepact.maximilianauer.at` as a custom domain;
    because `maximilianauer.at` is on Cloudflare, DNS and HTTPS are set up automatically.
 
-Afterwards, every `npm run deploy` publishes a new version. Workers Builds (Cloudflare dashboard → the Worker →
-Settings → Builds → connect the GitHub repository, deploy command `npm run deploy`) can deploy each push to `main`
-automatically.
+Afterwards, every `npm run deploy` publishes a new version.
+
+Automatic deploys (set up for production): Cloudflare dashboard → Workers & Pages → `pacepact` → Settings → Builds →
+Connect → repository `gitmaximilian/pacepact`, branch `main`, build command `npx opennextjs-cloudflare build`,
+deploy command `npx opennextjs-cloudflare deploy`. Every push to `main` then goes live. Database migrations are not
+applied by the build; run `npm run db:migrate:remote` before pushing a schema change.
 
 Plan note: Pacepact is built for the Workers Free plan (10 ms CPU per request). Sign-in uses passkeys, whose
 verification is cheap; page rendering measured around 10 ms locally, so occasional CPU-limit errors (1102) are

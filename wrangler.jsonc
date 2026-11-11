@@ -11,8 +11,8 @@
     {
       "binding": "DB",
       "database_name": "pacepact",
-      // Replace with the id printed by `npx wrangler d1 create pacepact --jurisdiction eu`.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created with `npx wrangler d1 create pacepact --jurisdiction eu`.
+      "database_id": "66147933-9beb-453d-ade3-6b8ea72f1ec9",
       "migrations_dir": "drizzle"
     }
   ],
