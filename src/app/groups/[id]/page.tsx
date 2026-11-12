@@ -15,7 +15,7 @@ import { fourWeeks, topMilestones, weekLanes, weekSummary } from "@/lib/social/o
 import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
 import { LEGAL } from "@/lib/legal";
-import { Flash, Shell } from "../../components";
+import { Flash, Seg, Shell } from "../../components";
 import { Icon } from "../../icons";
 import {
   deleteContest, deleteGroup, dismissReports, deleteComment, leaveGroup, removeMember, rotateInviteCode, saveGroupSettings, saveSharing,
@@ -228,7 +228,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
       <header className="crew-head">
         <div style={{ minWidth: 0 }}>
           <span className="eyebrow">
-            {countdown ? <span className="nowrap"><Icon name="flag" size={13} /> {countdown}</span> : fmt(s_.runners, { n: members.length })}
+            {countdown ? <span className="nowrap"><Icon name="flag" size={13} /> {countdown}</span> : members.length === 1 ? s_.runnersOne : fmt(s_.runners, { n: members.length })}
           </span>
           <h1>{group.name}</h1>
         </div>
@@ -283,7 +283,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               ))}
             </ol>
             {summary.me && !summary.me.met ? <Link href={logHref} className="btn signal block">{s_.logRun}</Link> : null}
-            <p className="small muted">{s_.weekHint}</p>
           </section>
 
           {since && (since.runs || since.kudos || since.comments || myInvites.length) ? (
@@ -335,7 +334,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ) : (
               <p className="panel muted">{s_.feedEmpty}</p>
             )}
-            <p className="small muted">{s_.feedHint} <Link href="/rules">{s_.rulesLink}</Link></p>
           </section>
         </>
       ) : null}
@@ -397,7 +395,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             <form action={rotateInviteCode} className="row">
               <Hidden v={{ groupId: id }} />
               <ConfirmButton message={s_.rotateHint} className="btn ghost small">{s_.rotate}</ConfirmButton>
-              <span className="small muted">{s_.rotateHint}</span>
             </form>
           ) : null}
         </div>
@@ -433,14 +430,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           <label className="check"><input type="checkbox" name="shareDistance" defaultChecked={me.shareDistance} /> {s_.shareDistance}</label>
           <label className="check"><input type="checkbox" name="sharePace" defaultChecked={me.sharePace} /> {s_.sharePace}</label>
           {group.raceName ? (
-            <div className="field">
-              <label htmlFor="raceRegistered">{s_.raceRegQ} ({group.raceName})</label>
-              <select id="raceRegistered" name="raceRegistered" defaultValue={me.raceRegistered == null ? "" : me.raceRegistered ? "yes" : "no"}>
-                <option value="">{s_.raceRegUnset}</option>
-                <option value="yes">{s_.yes}</option>
-                <option value="no">{s_.notYet}</option>
-              </select>
-            </div>
+            <Seg name="raceRegistered" label={`${s_.raceRegQ} (${group.raceName})`} value={me.raceRegistered == null ? "" : me.raceRegistered ? "yes" : "no"} options={[{ value: "yes", label: s_.yes }, { value: "no", label: s_.notYet }, { value: "", label: s_.raceRegUnset }]} />
           ) : null}
           <div><button className="btn">{s_.save}</button></div>
         </form>
@@ -485,11 +475,13 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           </details>
         ) : null}
 
+        <Link href="/groups?all=1" className="btn ghost">{s_.otherCrews}</Link>
+
         <form action={leaveGroup}>
           <Hidden v={{ groupId: id }} />
           <ConfirmButton message={s_.leaveConfirm} className="btn danger">{s_.leave}</ConfirmButton>
         </form>
-        <p className="small muted">{fmt(s_.rulesContact, { email: LEGAL.email })}</p>
+        <p className="small muted"><Link href="/rules">{s_.rulesLink}</Link> · {fmt(s_.rulesContact, { email: LEGAL.email })}</p>
       </section>
     );
   }

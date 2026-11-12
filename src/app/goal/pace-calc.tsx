@@ -21,15 +21,17 @@ export function PaceCalc({ presets, labels, initialPreset, initialCustom, initia
   const pace = sec ? paceSecPerKm(sec, km) : null;
   return (
     <div className="fields">
-      <div className="field">
-        <label htmlFor="distance">{labels.distance}</label>
-        <select id="distance" name="distance" value={preset} onChange={(e) => setPreset(e.target.value)}>
-          {presets.map((p) => (
-            <option key={p.value} value={p.value}>{p.label}</option>
+      <fieldset className="field type-pick" style={{ gridColumn: "1 / -1" }}>
+        <legend>{labels.distance}</legend>
+        <div className="seg">
+          {[...presets, { value: "custom", label: labels.custom }].map((p) => (
+            <label key={p.value}>
+              <input type="radio" name="distance" value={p.value} checked={preset === p.value} onChange={() => setPreset(p.value)} />
+              <span>{p.label}</span>
+            </label>
           ))}
-          <option value="custom">{labels.custom}</option>
-        </select>
-      </div>
+        </div>
+      </fieldset>
       {preset === "custom" ? (
         <div className="field">
           <label htmlFor="customKm">{labels.custom}</label>

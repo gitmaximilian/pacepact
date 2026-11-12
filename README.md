@@ -15,8 +15,11 @@ Planned address: `https://pacepact.maximilianauer.at`
   It can be repeated from Settings.
 - **Install as app:** web app manifest and icons; Android/Chrome gets a real install button, iPhone/iPad a short
   "Share → Add to Home Screen" guide (as in Rookie).
-- **Navigation:** three places only: Crew, Log a run (+) and Me (my week against the plan, recent runs, links to
+- **Navigation:** three places only: Crew (opens the crew you looked at last; the list of crews, joining and starting
+  one are under "Other crews" in the Crew tab), Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
+- **No dropdowns:** choices are tap chips (run type, date, walk breaks, race registration, language, distance,
+  challenge opponent). The date is Today / Yesterday / 2 days ago in the device's own calendar, or any other date.
 - **Log a run:** minutes and km are the only required fields; average heart rate is a standard field for runners who
   consented to storing heart rate; others can give that consent right in the form with a separate, unticked checkbox
   (the field appears only once it is ticked). The Me page shows "pace at the same heart rate" (12 weeks, ±5 bpm around

@@ -201,3 +201,14 @@ export async function targetVisible(group: Group, type: string, id: string): Pro
 }
 
 export const currentWeek = () => weekKey(new Date());
+
+/** The crew a runner lands in: the one they looked at last, else the first they joined. */
+export async function homeCrew(userId: string): Promise<string | null> {
+  const db = await getDb();
+  const rows = await db
+    .select({ id: schema.groupMembers.groupId, seen: schema.groupMembers.lastSeenAt, joined: schema.groupMembers.joinedAt })
+    .from(schema.groupMembers)
+    .where(eq(schema.groupMembers.userId, userId));
+  rows.sort((a, b) => (b.seen?.getTime() ?? 0) - (a.seen?.getTime() ?? 0) || a.joined.getTime() - b.joined.getTime());
+  return rows[0]?.id ?? null;
+}

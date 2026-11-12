@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
 import { param, userRuns, type SearchParams } from "@/lib/queries";
 import { deleteRun, updateRunType } from "../actions";
-import { Flash, Shell } from "../components";
+import { Flash, Seg, Shell } from "../components";
 
 export const metadata = { title: "Runs" };
 
@@ -48,28 +48,19 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
                     ].filter(Boolean).join(" · ")}
                   </span>
                 </div>
-                <span className={`src ${r.source === "manual" ? "manual" : "device"}`}>{r.source === "manual" ? `✍️ ${t.social.manual}` : "⌚ Apple Health"}</span>
+                {r.source === "manual" ? <span /> : <span className="src-icon" title="Apple Health" role="img" aria-label="Apple Health">⌚</span>}
               </div>
               <details className="more">
-                <summary>{t.runTypes[r.runType]} · {!r.walkKnown ? t.runs.walkUnknown : r.walkBreaks ? t.runs.walk : t.runs.walkNo} · {t.runs.change}</summary>
-                <div className="row" style={{ marginTop: 10, justifyContent: "space-between" }}>
-                  <form action={updateRunType} className="row" style={{ gap: 8 }}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <select name="runType" defaultValue={r.runType} aria-label={t.runs.type} className="compact">
-                      {RUN_TYPES.map((rt) => <option key={rt} value={rt}>{t.runTypes[rt]}</option>)}
-                    </select>
-                    <select name="walk" defaultValue={!r.walkKnown ? "" : r.walkBreaks ? "yes" : "no"} aria-label={t.runs.walkBreaks} className="compact">
-                      <option value="">{t.runs.walkUnknown}</option>
-                      <option value="no">{t.runs.walkNo}</option>
-                      <option value="yes">{t.runs.walk}</option>
-                    </select>
+                <summary>{[r.runType !== "other" ? t.runTypes[r.runType] : null, t.runs.change].filter(Boolean).join(" · ")}</summary>
+                <form action={updateRunType} className="form" style={{ marginTop: 10, gap: 10 }}>
+                  <input type="hidden" name="id" value={r.id} />
+                  <Seg name="runType" label={t.runs.type} value={r.runType} options={RUN_TYPES.map((rt) => ({ value: rt, label: t.runTypes[rt] }))} />
+                  <Seg name="walk" label={t.runs.walkBreaksQ} value={!r.walkKnown ? "" : r.walkBreaks ? "yes" : "no"} options={[{ value: "no", label: t.runs.walkNo }, { value: "yes", label: t.runs.walk }, { value: "", label: t.runs.walkUnknown }]} />
+                  <div className="row" style={{ justifyContent: "space-between" }}>
                     <button className="btn small">{t.common.save}</button>
-                  </form>
-                  <form action={deleteRun}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <button className="btn danger small">{t.runs.delete}</button>
-                  </form>
-                </div>
+                    <button className="btn danger small" formAction={deleteRun}>{t.runs.delete}</button>
+                  </div>
+                </form>
               </details>
             </li>
           ))}

@@ -120,3 +120,20 @@ export function LaneNo({ type }: { type: string }) {
   const m = /^run(\d)$/.exec(type);
   return <span className={`lane-no${m ? "" : " test"}`}>{m ? m[1] : type === "test" ? "TEST" : "–"}</span>;
 }
+
+/** Tap chips instead of a dropdown: one radio group, styled as pills. Works without JavaScript. */
+export function Seg({ name, label, options, value, hideLabel }: { name: string; label: string; options: { value: string; label: string }[]; value?: string; hideLabel?: boolean }) {
+  return (
+    <fieldset className="field type-pick">
+      <legend className={hideLabel ? "sr-only" : undefined}>{label}</legend>
+      <div className="seg">
+        {options.map((o) => (
+          <label key={o.value}>
+            <input type="radio" name={name} value={o.value} defaultChecked={o.value === (value ?? options[0]?.value)} />
+            <span>{o.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}

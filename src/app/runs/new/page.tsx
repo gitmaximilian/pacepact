@@ -8,6 +8,7 @@ import { weekStart } from "@/lib/stats";
 import { addRun } from "../../actions";
 import { TzField } from "./tz-field";
 import { HrField } from "./hr-field";
+import { DatePick } from "./date-pick";
 import { Flash, Shell } from "../../components";
 
 export const metadata = { title: "Log a run" };
@@ -19,7 +20,6 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
   const sp = await searchParams;
   const error = param(sp, "error");
   const back = param(sp, "back") ?? "";
-  const today = new Date().toISOString().slice(0, 10);
   // Preselect the first planned run that is still open this week (Run 4 is logged as Run 1).
   const since = weekStart(new Date()).getTime();
   const lanes = weeklyLanes(user.runsPerWeek);
@@ -63,12 +63,9 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
             ))}
           </div>
         </fieldset>
-        <div className="field">
-          <label htmlFor="date">{t.runs.date}</label>
-          <input id="date" name="date" type="date" defaultValue={today} max={today} required />
-        </div>
+        <DatePick labels={{ date: t.runs.date, today: t.runs.today, yesterday: t.runs.yesterday, twoDays: t.runs.twoDays, other: t.runs.otherDate }} />
         <details className="more">
-          <summary>{user.hrConsentAt ? t.runs.moreHr : t.runs.more}</summary>
+          <summary>{t.runs.more}</summary>
           <div className="form" style={{ marginTop: 12 }}>
             <div className="fields">
               <div className="field"><label htmlFor="time">{t.runs.time}</label><input id="time" name="time" type="time" /></div>

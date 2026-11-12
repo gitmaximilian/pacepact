@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { param, type SearchParams } from "@/lib/queries";
+import { redirect } from "next/navigation";
+import { homeCrew } from "@/lib/social/groups";
 import { createGroup, joinGroup } from "./actions";
 import { Flash, Shell } from "../components";
 import { Icon } from "../icons";
@@ -16,6 +18,11 @@ export default async function GroupsPage({ searchParams }: { searchParams: Searc
   const { t, locale } = await getT();
   const sp = await searchParams;
   const error = param(sp, "error");
+  const message = error || param(sp, "left") || param(sp, "deleted");
+  if (!param(sp, "all") && !message) {
+    const home = await homeCrew(user.id);
+    if (home) redirect(`/groups/${home}`);
+  }
   const db = await getDb();
   const mine = await db
     .select({ id: schema.groups.id, name: schema.groups.name, role: schema.groupMembers.role, raceName: schema.groups.raceName })
@@ -32,10 +39,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Searc
   const n = new Map(counts.map((c) => [c.g, c.n]));
   return (
     <Shell t={t} locale={locale} active="/groups">
-      <div className="stack" style={{ gap: 6 }}>
-        <h1>{t.social.crews}</h1>
-        <p className="muted">{t.social.crewsIntro}</p>
-      </div>
+      <h1>{t.social.crews}</h1>
       <Flash
         ok={param(sp, "left") ? t.social.left : param(sp, "deleted") ? t.social.deleted : null}
         err={error === "code" ? t.groups.errCode : error === "name" ? t.groups.errName : error === "rate" ? t.social.errRate : null}
@@ -44,7 +48,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Searc
         <div className="grid">
           {mine.map((g) => (
             <Link key={g.id} href={`/groups/${g.id}`} className="panel crew-card">
-              <span className="eyebrow">{fmt(t.social.runners, { n: n.get(g.id) ?? 1 })}{g.role === "owner" ? ` · ${t.groups.owner}` : ""}</span>
+              <span className="eyebrow">{(n.get(g.id) ?? 1) === 1 ? t.social.runnersOne : fmt(t.social.runners, { n: n.get(g.id) ?? 1 })}{g.role === "owner" ? ` · ${t.groups.owner}` : ""}</span>
               <h2>{g.name}</h2>
               {g.raceName ? <span className="small muted"><Icon name="flag" size={14} /> {g.raceName}</span> : null}
             </Link>

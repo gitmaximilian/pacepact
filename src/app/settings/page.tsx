@@ -8,7 +8,7 @@ import { InstallRow } from "../install-prompt";
 import { installLabels } from "../install-labels";
 import Link from "next/link";
 import { passkeyLabels } from "../passkey-labels";
-import { Flash, Shell } from "../components";
+import { Flash, Seg, Shell } from "../components";
 import { fmt } from "@/lib/i18n";
 import { param, type SearchParams } from "@/lib/queries";
 
@@ -27,7 +27,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.settings.title}</h1>
         <div className="row" style={{ gap: 8 }}>
-          <Link href="/import" className="btn ghost small">{t.nav.connections}</Link>
           <form action={signOut}><button className="btn ghost small">{t.nav.signOut}</button></form>
         </div>
       </div>
@@ -63,13 +62,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <form action={setLocale} className="panel form">
         <h3>{t.settings.language}</h3>
         <input type="hidden" name="back" value="/settings" />
-        <div className="field">
-          <label htmlFor="locale">{t.settings.language}</label>
-          <select id="locale" name="locale" defaultValue={locale} style={{ maxWidth: 260 }}>
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
-          </select>
-        </div>
+        <Seg name="locale" label={t.settings.language} hideLabel value={locale} options={[{ value: "en", label: "English" }, { value: "de", label: "Deutsch" }]} />
         <div><button className="btn">{t.settings.saveLanguage}</button></div>
       </form>
 

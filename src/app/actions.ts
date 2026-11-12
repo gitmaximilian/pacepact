@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -13,6 +13,7 @@ import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
 import { zonedDate } from "@/lib/tz";
 import { storeRuns } from "@/lib/runs-store";
 import { joinByCode } from "@/lib/social/join";
+import { homeCrew } from "@/lib/social/groups";
 import { refreshWeeks, weeksOf } from "@/lib/social/store";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -186,14 +187,8 @@ export async function addRun(fd: FormData) {
 /** After logging, show the runner where they stand: back to the crew they came from, or their first crew. */
 async function afterRun(userId: string, back: string): Promise<string> {
   if (back.startsWith("/groups/") && safeLocalPath(back, "") === back && !back.includes("?")) return `${back}?saved=1`;
-  const db = await getDb();
-  const [first] = await db
-    .select({ id: schema.groupMembers.groupId })
-    .from(schema.groupMembers)
-    .where(eq(schema.groupMembers.userId, userId))
-    .orderBy(asc(schema.groupMembers.joinedAt))
-    .limit(1);
-  return first ? `/groups/${first.id}?saved=1` : "/dashboard";
+  const home = await homeCrew(userId);
+  return home ? `/groups/${home}?saved=1` : "/dashboard";
 }
 
 export async function deleteRun(fd: FormData) {
