@@ -30,18 +30,20 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Datenkategorien | Durchschnitts- und Maximalpuls je Lauf |
 | Ohne Einwilligung | Pulswerte werden bei Import und Eingabe verworfen, nicht gespeichert |
 | Widerruf | Jederzeit in den Einstellungen; löscht sofort alle gespeicherten Pulswerte |
-| Weitergabe | Keine; Gruppenmitglieder sehen keinen Puls |
+| Weitergabe | Keine; Crew-Mitglieder sehen keinen Puls. Puls fließt in keine Wochenwerte, Ranglisten oder Challenges ein |
 | Löschfristen | Wie Verarbeitung 1, zusätzlich sofort bei Widerruf |
 
-## Verarbeitung 3: Gruppen
+## Verarbeitung 3: Crews (Gruppen), Ranglisten, Challenges, Kudos und Kommentare
 
 | Punkt | Inhalt |
 | --- | --- |
-| Zweck | Gemeinsames Training: Team-Kennzahlen, Verlauf, Fortschritt gegenüber dem eigenen Start |
-| Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (vom Nutzer gewählte Funktion; Beitritt nur aktiv per Code) |
-| Für andere Mitglieder sichtbar | Name; Datum, Art, Distanz, Dauer, Pace der Läufe; daraus berechnete Kennzahlen |
-| Nicht sichtbar | Notizen, Puls, Ziele, Trainingseinstellungen; von Strava importierte Läufe (Strava-API-Bedingungen) |
-| Löschung | Austritt beendet die Sichtbarkeit sofort; leere Gruppen werden gelöscht; bei Kontolöschung geht die Gruppenleitung an das älteste Mitglied |
+| Zweck | Gemeinsames Training: Wochenbahnen, faire Ranglisten, Challenges (Gruppe, Duell, persönlich), Feed mit Kudos und Kommentaren, Hinweise „seit deinem letzten Besuch“ |
+| Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (vom Nutzer gewählte Funktion; Beitritt nur aktiv per Code oder Einladungslink; Teilnahme an Challenges nur nach Zusage); Moderation: Art. 6 Abs. 1 lit. f DSGVO |
+| Daten | Crew: Name, Einladungscode, optional Rennen/Renndatum, Einstellung „nur Gerätedateien“. Mitgliedschaft: Rolle, Beitritt, Sichtbarkeit (Distanz, Pace), freiwillig Rennanmeldung, letzter Besuch. Wochenwerte je Nutzer (`run_weeks`) und Meilensteine. Challenges und Teilnahmen (Zusage, Ergebnis, Platz, Sticker). Kudos, Kommentare (max. 280 Zeichen), Meldungen |
+| Für andere Mitglieder sichtbar | Immer: Name; Datum, Art, Dauer der Läufe seit Beitritt (Feed 21 Tage); Herkunft (Gerätedatei/selbst eingetragen); Gehpausen; Anzahl Läufe; Wochenplan-Fortschritt; Ranglistenplätze (Serie, Minuten, Plantreue, Ausdauer-Zuwachs, Veränderung lockere Pace in %); Meilensteine; Challenges und Sticker; Kudos und Kommentare. Nur bei Opt-in je Crew: Distanz, Pace, Rennanmeldung |
+| Nicht sichtbar | Notizen, Puls, Ziele, Zielzeit, Trainingseinstellungen (Renndatum und Läufe pro Woche werden nur intern für Wochenziele genutzt) |
+| Ausgeschlossen | Läufe von Strava (API-Bedingungen: Anzeige nur für den Athleten selbst, auch nicht aggregiert) und vorerst von Polar, Fitbit, Wahoo, Suunto, Garmin, COROS (Bedingungen ungeprüft); unplausible Läufe (< 2:30 min/km) |
+| Löschung | Austritt oder Entfernen beendet die Sichtbarkeit sofort; leere Crews werden gelöscht; Löschen einer Crew löscht Challenges, Kudos, Kommentare und Meldungen; Löschen eines Laufs löscht Kudos und Kommentare darauf; Kontolöschung löscht eigene Kommentare, Kudos, Teilnahmen und Wochenwerte, die Crew-Leitung geht an das am längsten dabei befindliche Mitglied (auch bei automatischer Löschung nach 2 Jahren) |
 
 ## Verarbeitung 4: Verbindungen zu Drittdiensten und persönliche API
 
@@ -58,9 +60,9 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 
 | Punkt | Inhalt |
 | --- | --- |
-| Zweck | Auslieferung, Schutz vor Angriffen (Begrenzung von Anmeldeversuchen) |
+| Zweck | Auslieferung, Schutz vor Angriffen (Begrenzung von Anmelde-, Beitritts-, Kommentar- und API-Anfragen) |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb) |
-| Daten | Verbindungsdaten beim Hoster (IP, Zeitpunkt, URL, User-Agent); bei Pacepact IP-Adresse nur als Zähler im Arbeitsspeicher, max. 15 Minuten, nicht gespeichert |
+| Daten | Verbindungsdaten beim Hoster (IP, Zeitpunkt, URL, User-Agent); bei Pacepact Zähler in D1 (`rate_limits`) nur mit SHA-256-Prüfsumme aus Zweck und IP-Adresse bzw. Konto-ID, Löschung nach spätestens 24 Stunden; keine IP-Adressen im Klartext |
 | Empfänger | Hoster (Auftragsverarbeiter) |
 | Löschfrist | gemäß Hoster (kurzfristige Logs); Pacepact speichert keine Zugriffslogs |
 

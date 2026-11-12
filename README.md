@@ -18,17 +18,32 @@ Planned address: `https://pacepact.maximilianauer.at`
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.
 - **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Two runs a week drop
   Run 2; four add an easy Run 4. Phases are counted back from race day.
-  Tempo work in Run 2 unlocks after a logged 30-minute run without walk breaks or, until then, based on the runner's own
-  statement in the welcome flow (shown as "reported", not "measured"). Never because of the calendar.
+  Tempo work in Run 2 unlocks after a logged easy (effort ≤ 6) 30-minute run known to be without walk breaks or, until
+  then, based on the runner's own statement in the welcome flow (shown as "reported", not "measured"). Never because of
+  the calendar. Watch imports cannot tell walk breaks apart (`walk_known = false`), so they do not unlock tempo work.
+  Every fourth week is lighter (about a quarter fewer minutes, one tempo repetition less); in race week the race
+  replaces the long run.
 - **Runs:** manual entry (distance, duration, heart rate, effort 1–10, walk breaks, notes) and a list where the run type can be changed.
 - **Import:**
   - Files: GPX, TCX, FIT and CSV. The CSV import understands English and German headers, including the old team spreadsheet.
   - OAuth connections: Strava (including a push webhook), Polar, Fitbit, Wahoo and Suunto.
   - Personal API tokens for Apple Shortcuts (Apple Health), Android automations (Health Connect), Zapier, Make and similar tools.
   - Duplicates are skipped by source and activity ID.
-- **Groups:** create a group, invite others with a 6-character code, and see team km, a feed and each member's progress.
-  Progress is measured against each member's own first runs, not against the fastest runner.
-  Members see run summaries only, never notes.
+- **Crews (groups) – the heart of the app:** signed-in runners land in their crew.
+  - Invite link `/join/<code>` with the system share sheet; new runners sign up and land in the crew after the welcome
+    flow (6 taps). Admins rotate the code, remove members, edit the crew (race countdown, "count only device files")
+    and delete it; everyone can leave.
+  - This week: one lane per runner with planned runs as dots, minutes and a check mark when the week is done.
+  - Fair rankings (week, 4 weeks, since start): streak, minutes, on plan, endurance gain, easy pace at comparable effort.
+    Minutes count only up to the plan + 10 % per week; weeks before a runner's first run do not count as missed; raw
+    pace and heart rate are never ranked.
+  - Challenges in seconds from templates or custom: together (e.g. 200 km), everyone (e.g. most runs, 4 weeks on plan,
+    5/10 km test), 1:1 duels with accept/decline, and personal ones (30 minutes without walking, long run +10 %).
+    They never reward more than the plan. Results, stickers and a recap when they end.
+  - Feed (runs since joining, milestones, finished challenges) with kudos, comments, reporting and admin moderation;
+    "since your last visit" hints. Crew rules at `/rules`.
+  - Privacy per member and crew: minutes, run type and plan progress are visible; distance and pace only after opt-in.
+    Never heart rate, notes or goals. Device files are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
 
 Garmin Connect and COROS need partner approval from the vendor before API credentials are issued. Until then, users can
@@ -141,14 +156,21 @@ Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`
 - Sign-in: passkeys (WebAuthn) only; the server stores public keys, one-time challenges expire after 5 minutes.
   Sessions: random tokens, stored only as SHA-256 hashes.
 - Provider tokens are encrypted with AES-256-GCM. Pacepact only reads activities and never posts anything back.
-- The passkey API checks the Origin header; sign-in and the ingest API are rate-limited per Worker instance.
+- The passkey API checks the Origin header. Sign-in, sign-up, joining, invite links, comments, kudos, challenge
+  creation and the ingest API are rate-limited in D1 (`rate_limits`, hashed keys, shared by all Worker instances).
+- Implausible runs (faster than 2:30 min/km) are rejected when typed in and never count in crews. The personal API
+  cannot pose as a device file or a provider (sources become `api-…`).
 - Users can delete their account and all data under Settings. Groups they own are handed to another member.
 - Heart rate is health data (Art. 9 GDPR). It is only stored with explicit, separate consent; without consent,
   heart-rate values are dropped before saving. Withdrawing consent deletes all stored heart rates.
 - Sign-up requires confirming a minimum age of 14 (Austria, § 4 (4) DSG) and having read the privacy notice.
   No email address is collected.
 - Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
-- Runs imported from Strava are never shown to other group members (Strava API terms).
+- Runs from Strava are never shown to or counted for other crew members, not even as totals (Strava API terms).
+  Polar, Fitbit, Wahoo, Suunto, Garmin and COROS are excluded the same way until their terms are checked
+  (`src/lib/social/sources.ts`, `docs/legal/drittanbieter.md`).
+- Crew pages read precomputed weekly totals (`run_weeks`), rebuilt when runs change, to stay within the Workers free
+  plan's CPU limit. Bump `STATS_VERSION` in `src/lib/social/store.ts` when the formulas change.
 - The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.
   It describes the hosting on Cloudflare (Workers and D1, EU). Update that file if the hosting changes.
 - Internal GDPR documents (German) are in `docs/legal/`: record of processing activities, technical and organisational

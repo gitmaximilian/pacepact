@@ -41,7 +41,10 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
         <li><b>Ziele:</b> Rennen, Datum, Distanz, Zielzeit.</li>
         <li><b>Läufe:</b> Zeitpunkt, Art (Run 1/2/3, Test), Distanz, Dauer, Anstrengung 1–10, Gehpausen, deine Notizen, Quelle (z. B. Datei oder Strava) und die ID der Aktivität beim Anbieter. GPS-Strecken speichern wir nicht: Beim Import berechnen wir nur Distanz und Dauer.</li>
         <li><b>Puls (nur mit Einwilligung):</b> Durchschnitts- und Maximalpuls je Lauf.</li>
-        <li><b>Gruppen:</b> Gruppenname, Einladungscode, Mitgliedschaft und Rolle.</li>
+        <li><b>Crews (Gruppen):</b> Name der Crew, Einladungscode, optional Rennen und Renndatum, die Einstellung „nur Läufe aus Gerätedateien zählen“; je Mitglied Rolle, Beitrittsdatum, deine Sichtbarkeitseinstellungen (Distanz, Pace), freiwillig ob du fürs Rennen angemeldet bist, und wann du die Crew zuletzt geöffnet hast (für „seit deinem letzten Besuch“).</li>
+        <li><b>Wochenwerte und Meilensteine:</b> aus deinen Läufen berechnete Summen pro Woche (Anzahl, Minuten, km, längster Lauf, längster Lauf ohne Gehpause, Läufe mit Gehpausen, Läufe mit lockerer Anstrengung, Testläufe) und erreichte Meilensteine (z. B. erstmals 30 Minuten ohne Gehpause). Sie enthalten keine Pulswerte und nur Läufe, die in Crews zählen dürfen.</li>
+        <li><b>Challenges:</b> Art, Messgröße, Ziel, Zeitraum, wer sie erstellt hat; je Teilnahme Zusage oder Absage und am Ende Ergebnis, Platz und Sticker.</li>
+        <li><b>Kudos, Kommentare und Meldungen:</b> wer worauf wie reagiert hat, Kommentartexte (max. 280 Zeichen) mit Zeitpunkt, und wer einen Kommentar gemeldet hat.</li>
         <li><b>Verbindungen zu anderen Diensten:</b> Zugriffs-Tokens (verschlüsselt mit AES-256), deine Nutzer-ID beim Dienst, Zeitpunkt der letzten Synchronisierung.</li>
         <li><b>API-Tokens:</b> Bezeichnung und nur eine Prüfsumme des Tokens.</li>
       </ul>,
@@ -51,15 +54,26 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       <ul key="s">
         <li>Konto, Ziele, Läufe, Plan, Gruppen und Importe: Bereitstellung des Dienstes, den du nutzt (Art. 6 Abs. 1 lit. b DSGVO).</li>
         <li>Puls: deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO). Freiwillig; ohne Einwilligung funktioniert alles andere genauso. Widerruf jederzeit in den Einstellungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
-        <li>Schutz vor Missbrauch, z. B. Begrenzung von Anmeldeversuchen: berechtigtes Interesse am sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Dafür werden IP-Adressen nur kurz im Arbeitsspeicher gezählt und nicht gespeichert.</li>
+        <li>Crews, Ranglisten, Challenges, Kudos und Kommentare: Bereitstellung der Gemeinschaftsfunktionen, die du nutzt, wenn du einer Crew beitrittst (Art. 6 Abs. 1 lit. b DSGVO).</li>
+        <li>Schutz vor Missbrauch, z. B. Begrenzung von Anmelde- und Beitrittsversuchen, sowie Moderation gemeldeter Inhalte: berechtigtes Interesse am sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Für Zähler speichern wir nur eine Prüfsumme (SHA-256) aus IP-Adresse bzw. Konto-ID und Zweck, höchstens 24 Stunden lang, nie die IP-Adresse selbst.</li>
       </ul>,
     ],
     [
-      "Was andere in deinen Gruppen sehen",
+      "Was andere in deinen Crews sehen",
+      <ul key="s">
+        <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus einer Gerätedatei stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deine Plätze in den Ranglisten (Serie, Minuten, Plantreue, Ausdauer-Zuwachs in Minuten, Veränderung der lockeren Pace in Prozent), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
+        <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; ob du fürs Rennen angemeldet bist.</li>
+        <li><b>Nie:</b> Puls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan in Ranglisten nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
+        <li><b>Gar nicht in Crews:</b> Läufe von Strava (deren API-Bedingungen erlauben die Anzeige nur dir selbst) und vorerst auch von Polar, Fitbit, Wahoo, Suunto, Garmin und COROS, sowie unplausible Läufe (schneller als 2:30 min/km).</li>
+        <li>Wenn du eine Crew verlässt oder entfernt wirst, sieht sie deine Läufe nicht mehr. Deine Kommentare dort bleiben, bis du sie löschst oder dein Konto löschst.</li>
+      </ul>,
+    ],
+    [
+      "Kommentare, Meldungen und Moderation",
       <p key="s">
-        Mitglieder einer Gruppe sehen deinen Namen sowie Datum, Art, Distanz, Dauer und Pace deiner Läufe und daraus berechnete
-        Kennzahlen. Sie sehen <b>nicht</b> deine Notizen, deinen Puls, deine Ziele oder deine Trainingseinstellungen. Von Strava
-        importierte Läufe sind nur für dich sichtbar. Wenn du eine Gruppe verlässt, sehen ihre Mitglieder deine Läufe nicht mehr.
+        Kommentare und Crew-Namen sind deine Inhalte; es gelten die <Link href="/rules">Crew-Regeln</Link>. Du kannst eigene
+        Kommentare jederzeit löschen. Die Crew-Leitung sieht gemeldete Kommentare und kann sie entfernen. Meldungen an uns:{" "}
+        <Mail />. Gemeldete Inhalte prüfen wir und entfernen sie, wenn sie rechtswidrig sind oder gegen die Regeln verstoßen.
       </p>,
     ],
     [
@@ -98,6 +112,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
         <li>Konten ohne Nutzung seit {years} Jahren werden automatisch gelöscht.</li>
         <li>Anmeldungen laufen nach 30 Tagen ab.</li>
         <li>Pulswerte werden beim Widerruf der Einwilligung sofort gelöscht.</li>
+        <li>Wochenwerte und Meilensteine werden bei jeder Änderung deiner Läufe neu berechnet und mit dem Konto gelöscht. Kudos und Kommentare auf einen Lauf werden mit dem Lauf gelöscht; deine eigenen Kommentare mit deinem Konto. Löschst du dein Konto, geht die Leitung deiner Crews an das am längsten dabei befindliche Mitglied; leere Crews werden gelöscht, ebenso beim Löschen einer Crew alle Challenges, Kudos und Kommentare darin.</li>
       </ul>,
     ],
     [
@@ -149,7 +164,10 @@ const en: typeof de = {
         <li><b>Goals:</b> race, date, distance, target time.</li>
         <li><b>Runs:</b> time, type (Run 1/2/3, test), distance, duration, effort 1–10, walk breaks, your notes, source (e.g. file or Strava) and the activity ID at the provider. We do not store GPS tracks: imports only calculate distance and duration.</li>
         <li><b>Heart rate (only with consent):</b> average and maximum heart rate per run.</li>
-        <li><b>Groups:</b> group name, invite code, membership and role.</li>
+        <li><b>Crews (groups):</b> crew name, invite code, optionally race and race date, the setting “count only runs from device files”; per member role, join date, your visibility settings (distance, pace), voluntarily whether you are registered for the race, and when you last opened the crew (for “since your last visit”).</li>
+        <li><b>Weekly totals and milestones:</b> sums per week calculated from your runs (count, minutes, km, longest run, longest run without walk breaks, runs with walk breaks, runs at easy effort, test runs) and milestones reached (e.g. first 30 minutes without a walk break). They contain no heart rate and only runs that may count in crews.</li>
+        <li><b>Challenges:</b> type, measure, target, period, who created it; per participant acceptance or refusal and, at the end, result, place and sticker.</li>
+        <li><b>Kudos, comments and reports:</b> who reacted to what and how, comment texts (max. 280 characters) with time, and who reported a comment.</li>
         <li><b>Connections to other services:</b> access tokens (encrypted with AES-256), your user ID at the service, time of the last sync.</li>
         <li><b>API tokens:</b> label and only a checksum of the token.</li>
       </ul>,
@@ -159,15 +177,26 @@ const en: typeof de = {
       <ul key="s">
         <li>Account, goals, runs, plan, groups and imports: providing the service you use (Art. 6(1)(b) GDPR).</li>
         <li>Heart rate: your explicit consent (Art. 9(2)(a) GDPR). Voluntary; everything else works the same without it. Withdraw at any time in Settings, with effect for the future (Art. 7(3) GDPR).</li>
-        <li>Abuse protection such as limiting sign-in attempts: legitimate interest in secure operation (Art. 6(1)(f) GDPR). IP addresses are only counted briefly in memory and never stored.</li>
+        <li>Crews, rankings, challenges, kudos and comments: providing the community features you use when you join a crew (Art. 6(1)(b) GDPR).</li>
+        <li>Abuse protection such as limiting sign-in and join attempts, and moderating reported content: legitimate interest in secure operation (Art. 6(1)(f) GDPR). Counters store only a checksum (SHA-256) of IP address or account ID and purpose, for at most 24 hours, never the IP address itself.</li>
       </ul>,
     ],
     [
-      "What others in your groups see",
+      "What others in your crews see",
+      <ul key="s">
+        <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from a device file or was entered by you; walk breaks; number of runs; your weekly plan progress; your places in the rankings (streak, minutes, on plan, endurance gain in minutes, change of easy pace in percent); milestones; challenge participation and stickers; your kudos and comments.</li>
+        <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; whether you are registered for the race.</li>
+        <li><b>Never:</b> heart rate, notes, goals, target time, training settings. To compute your weekly plan in rankings we use your race date and runs per week internally, but never show them.</li>
+        <li><b>Not in crews at all:</b> runs from Strava (its API terms allow showing them only to you) and, for now, from Polar, Fitbit, Wahoo, Suunto, Garmin and COROS, as well as implausible runs (faster than 2:30 min/km).</li>
+        <li>When you leave a crew or are removed, it no longer sees your runs. Your comments there stay until you delete them or your account.</li>
+      </ul>,
+    ],
+    [
+      "Comments, reports and moderation",
       <p key="s">
-        Group members see your name and the date, type, distance, duration and pace of your runs, plus figures calculated from
-        them. They do <b>not</b> see your notes, heart rate, goals or training setup. Runs imported from Strava are visible to you
-        only. When you leave a group, its members no longer see your runs.
+        Comments and crew names are your content; the <Link href="/rules">crew rules</Link> apply. You can delete your own comments
+        at any time. The crew admin sees reported comments and can remove them. Reports to us: <Mail />. We review reported
+        content and remove it if it is unlawful or breaks the rules.
       </p>,
     ],
     [
@@ -206,6 +235,7 @@ const en: typeof de = {
         <li>Accounts unused for {years} years are deleted automatically.</li>
         <li>Sign-ins expire after 30 days.</li>
         <li>Heart-rate values are deleted immediately when you withdraw consent.</li>
+        <li>Weekly totals and milestones are recalculated whenever your runs change and deleted with your account. Kudos and comments on a run are deleted with the run; your own comments with your account. If you delete your account, your crews go to the longest-standing member; empty crews are deleted, and deleting a crew deletes all its challenges, kudos and comments.</li>
       </ul>,
     ],
     [

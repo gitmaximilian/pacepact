@@ -40,7 +40,7 @@ function message(err: unknown, l: PasskeyLabels): string {
   return l.errInput;
 }
 
-export function SignUpForm({ labels: l, locale }: { labels: PasskeyLabels; locale: string }) {
+export function SignUpForm({ labels: l, locale, join }: { labels: PasskeyLabels; locale: string; join?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -59,7 +59,7 @@ export function SignUpForm({ labels: l, locale }: { labels: PasskeyLabels; local
       });
       const response = await startRegistration({ optionsJSON });
       await post("/api/auth/register/verify?mode=register", response);
-      window.location.assign("/welcome");
+      window.location.assign(join ? `/welcome?join=${encodeURIComponent(join)}` : "/welcome");
     } catch (err) {
       setError(message(err, l));
       setBusy(false);
@@ -86,7 +86,7 @@ export function SignUpForm({ labels: l, locale }: { labels: PasskeyLabels; local
   );
 }
 
-export function SignInButton({ labels: l }: { labels: PasskeyLabels }) {
+export function SignInButton({ labels: l, next }: { labels: PasskeyLabels; next?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function onClick() {
@@ -97,7 +97,7 @@ export function SignInButton({ labels: l }: { labels: PasskeyLabels }) {
       const optionsJSON = await post("/api/auth/login/options", {});
       const response = await startAuthentication({ optionsJSON });
       await post("/api/auth/login/verify", response);
-      window.location.assign("/dashboard");
+      window.location.assign(next ?? "/");
     } catch (err) {
       setError(message(err, l));
       setBusy(false);

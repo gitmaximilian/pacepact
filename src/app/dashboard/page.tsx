@@ -3,7 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
-import { currentPhase, isLighterWeek, run2Prescription, tempoUnlock, weeklyLanes, weeksToRace } from "@/lib/plan";
+import { currentPhase, isLighterWeek, isRaceWeek, run2Prescription, tempoUnlock, weekPrescription, weeklyLanes, weeksToRace } from "@/lib/plan";
+import { weekKey } from "@/lib/social/weeks";
 import { redirect } from "next/navigation";
 import { activeGoal, param, userRuns, type SearchParams } from "@/lib/queries";
 import { summarize, weeklyKm } from "@/lib/stats";
@@ -21,7 +22,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
   const s = summarize(runs);
   const weeks = weeklyKm(runs, 12);
   const maxWeek = Math.max(1, ...weeks.map((w) => w.km));
-  const phase = goal ? currentPhase(goal.raceDate) : null;
+  const basePhase = goal ? currentPhase(goal.raceDate) : null;
+  const raceWeek = !!goal && isRaceWeek(goal.raceDate, weekKey(new Date()));
+  const lighter = !!goal && !raceWeek && isLighterWeek(goal.raceDate);
+  // This week's actual prescription: lighter weeks are shorter, in race week the race replaces the long run.
+  const phase = basePhase && "run1" in basePhase ? weekPrescription(basePhase, { lighter, raceWeek }) : basePhase;
   const targetPace = goal?.targetSeconds ? paceSecPerKm(goal.targetSeconds, goal.distanceKm) : null;
   const continuousMin = Math.floor(s.longestContinuousSec / 60);
   const unlock = tempoUnlock(s.reached30MinContinuous, user.experience);
@@ -86,14 +91,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
             <h3>{t.dashboard.thisPhase} · {t.plan.phases[phase.id]}</h3>
             <Link className="small" href="/plan">{t.nav.plan} →</Link>
           </div>
-          {isLighterWeek(goal!.raceDate) ? <p className="flash ok">{t.dashboard.lighterWeek}</p> : null}
+          {lighter ? <p className="flash ok">{t.dashboard.lighterWeek}</p> : null}
+          {raceWeek ? <p className="flash ok">{t.plan.raceWeek}</p> : null}
           {weeklyLanes(user.runsPerWeek).map((lane) => (
             <div key={lane} className="lane-tile">
               <LaneNo type={lane} />
               <span>
                 {lane === "run2"
                   ? describeRun2(t, run2Prescription(phase, !!unlock), phase.run2?.kind === "tempo" && !unlock)
-                  : describeEasy(t, lane === "run3" ? phase.run3 : phase.run1)}
+                  : lane === "run3" && raceWeek
+                    ? t.plan.raceInstead
+                    : describeEasy(t, lane === "run3" ? phase.run3 : phase.run1)}
               </span>
             </div>
           ))}
@@ -113,7 +121,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
           </div>
         </section>
       ) : (
-        <div className="row"><Link className="btn signal" href="/runs/new">{t.dashboard.logRun}</Link></div>
+        <div className="row">
+          <Link className="btn signal" href="/runs/new">{t.dashboard.logRun}</Link>
+          <Link className="btn ghost" href="/challenges">{t.social.personalTitle}</Link>
+        </div>
       )}
     </Shell>
   );

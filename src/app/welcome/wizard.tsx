@@ -37,7 +37,7 @@ function Choice({ name, value, checked, onChange, title, desc }: { name: string;
   );
 }
 
-export function Wizard({ t, initial, action, skip, error }: { t: Dictionary; initial: WizardInitial; action: (fd: FormData) => void; skip: () => void; error: string | null }) {
+export function Wizard({ t, initial, action, skip, error, join }: { t: Dictionary; initial: WizardInitial; action: (fd: FormData) => void; skip: (join?: string) => void; error: string | null; join?: string }) {
   const w = t.welcome;
   const [step, setStep] = useState(0);
   const [v, setV] = useState<WizardInitial>(initial);
@@ -73,10 +73,11 @@ export function Wizard({ t, initial, action, skip, error }: { t: Dictionary; ini
     <form action={action} className="wizard panel">
       {/* All answers are submitted together at the end. */}
       {Object.entries(v).map(([k, val]) => <input key={k} type="hidden" name={k} value={val} />)}
+      {join ? <input type="hidden" name="join" value={join} /> : null}
 
       <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="eyebrow">{step < total ? fmt(w.step, { i: step + 1, n: total }) : "✓"}</span>
-        <button type="button" className="btn ghost small" onClick={() => skip()}>{w.skip}</button>
+        <button type="button" className="btn ghost small" onClick={() => skip(join)}>{w.skip}</button>
       </div>
       <div className="progress" aria-hidden="true"><span style={{ width: `${(Math.min(step, total) / total) * 100}%` }} /></div>
       {error ? <p className="flash err" role="alert">{t.auth.errInput}</p> : null}

@@ -6,6 +6,7 @@ import { LEGAL } from "@/lib/legal";
 import { InstallPrompt } from "./install-prompt";
 import { installLabels } from "./install-labels";
 import { Logo } from "./logo";
+import { Icon } from "./icons";
 
 export { Logo } from "./logo";
 
@@ -20,12 +21,20 @@ export function LangSwitch({ locale, back }: { locale: Locale; back: string }) {
 }
 
 const NAV = [
+  ["/groups", "groups"],
   ["/dashboard", "dashboard"],
   ["/runs", "runs"],
   ["/plan", "plan"],
-  ["/groups", "groups"],
   ["/connections", "connections"],
   ["/settings", "settings"],
+] as const;
+
+const TABS = [
+  ["/groups", "groups", "crew"],
+  ["/dashboard", "dashboard", "today"],
+  ["/runs/new", "log", "plus"],
+  ["/runs", "runs", "runs"],
+  ["/plan", "plan", "plan"],
 ] as const;
 
 export function Shell({
@@ -55,7 +64,8 @@ export function Shell({
           </nav>
           <div className="tools">
             <LangSwitch locale={locale} back={active} />
-            <form action={signOut}>
+            <Link href="/settings" className="icon-btn mobile-only" aria-label={t.nav.settings}><Icon name="gear" /></Link>
+            <form action={signOut} className="desktop-only">
               <button className="btn ghost small">{t.nav.signOut}</button>
             </form>
           </div>
@@ -65,6 +75,14 @@ export function Shell({
         <div className="wrap stack">{children}</div>
       </main>
       <LegalFooter t={t} />
+      <nav className="tabbar" aria-label="Main">
+        {TABS.map(([href, key, icon]) => (
+          <Link key={href} href={href} className={key === "log" ? "tab-log" : undefined} aria-current={active === href ? "page" : undefined}>
+            <Icon name={icon} size={key === "log" ? 26 : 22} />
+            <span>{t.nav[key]}</span>
+          </Link>
+        ))}
+      </nav>
       <InstallPrompt labels={installLabels(t)} />
     </>
   );

@@ -10,13 +10,16 @@ export const metadata = { title: "Log a run" };
 export default async function NewRunPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser();
   const { t, locale } = await getT();
-  const error = param(await searchParams, "error");
+  const sp = await searchParams;
+  const error = param(sp, "error");
+  const back = param(sp, "back") ?? "";
   const today = new Date().toISOString().slice(0, 10);
   return (
-    <Shell t={t} locale={locale} active="/runs">
+    <Shell t={t} locale={locale} active="/runs/new">
       <h1>{t.runs.add}</h1>
       <Flash err={error === "pace" ? t.runs.errPace : error ? t.runs.errInput : null} />
       <form action={addRun} className="panel form">
+        {back.startsWith("/groups/") ? <input type="hidden" name="back" value={back} /> : null}
         <div className="fields">
           <div className="field"><label htmlFor="date">{t.runs.date}</label><input id="date" name="date" type="date" defaultValue={today} max={today} required /></div>
           <div className="field"><label htmlFor="time">{t.runs.time}</label><input id="time" name="time" type="time" /></div>

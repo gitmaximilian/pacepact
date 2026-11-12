@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { appUrl } from "@/lib/providers/registry";
-import { deleteAccount, deletePasskey, revokeApiToken, setHrConsent, setLocale } from "../actions";
+import { deleteAccount, deletePasskey, revokeApiToken, setHrConsent, setLocale, signOut } from "../actions";
 import { AddPasskeyButton } from "../passkey-client";
 import { InstallRow } from "../install-prompt";
 import { installLabels } from "../install-labels";
@@ -27,7 +27,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   const keys = await db.select().from(schema.passkeys).where(eq(schema.passkeys.userId, user.id));
   return (
     <Shell t={t} locale={locale} active="/settings">
-      <h1>{t.settings.title}</h1>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <h1>{t.settings.title}</h1>
+        <div className="row" style={{ gap: 8 }}>
+          <Link href="/connections" className="btn ghost small">{t.nav.connections}</Link>
+          <form action={signOut}><button className="btn ghost small">{t.nav.signOut}</button></form>
+        </div>
+      </div>
       <Flash ok={hr === "granted" ? t.settings.hrGranted : hr === "withdrawn" ? t.settings.hrWithdrawn : param(sp, "passkey") === "added" ? t.settings.passkeyAdded : null} />
 
       <section className="panel">

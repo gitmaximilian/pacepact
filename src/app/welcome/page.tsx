@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { formatDuration, HALF_MARATHON_KM, MARATHON_KM } from "@/lib/pace";
 import { activeGoal, param, type SearchParams } from "@/lib/queries";
+import { normalizeCode } from "@/lib/social/join";
 import { completeOnboarding, skipOnboarding } from "../actions";
 import { LangSwitch, LegalFooter, Logo } from "../components";
 import { Wizard, type WizardInitial } from "./wizard";
@@ -19,6 +20,7 @@ function goalKey(km: number | undefined): WizardInitial["goal"] {
 export default async function WelcomePage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser();
   const { t, locale } = await getT();
+  const sp = await searchParams;
   const goal = await activeGoal(user.id);
   const initial: WizardInitial = {
     goal: goal ? goalKey(goal.distanceKm) : "half",
@@ -43,7 +45,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Sear
             <h1>{t.welcome.title}</h1>
             <p className="muted">{t.welcome.intro}</p>
           </div>
-          <Wizard t={t} initial={initial} action={completeOnboarding} skip={skipOnboarding} error={param(await searchParams, "error")} />
+          <Wizard t={t} initial={initial} action={completeOnboarding} skip={skipOnboarding} error={param(sp, "error")} join={normalizeCode(param(sp, "join") ?? "") || undefined} />
         </div>
       </main>
       <LegalFooter t={t} />

@@ -1,11 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { asc, eq } from "drizzle-orm";
+import { getDb, schema } from "@/db";
 import { currentUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { LangSwitch, LegalFooter, Logo } from "./components";
 
 export default async function Landing() {
-  if (await currentUser()) redirect("/dashboard");
+  const user = await currentUser();
+  if (user) {
+    const db = await getDb();
+    const [first] = await db
+      .select({ id: schema.groupMembers.groupId })
+      .from(schema.groupMembers)
+      .where(eq(schema.groupMembers.userId, user.id))
+      .orderBy(asc(schema.groupMembers.joinedAt))
+      .limit(1);
+    redirect(!user.onboardedAt ? "/welcome" : first ? `/groups/${first.id}` : "/dashboard");
+  }
   const { t, locale } = await getT();
   const features = [
     [t.landing.f1t, t.landing.f1d],
