@@ -258,7 +258,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             </div>
             {summary.me ? (
               <p className={`you-line${summary.me.met ? " done" : ""}`} role={saved ? "status" : undefined}>
-                {saved ? <span className="saved-tag">✓ {s_.runSaved}</span> : null}
+                {saved ? <><span className="saved-tag">✓ {s_.runSaved}</span>{" "}</> : null}
                 <b>{s_.youLabel}:</b>{" "}
                 {summary.me.met
                   ? s_.youDone
