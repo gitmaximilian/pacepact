@@ -52,12 +52,17 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
             <tbody>
               {runs.map((r) => (
                 <tr key={r.id}>
-                  <td>{dateFmt.format(r.startedAt)}{r.walkBreaks ? <div className="small muted">{t.runs.walk}</div> : null}</td>
+                  <td>{dateFmt.format(r.startedAt)}</td>
                   <td>
                     <form action={updateRunType} className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
                       <input type="hidden" name="id" value={r.id} />
                       <select name="runType" defaultValue={r.runType} aria-label={t.runs.type} style={{ width: "auto" }}>
                         {RUN_TYPES.map((rt) => <option key={rt} value={rt}>{t.runTypes[rt]}</option>)}
+                      </select>
+                      <select name="walk" defaultValue={!r.walkKnown ? "" : r.walkBreaks ? "yes" : "no"} aria-label={t.runs.walkBreaks} style={{ width: "auto" }}>
+                        <option value="">{t.runs.walkUnknown}</option>
+                        <option value="no">{t.runs.walkNo}</option>
+                        <option value="yes">{t.runs.walk}</option>
                       </select>
                       <button className="btn ghost small">{t.runs.change}</button>
                     </form>

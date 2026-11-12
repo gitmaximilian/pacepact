@@ -64,7 +64,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
         <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus einer Gerätedatei stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deine Plätze in den Ranglisten (Serie, Minuten, Plantreue, Ausdauer-Zuwachs in Minuten, Veränderung der lockeren Pace in Prozent), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
         <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; ob du fürs Rennen angemeldet bist.</li>
         <li><b>Nie:</b> Puls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan in Ranglisten nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
-        <li><b>Gar nicht in Crews:</b> Läufe von Strava (deren API-Bedingungen erlauben die Anzeige nur dir selbst) und vorerst auch von Polar, Fitbit, Wahoo, Suunto, Garmin und COROS, sowie unplausible Läufe (schneller als 2:30 min/km).</li>
+        <li><b>Gar nicht in Crews:</b> Läufe von Strava (deren API-Bedingungen erlauben die Anzeige nur dir selbst) sowie unplausible Läufe (schneller als 2:30 min/km).</li>
         <li>Wenn du eine Crew verlässt oder entfernt wirst, sieht sie deine Läufe nicht mehr. Deine Kommentare dort bleiben, bis du sie löschst oder dein Konto löschst.</li>
       </ul>,
     ],
@@ -77,12 +77,25 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       </p>,
     ],
     [
-      "Verbindungen zu Strava, Polar, Fitbit, Wahoo und Suunto",
+      "Strava",
       <p key="s">
-        Eine Verbindung entsteht nur, wenn du sie selbst startest und beim jeweiligen Dienst zustimmst. Pacepact liest dann
-        deine Laufaktivitäten und postet nie etwas zurück. Für die Daten beim Dienst selbst gilt dessen Datenschutzerklärung.
-        „Trennen“ löscht die gespeicherten Zugriffs-Tokens sofort; bereits importierte Läufe bleiben, bis du sie löschst. Den
-        Zugriff kannst du zusätzlich in den Einstellungen des Dienstes entziehen.
+        Eine Verbindung entsteht nur, wenn du sie selbst startest und bei Strava zustimmst. Pacepact liest dann deine
+        Laufaktivitäten (Zeitpunkt, Distanz, Dauer, Name, Puls nur mit Einwilligung) und postet nie etwas zurück. Für die
+        Daten bei Strava gilt dessen Datenschutzerklärung. Strava-Läufe sieht nur du. „Trennen“ widerruft den Zugriff bei
+        Strava, löscht die Zugriffs-Tokens sofort und, wenn du es nicht abwählst, alle von Strava importierten Läufe. Entziehst
+        du den Zugriff direkt bei Strava, löschen wir Tokens und Strava-Läufe automatisch. Kommt derselbe Lauf auch über Apple
+        Health, behalten wir nur eine Kopie.
+      </p>,
+    ],
+    [
+      "Apple Health",
+      <p key="s">
+        Wenn du den Apple-Health-Sync einrichtest, sendet die iPhone-App „Health Auto Export“ (eines anderen Anbieters, den du
+        selbst installierst und bezahlst) deine Workouts direkt von deinem iPhone an Pacepact, geschützt durch einen
+        persönlichen Schlüssel, von dem wir nur eine Prüfsumme speichern. Wir behalten nur Lauf-Workouts mit Zeitpunkt, Dauer,
+        Distanz und einer Kennung; Puls nur mit deiner Einwilligung. Andere Workouts und Gesundheitsdaten, die die App
+        mitschickt, werden sofort verworfen und nicht gespeichert. Den Sync beendest du, indem du die Automation in der App
+        löschst oder den Schlüssel in den Einstellungen widerrufst.
       </p>,
     ],
     [
@@ -187,7 +200,7 @@ const en: typeof de = {
         <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from a device file or was entered by you; walk breaks; number of runs; your weekly plan progress; your places in the rankings (streak, minutes, on plan, endurance gain in minutes, change of easy pace in percent); milestones; challenge participation and stickers; your kudos and comments.</li>
         <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; whether you are registered for the race.</li>
         <li><b>Never:</b> heart rate, notes, goals, target time, training settings. To compute your weekly plan in rankings we use your race date and runs per week internally, but never show them.</li>
-        <li><b>Not in crews at all:</b> runs from Strava (its API terms allow showing them only to you) and, for now, from Polar, Fitbit, Wahoo, Suunto, Garmin and COROS, as well as implausible runs (faster than 2:30 min/km).</li>
+        <li><b>Not in crews at all:</b> runs from Strava (its API terms allow showing them only to you) as well as implausible runs (faster than 2:30 min/km).</li>
         <li>When you leave a crew or are removed, it no longer sees your runs. Your comments there stay until you delete them or your account.</li>
       </ul>,
     ],
@@ -200,12 +213,23 @@ const en: typeof de = {
       </p>,
     ],
     [
-      "Connections to Strava, Polar, Fitbit, Wahoo and Suunto",
+      "Strava",
       <p key="s">
-        A connection is only created when you start it and approve it at the service. Pacepact then reads your running
-        activities and never posts anything back. The service&apos;s own privacy policy applies to the data it holds.
-        “Disconnect” deletes the stored access tokens immediately; runs already imported stay until you delete them. You can
-        also revoke access in the service&apos;s settings.
+        A connection is only created when you start it and approve it at Strava. Pacepact then reads your running activities
+        (time, distance, duration, name, heart rate only with consent) and never posts anything back. Strava&apos;s privacy
+        policy applies to the data it holds. Only you see your Strava runs. “Disconnect” revokes access at Strava, deletes the
+        tokens immediately and, unless you untick it, all runs imported from Strava. If you revoke access at Strava directly,
+        we delete the tokens and Strava runs automatically. If the same run also arrives through Apple Health, we keep one copy.
+      </p>,
+    ],
+    [
+      "Apple Health",
+      <p key="s">
+        If you set up the Apple Health sync, the iPhone app “Health Auto Export” (by another provider, which you install and pay
+        for yourself) sends your workouts straight from your iPhone to Pacepact, protected by a personal key of which we store
+        only a checksum. We keep only running workouts with time, duration, distance and an identifier; heart rate only with
+        your consent. Other workouts and health data the app sends along are discarded immediately and never stored. End the
+        sync by deleting the automation in the app or revoking the key in Settings.
       </p>,
     ],
     [

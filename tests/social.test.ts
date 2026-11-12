@@ -19,7 +19,8 @@ const member = (userId: string, runs: AggRun[], runsPerWeek = 3): MemberData => 
 
 test("sources: providers never reach groups, files count as device, API cannot pose as a device", () => {
   assert.equal(countsInGroups("strava"), false);
-  assert.equal(countsInGroups("polar"), false);
+  assert.equal(countsInGroups("apple-health"), true);
+  assert.equal(sourceKind("apple-health"), "device");
   assert.equal(countsInGroups("gpx"), true);
   assert.equal(countsInGroups("manual"), true);
   assert.equal(sourceKind("fit"), "device");

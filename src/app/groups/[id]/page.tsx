@@ -134,7 +134,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                     {showKm && r.distanceKm > 0 ? <span className="num">{formatKm(r.distanceKm, locale, 1)} km</span> : null}
                     {showPace && r.distanceKm > 0 ? <span className="num">{formatPace(paceSecPerKm(r.durationSec, r.distanceKm))} /km</span> : null}
                     {r.walkBreaks ? <span className="small muted">{s_.walk}</span> : null}
-                    <span className={`src ${kind}`} title={kind === "device" ? s_.deviceTitle : s_.manualTitle}>{kind === "device" ? `⌚ ${s_.device}` : `✍️ ${s_.manual}`}</span>
+                    <span className={`src ${kind}`} title={kind === "device" ? s_.deviceTitle : s_.manualTitle}>{kind === "device" ? `⌚ ${r.source === "apple-health" ? "Apple Health" : s_.device}` : `✍️ ${s_.manual}`}</span>
                   </div>
                 </div>
               </div>

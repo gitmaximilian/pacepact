@@ -27,11 +27,13 @@ export async function POST(req: NextRequest) {
   if (!expectedSub || String(event.subscription_id) !== expectedSub) return NextResponse.json({ ok: true });
 
   const db = await getDb();
-  // The athlete revoked access at Strava: delete the stored tokens.
   if (event.object_type === "athlete" && String(event.updates?.authorized) === "false") {
-    await db
+    // Access revoked at Strava: delete the tokens and every run that came from Strava.
+    const gone = await db
       .delete(schema.connections)
-      .where(and(eq(schema.connections.provider, "strava"), eq(schema.connections.externalUserId, String(event.owner_id))));
+      .where(and(eq(schema.connections.provider, "strava"), eq(schema.connections.externalUserId, String(event.owner_id))))
+      .returning({ userId: schema.connections.userId });
+    for (const g of gone) await db.delete(schema.runs).where(and(eq(schema.runs.userId, g.userId), eq(schema.runs.source, "strava")));
     return NextResponse.json({ ok: true });
   }
   if (event.object_type !== "activity") return NextResponse.json({ ok: true });
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
       .where(and(eq(schema.runs.userId, conn.userId), eq(schema.runs.source, "strava"), eq(schema.runs.externalId, activityId)));
     return NextResponse.json({ ok: true });
   }
-  if (event.aspect_type === "create") {
+  if (event.aspect_type === "create" || event.aspect_type === "update") {
     // Fetch the activity directly; the event itself carries no activity data.
     // The fetched data is untrusted input and goes through the same sanitizer as every import.
     after(async () => {
@@ -58,6 +60,14 @@ export async function POST(req: NextRequest) {
         const p = getOAuthProvider("strava")!;
         const tokens = await freshTokens(conn, p);
         const run = await fetchStravaActivity(tokens.accessToken, activityId);
+        if (event.aspect_type === "update") {
+          // Changed at Strava (e.g. sport type or distance): replace the stored copy, keep the run type chosen here.
+          const [old] = await db
+            .delete(schema.runs)
+            .where(and(eq(schema.runs.userId, conn.userId), eq(schema.runs.source, "strava"), eq(schema.runs.externalId, activityId)))
+            .returning({ runType: schema.runs.runType });
+          if (run && old) run.runType = old.runType;
+        }
         if (run) await storeRuns(conn.userId, "strava", [run]);
       } catch (err) {
         console.error("Strava webhook import failed", err);

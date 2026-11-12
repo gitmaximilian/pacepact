@@ -26,8 +26,14 @@ Planned address: `https://pacepact.maximilianauer.at`
 - **Runs:** manual entry (distance, duration, heart rate, effort 1–10, walk breaks, notes) and a list where the run type can be changed.
 - **Import:**
   - Files: GPX, TCX, FIT and CSV. The CSV import understands English and German headers, including the old team spreadsheet.
-  - OAuth connections: Strava (including a push webhook), Polar, Fitbit, Wahoo and Suunto.
-  - Personal API tokens for Apple Shortcuts (Apple Health), Android automations (Health Connect), Zapier, Make and similar tools.
+  - **Apple Health** (iPhone, Apple Watch, and every app that writes workouts to Health, such as Garmin Connect, Polar
+    Flow, COROS, Suunto and Strava): the iOS app "Health Auto Export" posts workouts to `/api/ingest/apple-health`
+    (one-tap setup via deep link, or by hand). Only running workouts are kept. Runs from Apple Health count in crews.
+  - **Strava** (OAuth and push webhook): visible only to the runner (Strava API terms). Disconnecting revokes access at
+    Strava and deletes Strava runs by default. Strava can write to Apple Health; then the run counts in crews.
+  - The same run from two sources (Strava + Apple Health, or typed in + synced) is merged (`src/lib/dedupe.ts`): the copy
+    that may count in crews wins, and effort, notes and run type typed by the runner are kept.
+  - Personal API tokens for your own automations (`/api/ingest`).
   - Duplicates are skipped by source and activity ID.
 - **Crews (groups) – the heart of the app:** signed-in runners land in their crew.
   - Invite link `/join/<code>` with the system share sheet; new runners sign up and land in the crew after the welcome
@@ -46,8 +52,8 @@ Planned address: `https://pacepact.maximilianauer.at`
     Never heart rate, notes or goals. Device files are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
 
-Garmin Connect and COROS need partner approval from the vendor before API credentials are issued. Until then, users can
-sync those watches to Strava or upload FIT files.
+Other watch brands come in through Apple Health or file upload. Direct APIs for Polar, Fitbit, Wahoo, Suunto, Garmin and
+COROS were removed on 2026-11-12 (Fitbit's API was shut down; the others need partner approval or were untested).
 
 ## Stack
 
@@ -114,29 +120,26 @@ provider tokens at rest). `APP_URL` is set in `wrangler.jsonc`.
 
 ### Connecting services
 
-Each service is optional. A service only shows a "Connect" button once its credentials are set.
-The callback URL for every service is:
+Strava only shows a "Connect" button once its credentials are set. The callback URL is:
 
 ```
-https://<your-domain>/api/connections/<provider>/callback
+https://<your-domain>/api/connections/strava/callback
 ```
 
 | Service | Where to register | Environment variables |
 | --- | --- | --- |
 | Strava | https://www.strava.com/settings/api (set "Authorization Callback Domain" to your domain) | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_SUBSCRIPTION_ID` (required for webhook events; without it they are ignored) |
-| Polar | https://admin.polaraccesslink.com | `POLAR_CLIENT_ID`, `POLAR_CLIENT_SECRET` |
-| Fitbit | https://dev.fitbit.com/apps (type "Server") | `FITBIT_CLIENT_ID`, `FITBIT_CLIENT_SECRET` |
-| Wahoo | https://developers.wahooligan.com | `WAHOO_CLIENT_ID`, `WAHOO_CLIENT_SECRET` |
-| Suunto | https://apizone.suunto.com | `SUUNTO_CLIENT_ID`, `SUUNTO_CLIENT_SECRET`, `SUUNTO_SUBSCRIPTION_KEY` |
 
 Strava push updates: after deploying, create a webhook subscription with the callback
 `https://<your-domain>/api/webhooks/strava` and the same verify token
 (see https://developers.strava.com/docs/webhooks/).
 
-The provider mappings are unit-tested against sample payloads, but no service has been tested end to end against its
-live API yet. Verify each one with a real account after adding its credentials.
+New Strava API apps start in "Single Player Mode" (only the owner's account). Raise the athlete capacity in the Strava
+API settings (or request a review) before friends can connect.
 
-### Personal API (Apple Health, Health Connect, automations)
+Apple Health needs no server setup: every runner creates their sync key under **Connections**.
+
+### Personal API (own automations)
 
 Create a token under **Settings → API tokens**, then:
 
@@ -167,7 +170,6 @@ Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`
   No email address is collected.
 - Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
 - Runs from Strava are never shown to or counted for other crew members, not even as totals (Strava API terms).
-  Polar, Fitbit, Wahoo, Suunto, Garmin and COROS are excluded the same way until their terms are checked
   (`src/lib/social/sources.ts`, `docs/legal/drittanbieter.md`).
 - Crew pages read precomputed weekly totals (`run_weeks`), rebuilt when runs change, to stay within the Workers free
   plan's CPU limit. Bump `STATS_VERSION` in `src/lib/social/store.ts` when the formulas change.

@@ -25,22 +25,10 @@ export interface OAuthProvider {
   requiredEnv?: string[];
   /** Turns the raw token response into a TokenSet. */
   parseToken?: (json: any) => TokenSet;
-  /** Called once after the first token exchange (e.g. Polar user registration). */
-  afterConnect?: (tokens: TokenSet) => Promise<void>;
   /** Fetches running activities since `since`. */
   fetchRuns: (tokens: TokenSet, since: Date) => Promise<NormalizedRun[]>;
   website: string;
 }
-
-/** Services whose API requires a partner agreement before credentials are issued. */
-export interface PartnerProvider {
-  kind: "partner";
-  id: string;
-  name: string;
-  website: string;
-}
-
-export type Provider = OAuthProvider | PartnerProvider;
 
 export function defaultParseToken(json: any): TokenSet {
   if (!json?.access_token) throw new Error("Token response has no access_token");

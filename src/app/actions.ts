@@ -13,7 +13,8 @@ import { ImportError, parseActivityFile } from "@/lib/import";
 import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
 import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
 import { getOAuthProvider } from "@/lib/providers/registry";
-import { syncConnection } from "@/lib/providers/sync";
+import { freshTokens, syncConnection } from "@/lib/providers/sync";
+import { deauthorizeStrava } from "@/lib/providers/strava";
 import { storeRuns } from "@/lib/runs-store";
 import { joinByCode } from "@/lib/social/join";
 import { refreshWeeks, weeksOf } from "@/lib/social/store";
@@ -204,9 +205,12 @@ export async function updateRunType(fd: FormData) {
   const runType = str(fd, "runType");
   if (!(RUN_TYPES as readonly string[]).includes(runType)) redirect("/runs");
   const db = await getDb();
+  // Walk breaks can be confirmed afterwards for imports that cannot tell (Apple Health, Strava, files).
+  const walk = str(fd, "walk");
+  const walkSet = walk === "no" || walk === "yes" ? { walkKnown: true, walkBreaks: walk === "yes" } : fd.has("walk") ? { walkKnown: false, walkBreaks: false } : {};
   const [run] = await db
     .update(schema.runs)
-    .set({ runType: runType as (typeof RUN_TYPES)[number] })
+    .set({ runType: runType as (typeof RUN_TYPES)[number], ...walkSet })
     .where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)))
     .returning({ startedAt: schema.runs.startedAt });
   if (run) await refreshWeeks(user.id, weeksOf([run.startedAt]));
@@ -248,13 +252,38 @@ export async function syncNow(fd: FormData) {
   redirect(`/connections?ok=${provider}&n=${n}`);
 }
 
+/** Disconnects a service: revokes access there, deletes the tokens and, by default, the runs imported from it. */
 export async function disconnect(fd: FormData) {
   const user = await requireUser();
+  const provider = str(fd, "provider");
+  const p = getOAuthProvider(provider);
+  if (!p) redirect("/connections");
   const db = await getDb();
-  await db
+  const [conn] = await db
     .delete(schema.connections)
-    .where(and(eq(schema.connections.userId, user.id), eq(schema.connections.provider, str(fd, "provider"))));
-  redirect("/connections");
+    .where(and(eq(schema.connections.userId, user.id), eq(schema.connections.provider, provider)))
+    .returning();
+  if (conn && provider === "strava") {
+    try {
+      await deauthorizeStrava((await freshTokens(conn, p)).accessToken);
+    } catch {
+      // Token already invalid: nothing left to revoke.
+    }
+  }
+  if (fd.get("deleteRuns") === "on") {
+    await db.delete(schema.runs).where(and(eq(schema.runs.userId, user.id), eq(schema.runs.source, provider)));
+  }
+  redirect("/connections?disconnected=1");
+}
+
+/** Creates the token for the Apple Health sync and returns it once. */
+export async function createAppleToken(_prev: { token: string | null }, _fd: FormData): Promise<{ token: string | null }> {
+  const user = await requireUser();
+  const token = `pp_${randomToken(24)}`;
+  const db = await getDb();
+  await db.insert(schema.apiTokens).values({ userId: user.id, label: "Apple Health", tokenHash: sha256(token) });
+  revalidatePath("/connections");
+  return { token };
 }
 
 /* ------------------------------ API tokens ------------------------------- */

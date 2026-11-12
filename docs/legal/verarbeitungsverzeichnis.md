@@ -42,7 +42,7 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Daten | Crew: Name, Einladungscode, optional Rennen/Renndatum, Einstellung „nur Gerätedateien“. Mitgliedschaft: Rolle, Beitritt, Sichtbarkeit (Distanz, Pace), freiwillig Rennanmeldung, letzter Besuch. Wochenwerte je Nutzer (`run_weeks`) und Meilensteine. Challenges und Teilnahmen (Zusage, Ergebnis, Platz, Sticker). Kudos, Kommentare (max. 280 Zeichen), Meldungen |
 | Für andere Mitglieder sichtbar | Immer: Name; Datum, Art, Dauer der Läufe seit Beitritt (Feed 21 Tage); Herkunft (Gerätedatei/selbst eingetragen); Gehpausen; Anzahl Läufe; Wochenplan-Fortschritt; Ranglistenplätze (Serie, Minuten, Plantreue, Ausdauer-Zuwachs, Veränderung lockere Pace in %); Meilensteine; Challenges und Sticker; Kudos und Kommentare. Nur bei Opt-in je Crew: Distanz, Pace, Rennanmeldung |
 | Nicht sichtbar | Notizen, Puls, Ziele, Zielzeit, Trainingseinstellungen (Renndatum und Läufe pro Woche werden nur intern für Wochenziele genutzt) |
-| Ausgeschlossen | Läufe von Strava (API-Bedingungen: Anzeige nur für den Athleten selbst, auch nicht aggregiert) und vorerst von Polar, Fitbit, Wahoo, Suunto, Garmin, COROS (Bedingungen ungeprüft); unplausible Läufe (< 2:30 min/km) |
+| Ausgeschlossen | Läufe von Strava (API-Bedingungen: Anzeige nur für den Athleten selbst, auch nicht aggregiert) ; unplausible Läufe (< 2:30 min/km) |
 | Löschung | Austritt oder Entfernen beendet die Sichtbarkeit sofort; leere Crews werden gelöscht; Löschen einer Crew löscht Challenges, Kudos, Kommentare und Meldungen; Löschen eines Laufs löscht Kudos und Kommentare darauf; Kontolöschung löscht eigene Kommentare, Kudos, Teilnahmen und Wochenwerte, die Crew-Leitung geht an das am längsten dabei befindliche Mitglied (auch bei automatischer Löschung nach 2 Jahren) |
 
 ## Verarbeitung 4: Verbindungen zu Drittdiensten und persönliche API
@@ -51,7 +51,10 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | --- | --- |
 | Zweck | Automatischer Import von Läufen auf Wunsch des Nutzers |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (nur nach aktiver Verbindung durch den Nutzer und Zustimmung beim Dienst) |
-| Dienste | Strava, Polar, Fitbit, Wahoo, Suunto (OAuth); Apple-Kurzbefehle, Android-Automationen u. a. über persönliche API-Tokens |
+| Dienste | Strava (OAuth, Webhook); Apple Health über die iPhone-App „Health Auto Export“ (REST-Export direkt vom iPhone an `/api/ingest/apple-health`, Bearer-Token); persönliche API-Tokens für eigene Automationen |
+| Datenminimierung Apple Health | Nur Lauf-Workouts (Zeitpunkt, Dauer, Distanz, ID; Puls nur mit Einwilligung) werden gespeichert; andere Workouts und Gesundheitsdaten im Request werden nur im Arbeitsspeicher verworfen |
+| Strava | Anzeige nur für den Nutzer selbst; Trennen widerruft den Zugriff bei Strava (`/oauth/deauthorize`) und löscht standardmäßig die Strava-Läufe; Deauthorisierung bei Strava löscht Tokens und Strava-Läufe automatisch |
+| Dubletten | Derselbe Lauf aus Strava und Apple Health (bzw. manuell und Gerät) wird zusammengeführt (Start ±5 Min., Dauer ±15 %); behalten wird die Kopie, die in Crews zählen darf |
 | Daten | Zugriffs- und Refresh-Tokens (AES-256-GCM verschlüsselt), externe Nutzer-ID, Zeitpunkt der letzten Synchronisierung, Fehlermeldung der letzten Synchronisierung; API-Tokens nur als SHA-256-Hash |
 | Rolle | Die Dienste sind eigene Verantwortliche für ihre Daten; Pacepact liest nur und schreibt nichts zurück |
 | Löschung | „Trennen“ löscht Tokens sofort; „Widerrufen“ löscht API-Token sofort |

@@ -1,12 +1,11 @@
-import { coros, fitbit, garmin, polar, suunto, wahoo } from "./others";
 import { strava } from "./strava";
-import type { OAuthProvider, Provider } from "./types";
+import type { OAuthProvider } from "./types";
 
-export const PROVIDERS: Provider[] = [strava, garmin, polar, fitbit, wahoo, suunto, coros];
+/** Connected services. Strava only: Apple Health comes in through the personal sync endpoint. */
+export const PROVIDERS: OAuthProvider[] = [strava];
 
 export function getOAuthProvider(id: string): OAuthProvider | null {
-  const p = PROVIDERS.find((x) => x.id === id);
-  return p && p.kind === "oauth2" ? p : null;
+  return PROVIDERS.find((x) => x.id === id) ?? null;
 }
 
 export function clientCredentials(p: OAuthProvider) {
@@ -15,8 +14,7 @@ export function clientCredentials(p: OAuthProvider) {
   return id && secret ? { id, secret } : null;
 }
 
-export function isConfigured(p: Provider): boolean {
-  if (p.kind !== "oauth2") return false;
+export function isConfigured(p: OAuthProvider): boolean {
   return !!clientCredentials(p) && (p.requiredEnv ?? []).every((k) => !!process.env[k]);
 }
 

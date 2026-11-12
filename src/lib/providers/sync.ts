@@ -36,7 +36,6 @@ export function exchangeCode(p: OAuthProvider, code: string, codeVerifier?: stri
 
 /** Saves (or replaces) a connection and imports recent runs. */
 export async function saveConnection(userId: string, p: OAuthProvider, tokens: TokenSet) {
-  if (p.afterConnect) await p.afterConnect(tokens);
   const db = await getDb();
   const values = {
     userId,

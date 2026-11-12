@@ -1,7 +1,7 @@
 import FitParser from "fit-file-parser";
 import { ImportError, type NormalizedRun } from "./types";
 
-/** Garmin/COROS/Wahoo/Suunto FIT activity files. Uses the session summary. */
+/** FIT activity files (exported from most watches). Uses the session summary. */
 export async function parseFit(buffer: ArrayBuffer): Promise<NormalizedRun[]> {
   const parser = new FitParser({ force: true, speedUnit: "km/h", lengthUnit: "km", mode: "list" });
   const data: any = await new Promise((resolve, reject) => {

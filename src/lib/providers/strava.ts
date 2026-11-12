@@ -54,6 +54,16 @@ export const strava: OAuthProvider = {
   },
 };
 
+/** Revokes Pacepact's access at Strava (used when the runner disconnects). */
+export async function deauthorizeStrava(accessToken: string) {
+  await fetch("https://www.strava.com/oauth/deauthorize", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ access_token: accessToken }),
+    cache: "no-store",
+  }).catch(() => null);
+}
+
 export async function fetchStravaActivity(accessToken: string, id: string) {
   return mapStravaActivity(await getJson(`https://www.strava.com/api/v3/activities/${encodeURIComponent(id)}`, accessToken));
 }
