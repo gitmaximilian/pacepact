@@ -25,7 +25,7 @@ const NAV = [
   ["/dashboard", "dashboard"],
   ["/runs", "runs"],
   ["/plan", "plan"],
-  ["/connections", "connections"],
+  ["/import", "connections"],
   ["/settings", "settings"],
 ] as const;
 

@@ -3,18 +3,14 @@
 import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { EXPERIENCE, RUN_TYPES } from "@/db/schema";
 import { deleteUserData, destroySession, requireUser } from "@/lib/auth";
-import { randomToken, sha256 } from "@/lib/crypto";
+import { randomToken } from "@/lib/crypto";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
-import { ImportError, parseActivityFile } from "@/lib/import";
 import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
 import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
-import { getOAuthProvider } from "@/lib/providers/registry";
-import { freshTokens, importStravaPage, syncConnection } from "@/lib/providers/sync";
-import { deauthorizeStrava } from "@/lib/providers/strava";
+import { zonedDate } from "@/lib/tz";
 import { storeRuns } from "@/lib/runs-store";
 import { joinByCode } from "@/lib/social/join";
 import { refreshWeeks, weeksOf } from "@/lib/social/store";
@@ -152,7 +148,7 @@ export async function addRun(fd: FormData) {
   const user = await requireUser();
   const date = str(fd, "date");
   const time = str(fd, "time") || "12:00";
-  const startedAt = new Date(`${date}T${time}:00`);
+  const startedAt = zonedDate(date, time, str(fd, "tz") || "Europe/Vienna") ?? new Date(NaN);
   const distanceKm = Number(str(fd, "distanceKm").replace(",", "."));
   const durationSec = parseDuration(str(fd, "duration"));
   const runType = str(fd, "runType");
@@ -205,7 +201,7 @@ export async function updateRunType(fd: FormData) {
   const runType = str(fd, "runType");
   if (!(RUN_TYPES as readonly string[]).includes(runType)) redirect("/runs");
   const db = await getDb();
-  // Walk breaks can be confirmed afterwards for imports that cannot tell (Apple Health, Strava, files).
+  // Walk breaks can be confirmed afterwards for Apple Health imports, which cannot tell.
   const walk = str(fd, "walk");
   const walkSet = walk === "no" || walk === "yes" ? { walkKnown: true, walkBreaks: walk === "yes" } : fd.has("walk") ? { walkKnown: false, walkBreaks: false } : {};
   const [run] = await db
@@ -215,111 +211,6 @@ export async function updateRunType(fd: FormData) {
     .returning({ startedAt: schema.runs.startedAt });
   if (run) await refreshWeeks(user.id, weeksOf([run.startedAt]));
   redirect("/runs");
-}
-
-export async function importFiles(fd: FormData) {
-  const user = await requireUser();
-  const files = fd.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
-  let inserted = 0;
-  let skipped = 0;
-  for (const file of files.slice(0, 50)) {
-    try {
-      const { source, runs } = await parseActivityFile(file.name, await file.arrayBuffer(), { onlyName: str(fd, "onlyName") || undefined });
-      const res = await storeRuns(user.id, source, runs);
-      inserted += res.inserted;
-      skipped += res.skipped;
-    } catch (err) {
-      const msg = err instanceof ImportError ? err.message : "unreadable file";
-      redirect(`/runs?importError=${encodeURIComponent(`${file.name}: ${msg}`)}`);
-    }
-  }
-  redirect(`/runs?imported=${inserted}&skipped=${skipped}`);
-}
-
-/* ------------------------------ Connections ------------------------------ */
-
-export async function syncNow(fd: FormData) {
-  const user = await requireUser();
-  const provider = str(fd, "provider");
-  const p = getOAuthProvider(provider);
-  if (!p) redirect("/connections");
-  let n = 0;
-  try {
-    n = await syncConnection(user.id, provider);
-  } catch (err) {
-    redirect(`/connections?error=${provider}&msg=${encodeURIComponent(err instanceof Error ? err.message.slice(0, 120) : "error")}`);
-  }
-  redirect(`/connections?ok=${provider}&n=${n}`);
-}
-
-/** Disconnects a service: revokes access there, deletes the tokens and, by default, the runs imported from it. */
-export async function disconnect(fd: FormData) {
-  const user = await requireUser();
-  const provider = str(fd, "provider");
-  const p = getOAuthProvider(provider);
-  if (!p) redirect("/connections");
-  const db = await getDb();
-  const [conn] = await db
-    .delete(schema.connections)
-    .where(and(eq(schema.connections.userId, user.id), eq(schema.connections.provider, provider)))
-    .returning();
-  if (conn && provider === "strava") {
-    try {
-      await deauthorizeStrava((await freshTokens(conn, p)).accessToken);
-    } catch {
-      // Token already invalid: nothing left to revoke.
-    }
-  }
-  if (fd.get("deleteRuns") === "on") {
-    await db.delete(schema.runs).where(and(eq(schema.runs.userId, user.id), eq(schema.runs.source, provider)));
-  }
-  redirect("/connections?disconnected=1");
-}
-
-/**
- * History import from Strava, one page per call (the browser calls it in a loop and shows
- * progress). `since` is YYYY-MM-DD; pages hold up to 50 activities.
- */
-export async function importStravaHistory(since: string, page: number): Promise<{ ok: boolean; runs: number; inserted: number; more: boolean; error?: string }> {
-  const user = await requireUser();
-  const from = /^\d{4}-\d{2}-\d{2}$/.test(since) ? new Date(`${since}T00:00:00Z`) : new Date(0);
-  if (!Number.isInteger(page) || page < 1 || page > 200) return { ok: false, runs: 0, inserted: 0, more: false, error: "page" };
-  try {
-    const r = await importStravaPage(user.id, from, page);
-    return { ok: true, runs: r.runs, inserted: r.inserted, more: r.more };
-  } catch (err) {
-    return { ok: false, runs: 0, inserted: 0, more: false, error: err instanceof Error ? err.message.slice(0, 120) : "error" };
-  }
-}
-
-/** Creates the token for the Apple Health sync and returns it once. */
-export async function createAppleToken(_prev: { token: string | null }, _fd: FormData): Promise<{ token: string | null }> {
-  const user = await requireUser();
-  const token = `pp_${randomToken(24)}`;
-  const db = await getDb();
-  await db.insert(schema.apiTokens).values({ userId: user.id, label: "Apple Health", tokenHash: sha256(token) });
-  revalidatePath("/connections");
-  return { token };
-}
-
-/* ------------------------------ API tokens ------------------------------- */
-
-export async function createApiToken(_prev: { token: string | null }, fd: FormData): Promise<{ token: string | null }> {
-  const user = await requireUser();
-  const label = str(fd, "label").slice(0, 60) || "Token";
-  const token = `pp_${randomToken(24)}`;
-  const db = await getDb();
-  await db.insert(schema.apiTokens).values({ userId: user.id, label, tokenHash: sha256(token) });
-  revalidatePath("/settings");
-  // Returned once to the browser; only the hash is stored.
-  return { token };
-}
-
-export async function revokeApiToken(fd: FormData) {
-  const user = await requireUser();
-  const db = await getDb();
-  await db.delete(schema.apiTokens).where(and(eq(schema.apiTokens.id, str(fd, "id")), eq(schema.apiTokens.userId, user.id)));
-  redirect("/settings");
 }
 
 export async function deleteAccount(fd: FormData) {

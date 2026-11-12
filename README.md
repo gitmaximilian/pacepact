@@ -20,27 +20,22 @@ Planned address: `https://pacepact.maximilianauer.at`
   Run 2; four add an easy Run 4. Phases are counted back from race day.
   Tempo work in Run 2 unlocks after a logged easy (effort ≤ 6) 30-minute run known to be without walk breaks or, until
   then, based on the runner's own statement in the welcome flow (shown as "reported", not "measured"). Never because of
-  the calendar. Watch imports cannot tell walk breaks apart (`walk_known = false`), so they do not unlock tempo work.
+  the calendar. Apple Health imports cannot tell walk breaks apart (`walk_known = false`); runners can confirm "no walk breaks"
+  per run in the runs list.
   Every fourth week is lighter (about a quarter fewer minutes, one tempo repetition less); in race week the race
   replaces the long run.
-- **Runs:** manual entry (distance, duration, heart rate, effort 1–10, walk breaks, notes) and a list where the run type can be changed.
-- **Import:**
-  - Files: GPX, TCX, FIT and CSV. The CSV import understands English and German headers, including the old team spreadsheet.
-  - **Apple Health** (iPhone, Apple Watch, and every app that writes workouts to Health, such as Garmin Connect, Polar
-    Flow, COROS, Suunto and Strava): the iOS app "Health Auto Export" posts workouts to `/api/ingest/apple-health`
-    (one-tap setup via deep link, or by hand). Past runs: "Export Existing Data" in the app with Batch Requests on.
-    Only running workouts are kept. Runs from Apple Health count in crews. Free alternative: the Pacepact Apple
-    Shortcut (automation "Apple Watch workout ends"), see `docs/apple-shortcut.md`.
-  - **Strava** (OAuth and push webhook): the last 4 weeks on connect, older runs via "Import past runs" (one page of
-    50 activities per request, driven by the browser), new runs by webhook. Visible only to the runner (Strava API terms). Disconnecting revokes access at
-    Strava and deletes Strava runs by default. Strava can write to Apple Health; then the run counts in crews.
-  - The same run from two sources (Strava + Apple Health, or typed in + synced) is merged (`src/lib/dedupe.ts`): the copy
-    that may count in crews wins, and effort, notes and run type typed by the runner are kept.
-  - Personal API tokens for your own automations (`/api/ingest`).
-  - Duplicates are skipped by source and activity ID.
+- **Runs come in two ways only:**
+  - **By hand:** date, time, type, distance, duration, effort 1–10, walk breaks, notes (heart rate with consent).
+  - **Apple Health export:** in the Health app "Export All Health Data" → save export.zip to Files → choose it on
+    `/import`. The browser unzips and scans export.xml as a stream (`fflate`, `src/lib/import/apple-export.ts`, works
+    with multi-gigabyte exports) and uploads only running workouts in batches of 100 to `/api/import/apple-health`.
+    The export never leaves the phone. Every app that writes to Apple Health counts (Apple Watch, iPhone, Strava,
+    Garmin Connect, Nike Run Club, …). For new runs, repeat the export now and then; duplicates are skipped.
+  - The same run typed in and imported is merged (`src/lib/dedupe.ts`): the imported copy wins, and effort, notes and
+    run type typed by the runner are kept.
 - **Crews (groups) – the heart of the app:** signed-in runners land in their crew.
   - Invite link `/join/<code>` with the system share sheet; new runners sign up and land in the crew after the welcome
-    flow (6 taps). Admins rotate the code, remove members, edit the crew (race countdown, "count only device files")
+    flow (6 taps). Admins rotate the code, remove members, edit the crew (race countdown, "count only Apple Health runs")
     and delete it; everyone can leave.
   - This week: one lane per runner with planned runs as dots, minutes and a check mark when the week is done.
   - Fair rankings (week, 4 weeks, since start): streak, minutes, on plan, endurance gain, easy pace at comparable effort.
@@ -52,41 +47,12 @@ Planned address: `https://pacepact.maximilianauer.at`
   - Feed (runs since joining, milestones, finished challenges) with kudos, comments, reporting and admin moderation;
     "since your last visit" hints. Crew rules at `/rules`.
   - Privacy per member and crew: minutes, run type and plan progress are visible; distance and pace only after opt-in.
-    Never heart rate, notes or goals. Device files are marked as such; manual entries as self-reported.
+    Never heart rate, notes or goals. Apple Health runs are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
 
-Other watch brands come in through Apple Health or file upload. Direct APIs for Polar, Fitbit, Wahoo, Suunto, Garmin and
-COROS were removed on 2026-11-12 (Fitbit's API was shut down; the others need partner approval or were untested).
+Strava, the personal API, Health Auto Export, Apple Shortcuts and GPX/TCX/FIT/CSV files were removed on 2026-11-12:
+Apple Health covers every watch and app, and the web cannot read Apple Health directly (see `docs/legal/drittanbieter.md`).
 
-## Stack
-
-- Next.js 16 (App Router, server actions), React 19, TypeScript
-- Runs on Cloudflare Workers via the OpenNext adapter (`@opennextjs/cloudflare`), like
-  [Rookie](https://github.com/gitmaximilian/rookie-chess) on the same domain
-- Cloudflare D1 (SQLite) with EU jurisdiction, accessed through Drizzle ORM
-- Self-hosted fonts (no requests to Google Fonts)
-
-## Local development
-
-```bash
-npm ci
-cp .env.example .dev.vars        # optional; everything works without integrations
-npm run db:migrate:local         # creates the local D1 database in .wrangler/
-npm run dev                      # http://localhost:3000
-```
-
-`npm run preview` builds the Worker and runs it in the real Workers runtime (workerd) on your machine.
-
-Checks:
-
-```bash
-npm run lint    # TypeScript
-npm test        # unit tests (node:test)
-npm run build   # OpenNext build for Workers (runs `next build` via `npm run build:next`)
-```
-
-After changing `src/db/schema.ts`, run `npm run db:generate`, commit the new file in `drizzle/`, then apply it
-locally and remotely (`npm run db:migrate:local`, `npm run db:migrate:remote`).
 
 ## Deployment (Cloudflare)
 
@@ -96,9 +62,7 @@ One-time setup:
 2. Create the database in the EU: `npx wrangler d1 create pacepact --jurisdiction eu`.
    Put the printed `database_id` into `wrangler.jsonc`.
 3. Apply migrations: `npm run db:migrate:remote`
-4. Set secrets: `npx wrangler secret put ENCRYPTION_KEY` (32 random bytes, base64), plus the client IDs and secrets of
-   every service you want to offer (see below).
-5. Deploy: `npm run deploy`. The route in `wrangler.jsonc` attaches `pacepact.maximilianauer.at` as a custom domain;
+4. Deploy: `npm run deploy`. The route in `wrangler.jsonc` attaches `pacepact.maximilianauer.at` as a custom domain;
    because `maximilianauer.at` is on Cloudflare, DNS and HTTPS are set up automatically.
 
 Afterwards, every `npm run deploy` publishes a new version.
@@ -118,62 +82,23 @@ Local preview note: because `wrangler.jsonc` has a custom-domain route, run the 
 
 ## Configuration
 
-See `.env.example`. In production you need at least `ENCRYPTION_KEY` (32 random bytes, base64; it encrypts
-provider tokens at rest). `APP_URL` is set in `wrangler.jsonc`.
-
-### Connecting services
-
-Strava only shows a "Connect" button once its credentials are set. The callback URL is:
-
-```
-https://<your-domain>/api/connections/strava/callback
-```
-
-| Service | Where to register | Environment variables |
-| --- | --- | --- |
-| Strava | https://www.strava.com/settings/api (set "Authorization Callback Domain" to your domain) | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_SUBSCRIPTION_ID` (required for webhook events; without it they are ignored) |
-
-Strava push updates: after deploying, create a webhook subscription with the callback
-`https://<your-domain>/api/webhooks/strava` and the same verify token
-(see https://developers.strava.com/docs/webhooks/).
-
-New Strava API apps start in "Single Player Mode" (only the owner's account). Raise the athlete capacity in the Strava
-API settings (or request a review) before friends can connect.
-
-Apple Health needs no server setup: every runner creates their sync key under **Connections**.
-
-### Personal API (own automations)
-
-Create a token under **Settings → API tokens**, then:
-
-```bash
-curl -X POST https://<your-domain>/api/ingest \
-  -H "Authorization: Bearer pp_..." \
-  -H "Content-Type: application/json" \
-  -d '{"startedAt":"2026-11-12T18:30:00Z","distanceKm":5.2,"durationSec":1980,"avgHr":158,"runType":"run1","source":"apple-health"}'
-```
-
-The body can also be an array of up to 500 runs. Required fields: `startedAt`, `distanceKm`, `durationSec`.
-Optional fields: `avgHr`, `maxHr`, `effort` (1–10), `walkBreaks`, `runType` (`run1`, `run2`, `run3`, `test`, `other`),
-`notes`, `externalId`, `source`. Sending the same `externalId` again does not create a duplicate.
+No secrets are needed. `APP_URL` is set in `wrangler.jsonc` (see `.env.example` for local runs).
 
 ## Privacy and security
 
 - Sign-in: passkeys (WebAuthn) only; the server stores public keys, one-time challenges expire after 5 minutes.
   Sessions: random tokens, stored only as SHA-256 hashes.
-- Provider tokens are encrypted with AES-256-GCM. Pacepact only reads activities and never posts anything back.
 - The passkey API checks the Origin header. Sign-in, sign-up, joining, invite links, comments, kudos, challenge
-  creation and the ingest API are rate-limited in D1 (`rate_limits`, hashed keys, shared by all Worker instances).
-- Implausible runs (faster than 2:30 min/km) are rejected when typed in and never count in crews. The personal API
-  cannot pose as a device file or a provider (sources become `api-…`).
+  creation and imports are rate-limited in D1 (`rate_limits`, hashed keys, shared by all Worker instances).
+- Implausible runs (faster than 2:30 min/km) are rejected when typed in and never count in crews.
 - Users can delete their account and all data under Settings. Groups they own are handed to another member.
 - Heart rate is health data (Art. 9 GDPR). It is only stored with explicit, separate consent; without consent,
   heart-rate values are dropped before saving. Withdrawing consent deletes all stored heart rates.
 - Sign-up requires confirming a minimum age of 14 (Austria, § 4 (4) DSG) and having read the privacy notice.
   No email address is collected.
 - Users can download all their data as JSON (`/api/export`). Accounts unused for two years are deleted automatically.
-- Runs from Strava are never shown to or counted for other crew members, not even as totals (Strava API terms).
-  (`src/lib/social/sources.ts`, `docs/legal/drittanbieter.md`).
+- Apple Health: the export is processed in the browser; only running workouts (time, duration, distance, heart rate
+  with consent) are sent to the server.
 - Crew pages read precomputed weekly totals (`run_weeks`), rebuilt when runs change, to stay within the Workers free
   plan's CPU limit. Bump `STATS_VERSION` in `src/lib/social/store.ts` when the formulas change.
 - The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.

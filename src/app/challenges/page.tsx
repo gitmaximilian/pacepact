@@ -60,7 +60,7 @@ export default async function PersonalChallenges() {
       ) : (
         <p className="panel muted">{t.social.noChallenges}</p>
       )}
-      <p className="small muted">{t.social.guard} {t.social.providerNote}</p>
+      <p className="small muted">{t.social.guard}</p>
     </Shell>
   );
 }

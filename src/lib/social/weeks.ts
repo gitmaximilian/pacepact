@@ -1,6 +1,6 @@
 /** Weekly aggregation of runs. Pure functions: used when storing runs and in tests. */
 import { isPlausibleRun } from "../plausibility";
-import { countsInGroups, sourceKind } from "./sources";
+import { sourceKind } from "./sources";
 
 export interface AggRun {
   startedAt: Date;
@@ -53,9 +53,9 @@ export function weekRange(from: string, to: string): string[] {
   return out;
 }
 
-/** Whether a run may appear in groups at all. */
-export function groupEligible(r: Pick<AggRun, "source" | "distanceKm" | "durationSec">): boolean {
-  return countsInGroups(r.source) && isPlausibleRun(r);
+/** Whether a run may appear in groups at all: implausible runs never do. */
+export function groupEligible(r: Pick<AggRun, "distanceKm" | "durationSec">): boolean {
+  return isPlausibleRun(r);
 }
 
 export function aggregate(runs: AggRun[]): WeekAgg {
@@ -79,7 +79,7 @@ export function aggregate(runs: AggRun[]): WeekAgg {
   return a;
 }
 
-/** Group-eligible runs per week and variant ("all" and "device" = device files only). */
+/** Group-eligible runs per week and variant ("all", and "device" = imported from Apple Health only). */
 export function aggregateWeeks(runs: AggRun[]): Map<string, { all: WeekAgg; device: WeekAgg }> {
   const byWeek = new Map<string, AggRun[]>();
   for (const r of runs) {

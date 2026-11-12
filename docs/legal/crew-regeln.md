@@ -6,7 +6,7 @@
 
 1. Sei freundlich. Anfeuern statt bloßstellen: Alle fangen irgendwo an.
 2. Keine Beleidigungen, Belästigung, Diskriminierung, Werbung oder persönlichen Daten anderer in Namen und Kommentaren.
-3. Trag ehrlich ein. Unplausible Läufe zählen nicht; die Crew sieht, ob ein Lauf aus einer Gerätedatei kommt oder eingetippt wurde.
+3. Trag ehrlich ein. Unplausible Läufe zählen nicht; die Crew sieht, ob ein Lauf aus Apple Health kommt oder eingetippt wurde.
 4. Ruhetage, leichtere Wochen und Tapering gehören zum Plan. Lauf nicht krank oder verletzt, um eine Challenge zu gewinnen.
 5. Melde Kommentare, die gegen diese Regeln verstoßen. Die Crew-Leitung kann sie entfernen; auf Hinweis entfernen wir Inhalte.
 

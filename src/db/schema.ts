@@ -132,7 +132,7 @@ export const groups = sqliteTable("groups", {
   ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  /** Only runs from device files count in rankings and challenges. */
+  /** Only runs imported from Apple Health count in rankings and challenges. */
   onlyImported: integer("only_imported", { mode: "boolean" }).notNull().default(false),
   /** Shared race for the countdown (optional). */
   raceName: text("race_name"),
@@ -162,43 +162,9 @@ export const groupMembers = sqliteTable(
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_members_user_idx").on(t.userId)],
 );
 
-export const connections = sqliteTable(
-  "connections",
-  {
-    id: id(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    provider: text("provider").notNull(),
-    externalUserId: text("external_user_id"),
-    accessTokenEnc: text("access_token_enc").notNull(),
-    refreshTokenEnc: text("refresh_token_enc"),
-    expiresAt: ts("expires_at"),
-    lastSyncAt: ts("last_sync_at"),
-    lastError: text("last_error"),
-    createdAt: ts("created_at").notNull().$defaultFn(now),
-  },
-  (t) => [
-    uniqueIndex("connections_user_provider_uq").on(t.userId, t.provider),
-    index("connections_provider_external_idx").on(t.provider, t.externalUserId),
-  ],
-);
-
-export const apiTokens = sqliteTable("api_tokens", {
-  id: id(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  tokenHash: text("token_hash").notNull().unique(),
-  label: text("label").notNull(),
-  createdAt: ts("created_at").notNull().$defaultFn(now),
-  lastUsedAt: ts("last_used_at"),
-});
-
 /**
  * Precomputed weekly totals per runner, rebuilt whenever a run is stored, changed or deleted.
- * Only runs that may be shown in groups are included (no Strava or other provider data, no implausible runs).
- * variant "all" = every such run, "device" = only runs from device files (GPX/TCX/FIT).
+ * Implausible runs are left out. variant "all" = every run, "device" = only runs imported from Apple Health.
  */
 export const runWeeks = sqliteTable(
   "run_weeks",
@@ -346,7 +312,6 @@ export type User = typeof users.$inferSelect;
 export type Run = typeof runs.$inferSelect;
 export type NewRun = typeof runs.$inferInsert;
 export type Goal = typeof goals.$inferSelect;
-export type Connection = typeof connections.$inferSelect;
 export type Group = typeof groups.$inferSelect;
 export type RunWeek = typeof runWeeks.$inferSelect;
 export type Contest = typeof contests.$inferSelect;

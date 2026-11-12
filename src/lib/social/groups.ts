@@ -1,10 +1,9 @@
 import "server-only";
-import { and, asc, desc, eq, gte, inArray, ne, notInArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { Group, RunWeek } from "@/db/schema";
 import { contestEnd, evaluate, badgeFor } from "./contests";
 import type { MemberData } from "./scoring";
-import { PROVIDER_SOURCES } from "./sources";
 import { ensureStats } from "./store";
 import { groupEligible, weekKey } from "./weeks";
 
@@ -125,8 +124,8 @@ export async function finalizeDue(contests: (typeof schema.contests.$inferSelect
 export const FEED_DAYS = 21;
 
 /**
- * Recent runs of members for the feed: only group-eligible runs (no provider data, nothing
- * implausible) and only runs since the member joined this group. Never notes or heart rate.
+ * Recent runs of members for the feed: nothing implausible, and only runs since the member
+ * joined this group. Never notes or heart rate.
  */
 export async function feedRuns(members: Member[]) {
   if (!members.length) return [];
@@ -148,7 +147,6 @@ export async function feedRuns(members: Member[]) {
       and(
         inArray(schema.runs.userId, members.map((m) => m.id)),
         gte(schema.runs.startedAt, since),
-        notInArray(schema.runs.source, [...PROVIDER_SOURCES]),
       ),
     )
     .orderBy(desc(schema.runs.startedAt))

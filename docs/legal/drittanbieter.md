@@ -1,21 +1,14 @@
-# Drittdienste: Bedingungen vor dem Livegang prüfen – Pacepact
+# Drittdienste – Pacepact
 
-> Stand 2026-11-12. Die API-Bedingungen der Anbieter ändern sich regelmäßig. Vor dem Freischalten jedes Dienstes den aktuellen Text lesen und hier abhaken. Keine Rechtsberatung.
+> Stand 2026-11-12. Keine Rechtsberatung.
 
-## Strava (API Agreement, Brand Guidelines)
+Pacepact bindet keine Schnittstellen von Drittanbietern an. Läufe kommen nur auf zwei Wegen herein:
 
-- [x] **Anzeige nur für den eigenen Nutzer:** Seit dem Update der Strava-API-Bedingungen (November 2024) dürfen Strava-Daten eines Athleten nur diesem Athleten angezeigt werden. Umgesetzt: Läufe mit Quelle `strava` werden in Crews weder angezeigt noch mitgezählt – auch nicht aggregiert (Team-Summen, Ranglisten, Challenges, Meilensteine). Die UI erklärt das. Aktuellen Wortlaut vor dem Freischalten von Strava erneut prüfen.
-- [ ] **Keine Nutzung für KI-Training** und keine Weitergabe – Pacepact tut beides nicht.
-- [ ] **Athleten-Kapazität:** Neue API-Apps starten im „Single Player Mode“ (nur das eigene Konto). Für Freunde: Kapazität im Strava-API-Dashboard erhöhen bzw. Review beantragen (seit Juni 2026 neue Stufen, ggf. Strava-Abo nötig).
-- [ ] **Branding:** Derzeit Text-Button „Connect with Strava“ in Strava-Orange und Text „Powered by Strava“. Vor dem Freischalten für andere die offiziellen Button-/Logo-Dateien aus den Strava Brand Guidelines einsetzen.
-- [x] **Trennen/Widerruf:** Trennen ruft `/oauth/deauthorize` auf und löscht standardmäßig alle Strava-Läufe; Deauthorisierungs-Webhook löscht Tokens und Strava-Läufe.
-- [x] **Löschung:** Trennt ein Nutzer die Verbindung bei Strava, löscht der Webhook (Deauthorization-Event) die gespeicherten Tokens sofort. Gelöschte Strava-Aktivitäten werden auch in Pacepact gelöscht.
+1. **Manuelle Eingabe** durch den Nutzer.
+2. **Apple-Health-Export:** Der Nutzer exportiert seine Daten selbst in der Health-App und wählt die Datei in Pacepact. Sie wird im Browser gelesen; übertragen werden nur Lauf-Trainings. Es gibt keinen Zugriff auf Apple Health über eine API und keine Verbindung zu Apple.
 
-## Apple Health über „Health Auto Export“
-
-- [x] Kein Web-Zugang zu Apple Health; die iPhone-App „Health Auto Export“ (HealthyApps) sendet Workouts per REST-Automation direkt vom Gerät an `/api/ingest/apple-health`. Die Daten kommen vom Nutzer selbst, nicht über eine Anbieter-API; es gelten die Regeln wie bei Datei-Uploads (Puls nur mit Einwilligung). Automationen brauchen dort das Premium-Abo des Nutzers.
-- [ ] Prüfen, ob die von Strava/Garmin in Apple Health geschriebenen Workouts Bedingungen unterliegen, die eine Anzeige in Crews ausschließen (Einschätzung: nein, da der Nutzer seine eigenen Gerätedaten selbst weitergibt; keine Rechtsberatung).
+Workouts, die andere Apps (z. B. Strava, Garmin Connect) in Apple Health geschrieben haben, gibt der Nutzer damit selbst weiter. Pacepact nutzt dafür keine Anbieter-API; deren API-Bedingungen greifen daher nach Einschätzung nicht.
 
 ## Entfernt (2026-11-12)
 
-Polar, Fitbit, Wahoo, Suunto, Garmin und COROS sind aus der App entfernt: Fitbit Web API wurde am 2. 11. 2026 abgeschaltet, Garmin/COROS/Wahoo/Suunto brauchen Partner-Freigaben, Polar war ungetestet. Uhren dieser Hersteller kommen über Apple Health oder Datei-Upload herein.
+Strava (OAuth, Webhook), die persönliche API, der Empfang aus „Health Auto Export“ und Apple-Kurzbefehlen sowie der Datei-Import (GPX, TCX, FIT, CSV). Die Tabellen `connections` und `api_tokens` wurden gelöscht (Migration `0002_import_only`), ebenso alle über Strava importierten Läufe. Das Cloudflare-Secret `ENCRYPTION_KEY` wird nicht mehr gebraucht und kann gelöscht werden.

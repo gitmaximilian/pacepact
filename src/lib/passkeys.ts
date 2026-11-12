@@ -12,7 +12,7 @@ import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { and, eq, lt } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { getDb, schema } from "@/db";
-import { appUrl } from "./providers/registry";
+import { appUrl } from "./app-url";
 
 const CHALLENGE_COOKIE = "pp_challenge";
 const CHALLENGE_MS = 5 * 60_000;

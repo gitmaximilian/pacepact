@@ -8,7 +8,7 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   const db = await getDb();
-  const [goals, runs, memberships, connections, tokens, keys] = await Promise.all([
+  const [goals, runs, memberships, keys] = await Promise.all([
     db.select().from(schema.goals).where(eq(schema.goals.userId, user.id)),
     db.select().from(schema.runs).where(eq(schema.runs.userId, user.id)),
     db
@@ -17,26 +17,13 @@ export async function GET() {
       .innerJoin(schema.groups, eq(schema.groups.id, schema.groupMembers.groupId))
       .where(eq(schema.groupMembers.userId, user.id)),
     db
-      .select({
-        provider: schema.connections.provider,
-        externalUserId: schema.connections.externalUserId,
-        createdAt: schema.connections.createdAt,
-        lastSyncAt: schema.connections.lastSyncAt,
-      })
-      .from(schema.connections)
-      .where(eq(schema.connections.userId, user.id)),
-    db
-      .select({ label: schema.apiTokens.label, createdAt: schema.apiTokens.createdAt, lastUsedAt: schema.apiTokens.lastUsedAt })
-      .from(schema.apiTokens)
-      .where(eq(schema.apiTokens.userId, user.id)),
-    db
       .select({ id: schema.passkeys.id, createdAt: schema.passkeys.createdAt, lastUsedAt: schema.passkeys.lastUsedAt })
       .from(schema.passkeys)
       .where(eq(schema.passkeys.userId, user.id)),
   ]);
   const account = user;
   const body = JSON.stringify(
-    { exportedAt: new Date().toISOString(), account, goals, runs, groups: memberships, connections, apiTokens: tokens, passkeys: keys },
+    { exportedAt: new Date().toISOString(), account, goals, runs, groups: memberships, passkeys: keys },
     null,
     2,
   );

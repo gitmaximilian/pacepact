@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { param, type SearchParams } from "@/lib/queries";
 import { addRun } from "../../actions";
+import { TzField } from "./tz-field";
 import { Flash, Shell } from "../../components";
 
 export const metadata = { title: "Log a run" };
@@ -19,6 +20,7 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
       <h1>{t.runs.add}</h1>
       <Flash err={error === "pace" ? t.runs.errPace : error ? t.runs.errInput : null} />
       <form action={addRun} className="panel form">
+        <TzField />
         {back.startsWith("/groups/") ? <input type="hidden" name="back" value={back} /> : null}
         <div className="fields">
           <div className="field"><label htmlFor="date">{t.runs.date}</label><input id="date" name="date" type="date" defaultValue={today} max={today} required /></div>

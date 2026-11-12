@@ -9,7 +9,7 @@ export interface NormalizedRun {
   maxHr?: number | null;
   effort?: number | null;
   walkBreaks?: boolean;
-  /** Whether walkBreaks was stated explicitly. Defaults by source (manual and CSV yes, files and providers no). */
+  /** Whether walkBreaks was stated explicitly (manual entries yes, Apple Health no). */
   walkKnown?: boolean;
   runType?: RunType;
   notes?: string | null;

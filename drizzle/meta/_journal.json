@@ -15,6 +15,13 @@
       "when": 1794469895291,
       "tag": "0001_social",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794509779275,
+      "tag": "0002_import_only",
+      "breakpoints": true
     }
   ]
 }

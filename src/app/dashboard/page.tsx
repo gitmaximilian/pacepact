@@ -117,7 +117,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
           <p>{t.dashboard.noRuns}</p>
           <div className="row">
             <Link className="btn" href="/runs/new">{t.dashboard.logRun}</Link>
-            <Link className="btn ghost" href="/connections">{t.dashboard.connect}</Link>
+            <Link className="btn ghost" href="/import">{t.dashboard.connect}</Link>
           </div>
         </section>
       ) : (

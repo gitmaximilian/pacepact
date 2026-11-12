@@ -2,8 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { appUrl } from "@/lib/providers/registry";
-import { deleteAccount, deletePasskey, revokeApiToken, setHrConsent, setLocale, signOut } from "../actions";
+import { deleteAccount, deletePasskey, setHrConsent, setLocale, signOut } from "../actions";
 import { AddPasskeyButton } from "../passkey-client";
 import { InstallRow } from "../install-prompt";
 import { installLabels } from "../install-labels";
@@ -12,7 +11,6 @@ import { passkeyLabels } from "../passkey-labels";
 import { Flash, Shell } from "../components";
 import { fmt } from "@/lib/i18n";
 import { param, type SearchParams } from "@/lib/queries";
-import { TokenForm } from "./token-form";
 
 export const metadata = { title: "Settings" };
 
@@ -23,14 +21,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   const hr = param(sp, "hr");
   const dateFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium" });
   const db = await getDb();
-  const tokens = await db.select().from(schema.apiTokens).where(eq(schema.apiTokens.userId, user.id));
   const keys = await db.select().from(schema.passkeys).where(eq(schema.passkeys.userId, user.id));
   return (
     <Shell t={t} locale={locale} active="/settings">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.settings.title}</h1>
         <div className="row" style={{ gap: 8 }}>
-          <Link href="/connections" className="btn ghost small">{t.nav.connections}</Link>
+          <Link href="/import" className="btn ghost small">{t.nav.connections}</Link>
           <form action={signOut}><button className="btn ghost small">{t.nav.signOut}</button></form>
         </div>
       </div>
@@ -100,27 +97,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
         <p className="small muted">{t.settings.exportText}</p>
         <div><a className="btn ghost small" href="/api/export" download>{t.settings.exportButton}</a></div>
         <p className="small"><a href="/privacy">{t.legal.privacy}</a></p>
-      </section>
-
-      <section className="panel">
-        <h3>{t.settings.tokens}</h3>
-        <p className="small muted">{t.settings.tokensHint}</p>
-        {tokens.length ? (
-          <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none" }} className="stack">
-            {tokens.map((tk) => (
-              <li key={tk.id} className="row" style={{ justifyContent: "space-between" }}>
-                <span>{tk.label} <span className="small muted">· {tk.lastUsedAt ? tk.lastUsedAt.toISOString().slice(0, 10) : "–"}</span></span>
-                <form action={revokeApiToken}><input type="hidden" name="id" value={tk.id} /><button className="btn danger small">{t.settings.revoke}</button></form>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="small muted">{t.settings.noTokens}</p>
-        )}
-        <TokenForm
-          ingestUrl={`${appUrl()}/api/ingest`}
-          labels={{ label: t.settings.tokenLabel, create: t.settings.createToken, newToken: t.settings.newToken, example: t.settings.example }}
-        />
       </section>
 
       <form action={deleteAccount} className="panel form">

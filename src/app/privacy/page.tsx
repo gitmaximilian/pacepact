@@ -39,14 +39,12 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
         <li><b>Passkey:</b> die Kennung deines Passkeys, der zugehörige öffentliche Schlüssel, ein Signaturzähler, die Übertragungsart und Zeitpunkte. Dein privater Schlüssel und biometrische Daten (Face ID, Touch ID) verlassen nie dein Gerät.</li>
         <li><b>Anmeldung:</b> nur eine Prüfsumme (SHA-256) des Sitzungs-Tokens mit Ablaufdatum; während der Anmeldung eine einmalige Challenge für 5 Minuten.</li>
         <li><b>Ziele:</b> Rennen, Datum, Distanz, Zielzeit.</li>
-        <li><b>Läufe:</b> Zeitpunkt, Art (Run 1/2/3, Test), Distanz, Dauer, Anstrengung 1–10, Gehpausen, deine Notizen, Quelle (z. B. Datei oder Strava) und die ID der Aktivität beim Anbieter. GPS-Strecken speichern wir nicht: Beim Import berechnen wir nur Distanz und Dauer.</li>
+        <li><b>Läufe:</b> Zeitpunkt, Art (Run 1/2/3, Test), Distanz, Dauer, Anstrengung 1–10, Gehpausen, deine Notizen, Quelle (von Hand oder Apple Health). GPS-Strecken speichern wir nicht.</li>
         <li><b>Puls (nur mit Einwilligung):</b> Durchschnitts- und Maximalpuls je Lauf.</li>
-        <li><b>Crews (Gruppen):</b> Name der Crew, Einladungscode, optional Rennen und Renndatum, die Einstellung „nur Läufe aus Gerätedateien zählen“; je Mitglied Rolle, Beitrittsdatum, deine Sichtbarkeitseinstellungen (Distanz, Pace), freiwillig ob du fürs Rennen angemeldet bist, und wann du die Crew zuletzt geöffnet hast (für „seit deinem letzten Besuch“).</li>
+        <li><b>Crews (Gruppen):</b> Name der Crew, Einladungscode, optional Rennen und Renndatum, die Einstellung „nur aus Apple Health importierte Läufe zählen“; je Mitglied Rolle, Beitrittsdatum, deine Sichtbarkeitseinstellungen (Distanz, Pace), freiwillig ob du fürs Rennen angemeldet bist, und wann du die Crew zuletzt geöffnet hast (für „seit deinem letzten Besuch“).</li>
         <li><b>Wochenwerte und Meilensteine:</b> aus deinen Läufen berechnete Summen pro Woche (Anzahl, Minuten, km, längster Lauf, längster Lauf ohne Gehpause, Läufe mit Gehpausen, Läufe mit lockerer Anstrengung, Testläufe) und erreichte Meilensteine (z. B. erstmals 30 Minuten ohne Gehpause). Sie enthalten keine Pulswerte und nur Läufe, die in Crews zählen dürfen.</li>
         <li><b>Challenges:</b> Art, Messgröße, Ziel, Zeitraum, wer sie erstellt hat; je Teilnahme Zusage oder Absage und am Ende Ergebnis, Platz und Sticker.</li>
         <li><b>Kudos, Kommentare und Meldungen:</b> wer worauf wie reagiert hat, Kommentartexte (max. 280 Zeichen) mit Zeitpunkt, und wer einen Kommentar gemeldet hat.</li>
-        <li><b>Verbindungen zu anderen Diensten:</b> Zugriffs-Tokens (verschlüsselt mit AES-256), deine Nutzer-ID beim Dienst, Zeitpunkt der letzten Synchronisierung.</li>
-        <li><b>API-Tokens:</b> Bezeichnung und nur eine Prüfsumme des Tokens.</li>
       </ul>,
     ],
     [
@@ -61,10 +59,10 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
     [
       "Was andere in deinen Crews sehen",
       <ul key="s">
-        <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus einer Gerätedatei stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deine Plätze in den Ranglisten (Serie, Minuten, Plantreue, Ausdauer-Zuwachs in Minuten, Veränderung der lockeren Pace in Prozent), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
+        <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus Apple Health stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deine Plätze in den Ranglisten (Serie, Minuten, Plantreue, Ausdauer-Zuwachs in Minuten, Veränderung der lockeren Pace in Prozent), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
         <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; ob du fürs Rennen angemeldet bist.</li>
         <li><b>Nie:</b> Puls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan in Ranglisten nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
-        <li><b>Gar nicht in Crews:</b> Läufe von Strava (deren API-Bedingungen erlauben die Anzeige nur dir selbst) sowie unplausible Läufe (schneller als 2:30 min/km).</li>
+        <li><b>Gar nicht in Crews:</b> unplausible Läufe (schneller als 2:30 min/km).</li>
         <li>Wenn du eine Crew verlässt oder entfernt wirst, sieht sie deine Läufe nicht mehr. Deine Kommentare dort bleiben, bis du sie löschst oder dein Konto löschst.</li>
       </ul>,
     ],
@@ -77,25 +75,13 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       </p>,
     ],
     [
-      "Strava",
+      "Import aus Apple Health",
       <p key="s">
-        Eine Verbindung entsteht nur, wenn du sie selbst startest und bei Strava zustimmst. Pacepact liest dann deine
-        Laufaktivitäten (Zeitpunkt, Distanz, Dauer, Name, Puls nur mit Einwilligung) und postet nie etwas zurück. Für die
-        Daten bei Strava gilt dessen Datenschutzerklärung. Strava-Läufe sieht nur du. „Trennen“ widerruft den Zugriff bei
-        Strava, löscht die Zugriffs-Tokens sofort und, wenn du es nicht abwählst, alle von Strava importierten Läufe. Entziehst
-        du den Zugriff direkt bei Strava, löschen wir Tokens und Strava-Läufe automatisch. Kommt derselbe Lauf auch über Apple
-        Health, behalten wir nur eine Kopie.
-      </p>,
-    ],
-    [
-      "Apple Health",
-      <p key="s">
-        Wenn du den Apple-Health-Sync einrichtest, sendet die iPhone-App „Health Auto Export“ (eines anderen Anbieters, den du
-        selbst installierst und bezahlst) deine Workouts direkt von deinem iPhone an Pacepact, geschützt durch einen
-        persönlichen Schlüssel, von dem wir nur eine Prüfsumme speichern. Wir behalten nur Lauf-Workouts mit Zeitpunkt, Dauer,
-        Distanz und einer Kennung; Puls nur mit deiner Einwilligung. Andere Workouts und Gesundheitsdaten, die die App
-        mitschickt, werden sofort verworfen und nicht gespeichert. Den Sync beendest du, indem du die Automation in der App
-        löschst oder den Schlüssel in den Einstellungen widerrufst.
+        Du exportierst deine Daten selbst in der Health-App („Alle Gesundheitsdaten exportieren“) und wählst die Datei in
+        Pacepact aus. Die Datei wird <b>nur in deinem Browser</b> gelesen und nie hochgeladen. An Pacepact gehen nur
+        Lauf-Trainings: Zeitpunkt, Dauer, Distanz, und Durchschnitts- und Maximalpuls nur mit deiner Einwilligung. Andere
+        Trainings und alle übrigen Gesundheitsdaten bleiben auf deinem Gerät. Hast du denselben Lauf auch von Hand eingetragen,
+        behalten wir eine Kopie und übernehmen deine Anstrengung und Notizen.
       </p>,
     ],
     [
@@ -103,7 +89,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       <p key="s">
         Nur technisch notwendige Cookies, keine Analyse- oder Werbe-Cookies (§ 165 Abs. 3 TKG 2021): <code>pp_session</code>{" "}
         (Anmeldung, 30 Tage), <code>pp_locale</code> (deine Sprachwahl, 1 Jahr), <code>pp_challenge</code> (nur während der
-        Anmeldung, 5 Minuten) und <code>pp_oauth</code> (nur während du einen Dienst verbindest, 10 Minuten). Im Speicher deines
+        Anmeldung, 5 Minuten). Im Speicher deines
         Browsers merken wir uns nur, wenn du „Nicht jetzt“ bei der App-Installation wählst, damit wir 30 Tage nicht erneut fragen.
         Passkeys verwaltet dein Betriebssystem (z. B. iCloud-Schlüsselbund); dafür gelten die Bedingungen des Anbieters.
       </p>,
@@ -115,7 +101,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
         <a href={H.dpa} rel="noopener">Auftragsverarbeitungsvertrags</a>. Speicherort: {H.location}. Für etwaige Zugriffe aus
         den USA gelten das EU-US Data Privacy Framework bzw. Standardvertragsklauseln. Beim Abruf der Seite verarbeitet der
         Hoster technisch notwendige Verbindungsdaten (siehe allgemeine Datenschutzerklärung). Wir geben keine Daten an
-        Dritte weiter, außer an die Dienste, die du selbst verbindest.
+        Dritte weiter.
       </p>,
     ],
     [
@@ -175,14 +161,12 @@ const en: typeof de = {
         <li><b>Passkey:</b> your passkey&apos;s ID, its public key, a signature counter, the transport type and timestamps. Your private key and biometric data (Face ID, Touch ID) never leave your device.</li>
         <li><b>Sign-in:</b> only a checksum (SHA-256) of the session token and its expiry; during sign-in a one-time challenge for 5 minutes.</li>
         <li><b>Goals:</b> race, date, distance, target time.</li>
-        <li><b>Runs:</b> time, type (Run 1/2/3, test), distance, duration, effort 1–10, walk breaks, your notes, source (e.g. file or Strava) and the activity ID at the provider. We do not store GPS tracks: imports only calculate distance and duration.</li>
+        <li><b>Runs:</b> time, type (Run 1/2/3, test), distance, duration, effort 1–10, walk breaks, your notes, source (by hand or Apple Health). We do not store GPS tracks.</li>
         <li><b>Heart rate (only with consent):</b> average and maximum heart rate per run.</li>
-        <li><b>Crews (groups):</b> crew name, invite code, optionally race and race date, the setting “count only runs from device files”; per member role, join date, your visibility settings (distance, pace), voluntarily whether you are registered for the race, and when you last opened the crew (for “since your last visit”).</li>
+        <li><b>Crews (groups):</b> crew name, invite code, optionally race and race date, the setting “count only runs imported from Apple Health”; per member role, join date, your visibility settings (distance, pace), voluntarily whether you are registered for the race, and when you last opened the crew (for “since your last visit”).</li>
         <li><b>Weekly totals and milestones:</b> sums per week calculated from your runs (count, minutes, km, longest run, longest run without walk breaks, runs with walk breaks, runs at easy effort, test runs) and milestones reached (e.g. first 30 minutes without a walk break). They contain no heart rate and only runs that may count in crews.</li>
         <li><b>Challenges:</b> type, measure, target, period, who created it; per participant acceptance or refusal and, at the end, result, place and sticker.</li>
         <li><b>Kudos, comments and reports:</b> who reacted to what and how, comment texts (max. 280 characters) with time, and who reported a comment.</li>
-        <li><b>Connections to other services:</b> access tokens (encrypted with AES-256), your user ID at the service, time of the last sync.</li>
-        <li><b>API tokens:</b> label and only a checksum of the token.</li>
       </ul>,
     ],
     [
@@ -197,10 +181,10 @@ const en: typeof de = {
     [
       "What others in your crews see",
       <ul key="s">
-        <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from a device file or was entered by you; walk breaks; number of runs; your weekly plan progress; your places in the rankings (streak, minutes, on plan, endurance gain in minutes, change of easy pace in percent); milestones; challenge participation and stickers; your kudos and comments.</li>
+        <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from Apple Health or was entered by you; walk breaks; number of runs; your weekly plan progress; your places in the rankings (streak, minutes, on plan, endurance gain in minutes, change of easy pace in percent); milestones; challenge participation and stickers; your kudos and comments.</li>
         <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; whether you are registered for the race.</li>
         <li><b>Never:</b> heart rate, notes, goals, target time, training settings. To compute your weekly plan in rankings we use your race date and runs per week internally, but never show them.</li>
-        <li><b>Not in crews at all:</b> runs from Strava (its API terms allow showing them only to you) as well as implausible runs (faster than 2:30 min/km).</li>
+        <li><b>Not in crews at all:</b> implausible runs (faster than 2:30 min/km).</li>
         <li>When you leave a crew or are removed, it no longer sees your runs. Your comments there stay until you delete them or your account.</li>
       </ul>,
     ],
@@ -213,31 +197,19 @@ const en: typeof de = {
       </p>,
     ],
     [
-      "Strava",
+      "Import from Apple Health",
       <p key="s">
-        A connection is only created when you start it and approve it at Strava. Pacepact then reads your running activities
-        (time, distance, duration, name, heart rate only with consent) and never posts anything back. Strava&apos;s privacy
-        policy applies to the data it holds. Only you see your Strava runs. “Disconnect” revokes access at Strava, deletes the
-        tokens immediately and, unless you untick it, all runs imported from Strava. If you revoke access at Strava directly,
-        we delete the tokens and Strava runs automatically. If the same run also arrives through Apple Health, we keep one copy.
-      </p>,
-    ],
-    [
-      "Apple Health",
-      <p key="s">
-        If you set up the Apple Health sync, the iPhone app “Health Auto Export” (by another provider, which you install and pay
-        for yourself) sends your workouts straight from your iPhone to Pacepact, protected by a personal key of which we store
-        only a checksum. We keep only running workouts with time, duration, distance and an identifier; heart rate only with
-        your consent. Other workouts and health data the app sends along are discarded immediately and never stored. End the
-        sync by deleting the automation in the app or revoking the key in Settings.
+        You export your data yourself in the Health app (“Export All Health Data”) and choose the file in Pacepact. The file is
+        read <b>only in your browser</b> and never uploaded. Pacepact receives running workouts only: time, duration, distance,
+        and average and maximum heart rate only with your consent. Other workouts and all other health data stay on your
+        device. If you also typed the same run in by hand, we keep one copy and keep your effort and notes.
       </p>,
     ],
     [
       "Cookies",
       <p key="s">
         Only strictly necessary cookies, no analytics or advertising cookies: <code>pp_session</code> (sign-in, 30 days),{" "}
-        <code>pp_locale</code> (your language choice, 1 year), <code>pp_challenge</code> (only during sign-in, 5 minutes) and{" "}
-        <code>pp_oauth</code> (only while you connect a service, 10 minutes). In your browser&apos;s storage we only remember
+        <code>pp_locale</code> (your language choice, 1 year) and <code>pp_challenge</code> (only during sign-in, 5 minutes). In your browser&apos;s storage we only remember
         when you choose “Not now” for installing the app, so we do not ask again for 30 days. Passkeys are managed by your
         operating system (e.g. iCloud Keychain); the provider&apos;s terms apply.
       </p>,
@@ -248,8 +220,7 @@ const en: typeof de = {
         Hosting and database: {H.provider} ({H.servicesEn}) as processor under its{" "}
         <a href={H.dpa} rel="noopener">data processing addendum</a>. Location: {H.locationEn}. Any access from the US is covered
         by the EU-US Data Privacy Framework or standard contractual clauses. When you load the site, the host processes
-        technically necessary connection data (see the general privacy policy). We do not share data with anyone else, except
-        the services you connect yourself.
+        technically necessary connection data (see the general privacy policy). We do not share data with anyone else.
       </p>,
     ],
     [

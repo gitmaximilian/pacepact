@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
-import { appUrl } from "@/lib/providers/registry";
+import { appUrl } from "@/lib/app-url";
 import { param, type SearchParams } from "@/lib/queries";
 import { contestEnd, evaluate } from "@/lib/social/contests";
 import { currentWeek, feedMilestones, feedRuns, finalizeDue, groupMembers, memberData, membership, milestoneId } from "@/lib/social/groups";
@@ -302,7 +302,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ) : (
               <p className="panel muted">{s_.feedEmpty}</p>
             )}
-            <p className="small muted">{s_.feedHint} {s_.providerNote}</p>
+            <p className="small muted">{s_.feedHint}</p>
           </section>
         </>
       ) : null}
@@ -342,7 +342,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             );
           })}
         </ol>
-        <p className="small muted">{s_.boardFair} {group.onlyImported ? s_.onlyImportedNote : ""} {s_.providerNote}</p>
+        <p className="small muted">{s_.boardFair} {group.onlyImported ? s_.onlyImportedNote : ""}</p>
       </section>
     );
   }
@@ -378,7 +378,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ))}
           </>
         ) : null}
-        <p className="small muted">{s_.guard} {s_.providerNote}</p>
+        <p className="small muted">{s_.guard}</p>
       </section>
     );
   }

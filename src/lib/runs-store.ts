@@ -5,8 +5,8 @@ import { resolveDuplicate } from "./dedupe";
 import { sanitize, type NormalizedRun } from "./import/types";
 import { refreshWeeks, weeksOf } from "./social/store";
 
-/** Sources where the runner states walk breaks explicitly. Watch files, Apple Health and Strava cannot tell. */
-const WALK_KNOWN_SOURCES = ["manual", "csv"];
+/** Only manual entries state walk breaks explicitly; Apple Health cannot tell. */
+const WALK_KNOWN_SOURCES = ["manual"];
 
 /**
  * Inserts runs. Skips duplicates of the same source (by externalId) and merges the same run

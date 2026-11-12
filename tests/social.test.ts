@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { weekPrescription, weekTarget, PHASES, isRaceWeek } from "../src/lib/plan.ts";
 import { badgeFor, evaluate, longRunTarget, score, validContest, contestEnd } from "../src/lib/social/contests.ts";
 import { board, countedWeek, easyPaceGain, enduranceGain, rank, streak, type MemberData } from "../src/lib/social/scoring.ts";
-import { countsInGroups, ingestSource, sourceKind } from "../src/lib/social/sources.ts";
+import { sourceKind } from "../src/lib/social/sources.ts";
 import { aggregate, aggregateWeeks, milestonesFrom, weekKey, weekRange, type AggRun, type WeekAgg } from "../src/lib/social/weeks.ts";
 
 const RACE = "2027-04-18";
@@ -17,26 +17,16 @@ const member = (userId: string, runs: AggRun[], runsPerWeek = 3): MemberData => 
   return { userId, runsPerWeek, raceDate: RACE, weeks };
 };
 
-test("sources: providers never reach groups, files count as device, API cannot pose as a device", () => {
-  assert.equal(countsInGroups("strava"), false);
-  assert.equal(countsInGroups("apple-health"), true);
+test("sources: Apple Health counts as device, everything else as self-reported", () => {
   assert.equal(sourceKind("apple-health"), "device");
-  assert.equal(countsInGroups("gpx"), true);
-  assert.equal(countsInGroups("manual"), true);
-  assert.equal(sourceKind("fit"), "device");
   assert.equal(sourceKind("manual"), "manual");
-  assert.equal(ingestSource("fit"), "api-fit");
-  assert.equal(ingestSource("strava"), "api-strava");
-  assert.equal(ingestSource(undefined), "api");
-  assert.equal(sourceKind(ingestSource("gpx")), "manual");
 });
 
-test("weekly aggregation skips Strava and implausible runs and keeps walk breaks honest", () => {
+test("weekly aggregation skips implausible runs and keeps walk breaks honest", () => {
   const w = aggregateWeeks([
     run("2026-11-09", 5, 30),
     run("2026-11-10", 21, 30), // 1:26 min/km: implausible
-    run("2026-11-11", 6, 36, { source: "strava" }),
-    run("2026-11-12", 4, 40, { walkKnown: false, source: "fit" }),
+    run("2026-11-12", 4, 40, { walkKnown: false, source: "apple-health" }),
     run("2026-11-13", 3, 25, { walkBreaks: true }),
   ]);
   const a = w.get("2026-11-09")!;

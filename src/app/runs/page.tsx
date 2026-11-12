@@ -5,7 +5,7 @@ import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
 import { param, userRuns, type SearchParams } from "@/lib/queries";
-import { deleteRun, importFiles, updateRunType } from "../actions";
+import { deleteRun, updateRunType } from "../actions";
 import { Flash, Shell } from "../components";
 
 export const metadata = { title: "Runs" };
@@ -18,7 +18,7 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
   const imported = param(sp, "imported");
   const ok = param(sp, "saved") ? t.runs.saved : imported != null ? fmt(t.runs.imported, { n: imported, s: param(sp, "skipped") ?? 0 }) : null;
   const importError = param(sp, "importError");
-  const dateFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium" });
+  const dateFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Vienna" });
 
   return (
     <Shell t={t} locale={locale} active="/runs">
@@ -28,15 +28,7 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
       </div>
       <Flash ok={ok} err={importError ? fmt(t.runs.importFailed, { msg: importError }) : null} />
 
-      <form action={importFiles} className="panel form">
-        <h3>{t.runs.importTitle}</h3>
-        <p className="small muted">{t.runs.importHint}</p>
-        <div className="row">
-          <input type="file" name="files" accept=".gpx,.tcx,.fit,.csv" multiple required style={{ maxWidth: 420 }} aria-label={t.runs.importTitle} />
-          <input type="hidden" name="onlyName" value={user.name} />
-          <button className="btn">{t.runs.importButton}</button>
-        </div>
-      </form>
+      <p className="panel small">{t.runs.importHint} <Link href="/import">{t.nav.connections} →</Link></p>
 
       {runs.length === 0 ? (
         <p className="panel muted">{t.runs.empty}</p>
