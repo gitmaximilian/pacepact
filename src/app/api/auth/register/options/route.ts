@@ -15,7 +15,7 @@ const Body = z.object({
 export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "origin" }, { status: 403 });
   const ip = req.headers.get("cf-connecting-ip") ?? "local";
-  if (!rateLimit(`register:${ip}`, 20, 60 * 60_000)) return NextResponse.json({ error: "rate" }, { status: 429 });
+  if (!(await rateLimit(`register:${ip}`, 20, 60 * 60_000))) return NextResponse.json({ error: "rate" }, { status: 429 });
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "input" }, { status: 400 });
   const b = parsed.data;

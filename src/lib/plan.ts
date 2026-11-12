@@ -74,3 +74,67 @@ export function tempoUnlock(measured30: boolean, experience: string | null | und
   if (experience === "easy30" || experience === "regular") return "reported";
   return null;
 }
+
+const round5 = (n: number) => Math.max(10, Math.round(n / 5) * 5);
+const scale = (r: [number, number] | null, f: number): [number, number] | null => (r ? [round5(r[0] * f), round5(r[1] * f)] : null);
+
+/** Whether the race falls into the week starting on `week` (Monday, YYYY-MM-DD). */
+export function isRaceWeek(raceDate: string, week: string): boolean {
+  const end = new Date(new Date(`${week}T00:00:00Z`).getTime() + 6 * 86400_000).toISOString().slice(0, 10);
+  return raceDate >= week && raceDate <= end;
+}
+
+/**
+ * What a phase looks like in a specific week. Lighter weeks cut the minutes by about a
+ * quarter and drop one tempo repetition. In race week the race replaces the long run.
+ */
+export function weekPrescription(phase: Phase, opts: { lighter: boolean; raceWeek: boolean }): Phase {
+  if (opts.raceWeek) {
+    return { ...phase, run1: [20, 30], run2: { kind: "easy", minutes: [15, 20] }, run3: null };
+  }
+  if (!opts.lighter) return phase;
+  const run2: Phase["run2"] = !phase.run2
+    ? null
+    : phase.run2.kind === "tempo"
+      ? { ...phase.run2, reps: Math.max(1, phase.run2.reps - 1) }
+      : { kind: "easy", minutes: scale(phase.run2.minutes, 0.75)! };
+  return { ...phase, run1: scale(phase.run1, 0.75), run2, run3: scale(phase.run3, 0.75) };
+}
+
+export interface WeekTarget {
+  /** Runs that make the week "done". */
+  runs: number;
+  /** Planned minutes plus 10 %: more than this never counts in rankings or challenges. */
+  capSec: number;
+  lighter: boolean;
+  taper: boolean;
+  raceWeek: boolean;
+}
+
+/**
+ * The plan's target for one week. Lighter weeks and taper keep the number of runs, so
+ * doing the lighter plan counts as "done"; extra volume beyond the plan earns nothing.
+ */
+export function weekTarget(runsPerWeek: number, raceDate: string | null, week: string): WeekTarget {
+  const mid = new Date(new Date(`${week}T00:00:00Z`).getTime() + 3.5 * 86400_000);
+  const lanes = weeklyLanes(runsPerWeek);
+  let phase: Phase = PHASES[0];
+  let lighter = false;
+  let raceWeek = false;
+  if (raceDate) {
+    const p = currentPhase(raceDate, mid);
+    if ("run1" in p) phase = p;
+    raceWeek = isRaceWeek(raceDate, week);
+    lighter = !raceWeek && "run1" in p && isLighterWeek(raceDate, mid);
+  }
+  const week_ = weekPrescription(phase, { lighter, raceWeek });
+  const upper = (lane: Lane) => {
+    if (lane === "run3") return week_.run3?.[1] ?? 150; // race week: the race itself
+    if (lane === "run2" && week_.run2) {
+      return week_.run2.kind === "easy" ? week_.run2.minutes[1] : 20 + week_.run2.reps * week_.run2.repMinutes * 2;
+    }
+    return week_.run1?.[1] ?? 30;
+  };
+  const minutes = lanes.reduce((a, l) => a + upper(l), 0);
+  return { runs: lanes.length, capSec: Math.round(minutes * 60 * 1.1), lighter, taper: phase.id === "taper", raceWeek };
+}

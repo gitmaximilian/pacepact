@@ -28,6 +28,8 @@ export const users = sqliteTable("users", {
   runsPerWeek: integer("runs_per_week").notNull().default(3),
   /** Does strength training on the side (affects plan hints). */
   strength: integer("strength", { mode: "boolean" }).notNull().default(false),
+  /** Version of the precomputed weekly stats (run_weeks); older versions are rebuilt on demand. */
+  statsVersion: integer("stats_version").notNull().default(0),
   createdAt: ts("created_at").notNull().$defaultFn(now),
 });
 
@@ -110,6 +112,8 @@ export const runs = sqliteTable(
     maxHr: integer("max_hr"),
     effort: integer("effort"),
     walkBreaks: integer("walk_breaks", { mode: "boolean" }).notNull().default(false),
+    /** False when the source cannot tell walk breaks apart (watch imports): then walkBreaks means "unknown". */
+    walkKnown: integer("walk_known", { mode: "boolean" }).notNull().default(true),
     notes: text("notes"),
     source: text("source").notNull().default("manual"),
     externalId: text("external_id"),
@@ -128,6 +132,11 @@ export const groups = sqliteTable("groups", {
   ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  /** Only runs from device files count in rankings and challenges. */
+  onlyImported: integer("only_imported", { mode: "boolean" }).notNull().default(false),
+  /** Shared race for the countdown (optional). */
+  raceName: text("race_name"),
+  raceDate: text("race_date"), // YYYY-MM-DD
   createdAt: ts("created_at").notNull().$defaultFn(now),
 });
 
@@ -142,6 +151,13 @@ export const groupMembers = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     role: text("role").$type<"owner" | "member">().notNull().default("member"),
     joinedAt: ts("joined_at").notNull().$defaultFn(now),
+    /** Privacy per membership. By default the group sees minutes, run counts and plan progress only. */
+    shareDistance: integer("share_distance", { mode: "boolean" }).notNull().default(false),
+    sharePace: integer("share_pace", { mode: "boolean" }).notNull().default(false),
+    /** Voluntary: registered for the group race (null = not said). */
+    raceRegistered: integer("race_registered", { mode: "boolean" }),
+    /** For "since your last visit" hints. */
+    lastSeenAt: ts("last_seen_at"),
   },
   (t) => [primaryKey({ columns: [t.groupId, t.userId] }), index("group_members_user_idx").on(t.userId)],
 );
@@ -179,8 +195,158 @@ export const apiTokens = sqliteTable("api_tokens", {
   lastUsedAt: ts("last_used_at"),
 });
 
+/**
+ * Precomputed weekly totals per runner, rebuilt whenever a run is stored, changed or deleted.
+ * Only runs that may be shown in groups are included (no Strava or other provider data, no implausible runs).
+ * variant "all" = every such run, "device" = only runs from device files (GPX/TCX/FIT).
+ */
+export const runWeeks = sqliteTable(
+  "run_weeks",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    week: text("week").notNull(), // Monday, YYYY-MM-DD
+    variant: text("variant").$type<"all" | "device">().notNull(),
+    runs: integer("runs").notNull().default(0),
+    sec: integer("sec").notNull().default(0),
+    km: real("km").notNull().default(0),
+    longestSec: integer("longest_sec").notNull().default(0),
+    longestKm: real("longest_km").notNull().default(0),
+    continuousSec: integer("continuous_sec").notNull().default(0),
+    walkRuns: integer("walk_runs").notNull().default(0),
+    easySec: integer("easy_sec").notNull().default(0),
+    easyKm: real("easy_km").notNull().default(0),
+    testKm: real("test_km").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.week, t.variant] })],
+);
+
+/** Personal milestones (first 30 minutes without walking, first 10 km, …). */
+export const milestones = sqliteTable(
+  "milestones",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<MilestoneKind>().notNull(),
+    value: integer("value").notNull(),
+    achievedAt: ts("achieved_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.value] }), index("milestones_user_time_idx").on(t.userId, t.achievedAt)],
+);
+export type MilestoneKind = "continuous" | "distance" | "test";
+
+export const CHALLENGE_KINDS = ["coop", "compete", "duel", "personal"] as const;
+export type ChallengeKind = (typeof CHALLENGE_KINDS)[number];
+export const CHALLENGE_METRICS = ["minutes", "runs", "km", "planWeeks", "continuous", "longRun", "test"] as const;
+export type ChallengeMetric = (typeof CHALLENGE_METRICS)[number];
+
+/** Group and personal challenges (called "contests" in code; the WebAuthn table is already named "challenges"). */
+export const contests = sqliteTable(
+  "contests",
+  {
+    id: id(),
+    /** Null for personal challenges. */
+    groupId: text("group_id").references(() => groups.id, { onDelete: "cascade" }),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    kind: text("kind").$type<ChallengeKind>().notNull(),
+    metric: text("metric").$type<ChallengeMetric>().notNull(),
+    target: real("target").notNull(),
+    startWeek: text("start_week").notNull(), // Monday, YYYY-MM-DD
+    weeks: integer("weeks").notNull(),
+    template: text("template"),
+    title: text("title"),
+    status: text("status").$type<"active" | "done">().notNull().default("active"),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
+  },
+  (t) => [index("contests_group_idx").on(t.groupId, t.status), index("contests_creator_idx").on(t.createdBy)],
+);
+
+export const contestEntries = sqliteTable(
+  "contest_entries",
+  {
+    contestId: text("contest_id")
+      .notNull()
+      .references(() => contests.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").$type<"invited" | "accepted" | "declined">().notNull(),
+    /** Filled when the challenge is finished. */
+    score: real("score"),
+    rank: integer("rank"),
+    badge: text("badge"),
+  },
+  (t) => [primaryKey({ columns: [t.contestId, t.userId] }), index("contest_entries_user_idx").on(t.userId)],
+);
+
+export const REACTIONS = ["clap", "fire", "strong", "party"] as const;
+export type Reaction = (typeof REACTIONS)[number];
+export const TARGET_TYPES = ["run", "contest", "milestone"] as const;
+export type TargetType = (typeof TARGET_TYPES)[number];
+
+export const reactions = sqliteTable(
+  "reactions",
+  {
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    targetType: text("target_type").$type<TargetType>().notNull(),
+    targetId: text("target_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    emoji: text("emoji").$type<Reaction>().notNull(),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.targetType, t.targetId, t.userId, t.emoji] }), index("reactions_target_idx").on(t.targetId)],
+);
+
+export const comments = sqliteTable(
+  "comments",
+  {
+    id: id(),
+    groupId: text("group_id")
+      .notNull()
+      .references(() => groups.id, { onDelete: "cascade" }),
+    targetType: text("target_type").$type<TargetType>().notNull(),
+    targetId: text("target_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
+  },
+  (t) => [index("comments_group_target_idx").on(t.groupId, t.targetId), index("comments_target_idx").on(t.targetId)],
+);
+
+export const reports = sqliteTable(
+  "reports",
+  {
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    reporterId: text("reporter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: ts("created_at").notNull().$defaultFn(now),
+  },
+  (t) => [primaryKey({ columns: [t.commentId, t.reporterId] })],
+);
+
+/** Fixed-window rate limits shared by all Worker instances. Keys contain hashes, never raw IPs. */
+export const rateLimits = sqliteTable("rate_limits", {
+  key: text("key").primaryKey(),
+  windowStart: integer("window_start").notNull(),
+  count: integer("count").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Run = typeof runs.$inferSelect;
 export type NewRun = typeof runs.$inferInsert;
 export type Goal = typeof goals.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
+export type Group = typeof groups.$inferSelect;
+export type RunWeek = typeof runWeeks.$inferSelect;
+export type Contest = typeof contests.$inferSelect;

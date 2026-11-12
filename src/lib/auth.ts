@@ -1,5 +1,6 @@
 import "server-only";
-import { and, eq, gt, lt } from "drizzle-orm";
+import { and, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { handOverOwnedGroups } from "./social/groups";
 import { INACTIVE_ACCOUNT_DAYS } from "./legal";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -34,9 +35,24 @@ export async function cleanup(force = false) {
   lastCleanup = Date.now();
   const db = await getDb();
   await db.delete(schema.sessions).where(lt(schema.sessions.expiresAt, new Date()));
-  await db
-    .delete(schema.users)
-    .where(lt(schema.users.lastActiveAt, new Date(Date.now() - INACTIVE_ACCOUNT_DAYS * 86400_000)));
+  await db.delete(schema.rateLimits).where(lt(schema.rateLimits.windowStart, Date.now() - 86400_000));
+  const inactive = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(lt(schema.users.lastActiveAt, new Date(Date.now() - INACTIVE_ACCOUNT_DAYS * 86400_000)))
+    .limit(20);
+  // Groups of an inactive admin go to the next member instead of being deleted with the account.
+  for (const u of inactive) await deleteUserData(u.id);
+}
+
+/** Deletes an account: hands over owned groups and removes comments and reactions on its runs. */
+export async function deleteUserData(userId: string) {
+  const db = await getDb();
+  await handOverOwnedGroups(userId);
+  const runIds = db.select({ id: schema.runs.id }).from(schema.runs).where(eq(schema.runs.userId, userId));
+  await db.delete(schema.comments).where(inArray(schema.comments.targetId, runIds));
+  await db.delete(schema.reactions).where(inArray(schema.reactions.targetId, runIds));
+  await db.delete(schema.users).where(eq(schema.users.id, userId));
 }
 
 export async function destroySession() {
@@ -74,15 +90,24 @@ export async function requireUser() {
   return user;
 }
 
-/** Simple in-memory limiter for sign-in attempts (per process). */
-const attempts = new Map<string, { count: number; resetAt: number }>();
-export function rateLimit(key: string, max = 8, windowMs = 15 * 60_000): boolean {
+/**
+ * Fixed-window rate limit stored in D1, so it holds across all Worker instances.
+ * Keys are hashed; raw IP addresses are never stored. Returns false once `max` is exceeded.
+ */
+export async function rateLimit(key: string, max = 8, windowMs = 15 * 60_000): Promise<boolean> {
+  const db = await getDb();
   const now = Date.now();
-  const entry = attempts.get(key);
-  if (!entry || entry.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  entry.count += 1;
-  return entry.count <= max;
+  const fresh = now - windowMs;
+  const [row] = await db
+    .insert(schema.rateLimits)
+    .values({ key: sha256(key), windowStart: now, count: 1 })
+    .onConflictDoUpdate({
+      target: schema.rateLimits.key,
+      set: {
+        count: sql`CASE WHEN ${schema.rateLimits.windowStart} < ${fresh} THEN 1 ELSE ${schema.rateLimits.count} + 1 END`,
+        windowStart: sql`CASE WHEN ${schema.rateLimits.windowStart} < ${fresh} THEN ${now} ELSE ${schema.rateLimits.windowStart} END`,
+      },
+    })
+    .returning({ count: schema.rateLimits.count });
+  return (row?.count ?? 1) <= max;
 }

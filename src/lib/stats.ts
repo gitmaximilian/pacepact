@@ -7,6 +7,8 @@ export interface RunLike {
   avgHr: number | null;
   effort: number | null;
   walkBreaks: boolean;
+  /** False for imports that cannot tell walk breaks apart. */
+  walkKnown?: boolean;
   runType: string;
 }
 
@@ -28,8 +30,10 @@ export function summarize(runs: RunLike[], now = new Date()) {
   const efforts = runs.filter((r) => r.effort != null).map((r) => r.effort as number);
   const longest = runs.reduce<RunLike | null>((a, r) => (!a || r.distanceKm > a.distanceKm ? r : a), null);
   const latest = runs.reduce<RunLike | null>((a, r) => (!a || r.startedAt > a.startedAt ? r : a), null);
+  // Only runs known to be without walk breaks and not logged as hard (effort 7+) count as
+  // "continuous easy minutes": this is what unlocks tempo work.
   const longestContinuousSec = runs
-    .filter((r) => !r.walkBreaks)
+    .filter((r) => r.walkKnown !== false && !r.walkBreaks && (r.effort == null || r.effort <= 6))
     .reduce((a, r) => Math.max(a, r.durationSec), 0);
 
   return {

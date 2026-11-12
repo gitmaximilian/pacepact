@@ -9,6 +9,8 @@ export interface NormalizedRun {
   maxHr?: number | null;
   effort?: number | null;
   walkBreaks?: boolean;
+  /** Whether walkBreaks was stated explicitly. Defaults by source (manual and CSV yes, files and providers no). */
+  walkKnown?: boolean;
   runType?: RunType;
   notes?: string | null;
   externalId?: string | null;

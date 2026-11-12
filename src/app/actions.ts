@@ -1,13 +1,13 @@
 "use server";
 
-import { and, asc, eq, ne } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { EXPERIENCE, RUN_TYPES } from "@/db/schema";
-import { destroySession, rateLimit, requireUser } from "@/lib/auth";
-import { inviteCode, randomToken, sha256 } from "@/lib/crypto";
+import { deleteUserData, destroySession, requireUser } from "@/lib/auth";
+import { randomToken, sha256 } from "@/lib/crypto";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
 import { ImportError, parseActivityFile } from "@/lib/import";
 import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
@@ -15,6 +15,8 @@ import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
 import { getOAuthProvider } from "@/lib/providers/registry";
 import { syncConnection } from "@/lib/providers/sync";
 import { storeRuns } from "@/lib/runs-store";
+import { joinByCode } from "@/lib/social/join";
+import { refreshWeeks, weeksOf } from "@/lib/social/store";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -111,14 +113,17 @@ export async function completeOnboarding(fd: FormData) {
     targetSeconds,
     active: true,
   });
-  redirect("/dashboard?welcome=1");
+  const groupId = await joinByCode(user.id, str(fd, "join"));
+  redirect(groupId ? `/groups/${groupId}?joined=1` : "/dashboard?welcome=1");
 }
 
-export async function skipOnboarding() {
+/** `join` is the invite code the runner signed up with: they join right after the welcome flow. */
+export async function skipOnboarding(join?: string) {
   const user = await requireUser();
   const db = await getDb();
   await db.update(schema.users).set({ onboardedAt: new Date() }).where(eq(schema.users.id, user.id));
-  redirect("/dashboard");
+  const groupId = await joinByCode(user.id, typeof join === "string" ? join : "");
+  redirect(groupId ? `/groups/${groupId}?joined=1` : "/dashboard");
 }
 
 /* --------------------------------- Goal ---------------------------------- */
@@ -172,13 +177,25 @@ export async function addRun(fd: FormData) {
       externalId: `manual:${randomToken(9)}`,
     },
   ]);
-  redirect("/runs?saved=1");
+  redirect(safeLocalPath(str(fd, "back"), "/runs?saved=1"));
 }
 
 export async function deleteRun(fd: FormData) {
   const user = await requireUser();
   const db = await getDb();
-  await db.delete(schema.runs).where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)));
+  const [run] = await db
+    .delete(schema.runs)
+    .where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)))
+    .returning({ id: schema.runs.id, startedAt: schema.runs.startedAt });
+  if (run) {
+    // Remove what others attached to the run, and milestones it alone stood for.
+    await db.delete(schema.comments).where(eq(schema.comments.targetId, run.id));
+    await db.delete(schema.reactions).where(eq(schema.reactions.targetId, run.id));
+    await db
+      .delete(schema.milestones)
+      .where(and(eq(schema.milestones.userId, user.id), eq(schema.milestones.achievedAt, run.startedAt)));
+    await refreshWeeks(user.id, weeksOf([run.startedAt]));
+  }
   redirect("/runs");
 }
 
@@ -187,10 +204,12 @@ export async function updateRunType(fd: FormData) {
   const runType = str(fd, "runType");
   if (!(RUN_TYPES as readonly string[]).includes(runType)) redirect("/runs");
   const db = await getDb();
-  await db
+  const [run] = await db
     .update(schema.runs)
     .set({ runType: runType as (typeof RUN_TYPES)[number] })
-    .where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)));
+    .where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)))
+    .returning({ startedAt: schema.runs.startedAt });
+  if (run) await refreshWeeks(user.id, weeksOf([run.startedAt]));
   redirect("/runs");
 }
 
@@ -211,63 +230,6 @@ export async function importFiles(fd: FormData) {
     }
   }
   redirect(`/runs?imported=${inserted}&skipped=${skipped}`);
-}
-
-/* -------------------------------- Groups --------------------------------- */
-
-export async function createGroup(fd: FormData) {
-  const user = await requireUser();
-  const name = str(fd, "name").slice(0, 60);
-  if (!name) redirect("/groups?error=name");
-  const db = await getDb();
-  let group: typeof schema.groups.$inferSelect | undefined;
-  for (let i = 0; i < 5 && !group; i++) {
-    [group] = await db.insert(schema.groups).values({ name, ownerId: user.id, inviteCode: inviteCode() }).onConflictDoNothing().returning();
-  }
-  if (!group) redirect("/groups?error=name");
-  await db.insert(schema.groupMembers).values({ groupId: group.id, userId: user.id, role: "owner" });
-  redirect(`/groups/${group.id}`);
-}
-
-export async function joinGroup(fd: FormData) {
-  const user = await requireUser();
-  const code = str(fd, "code").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (!rateLimit(`join:${user.id}`, 20)) redirect("/groups?error=code");
-  const db = await getDb();
-  const [group] = await db.select().from(schema.groups).where(eq(schema.groups.inviteCode, code)).limit(1);
-  if (!group) redirect("/groups?error=code");
-  await db.insert(schema.groupMembers).values({ groupId: group.id, userId: user.id }).onConflictDoNothing();
-  redirect(`/groups/${group.id}`);
-}
-
-/** Hands a group to its longest-standing other member, or deletes it if nobody else is in it. */
-async function handOverOrDelete(groupId: string, leavingUserId: string) {
-  const db = await getDb();
-  const [next] = await db
-    .select()
-    .from(schema.groupMembers)
-    .where(and(eq(schema.groupMembers.groupId, groupId), ne(schema.groupMembers.userId, leavingUserId)))
-    .orderBy(asc(schema.groupMembers.joinedAt))
-    .limit(1);
-  if (!next) {
-    await db.delete(schema.groups).where(eq(schema.groups.id, groupId));
-    return;
-  }
-  await db.update(schema.groups).set({ ownerId: next.userId }).where(eq(schema.groups.id, groupId));
-  await db
-    .update(schema.groupMembers)
-    .set({ role: "owner" })
-    .where(and(eq(schema.groupMembers.groupId, groupId), eq(schema.groupMembers.userId, next.userId)));
-}
-
-export async function leaveGroup(fd: FormData) {
-  const user = await requireUser();
-  const db = await getDb();
-  const groupId = str(fd, "groupId");
-  const [group] = await db.select().from(schema.groups).where(eq(schema.groups.id, groupId)).limit(1);
-  if (group?.ownerId === user.id) await handOverOrDelete(groupId, user.id);
-  await db.delete(schema.groupMembers).where(and(eq(schema.groupMembers.groupId, groupId), eq(schema.groupMembers.userId, user.id)));
-  redirect("/groups");
 }
 
 /* ------------------------------ Connections ------------------------------ */
@@ -318,10 +280,7 @@ export async function revokeApiToken(fd: FormData) {
 export async function deleteAccount(fd: FormData) {
   const user = await requireUser();
   if (str(fd, "confirm") !== "DELETE") redirect("/settings");
-  const db = await getDb();
-  const owned = await db.select().from(schema.groups).where(eq(schema.groups.ownerId, user.id));
-  for (const g of owned) await handOverOrDelete(g.id, user.id);
-  await db.delete(schema.users).where(eq(schema.users.id, user.id));
+  await deleteUserData(user.id);
   (await cookies()).delete("pp_session");
   redirect("/");
 }

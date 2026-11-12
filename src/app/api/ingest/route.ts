@@ -6,6 +6,7 @@ import { RUN_TYPES } from "@/db/schema";
 import { sha256 } from "@/lib/crypto";
 import { rateLimit } from "@/lib/auth";
 import { storeRuns } from "@/lib/runs-store";
+import { ingestSource } from "@/lib/social/sources";
 
 const RunInput = z.object({
   startedAt: z.coerce.date(),
@@ -30,7 +31,7 @@ const Body = z.union([RunInput, z.array(RunInput).max(500)]);
 export async function POST(req: NextRequest) {
   const token = req.headers.get("authorization")?.match(/^Bearer\s+(\S+)$/i)?.[1];
   if (!token) return NextResponse.json({ error: "Missing bearer token" }, { status: 401 });
-  if (!rateLimit(`ingest:${sha256(token)}`, 120, 60 * 60_000)) {
+  if (!(await rateLimit(`ingest:${sha256(token)}`, 120, 60 * 60_000))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
   const db = await getDb();
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
   const list = Array.isArray(parsed.data) ? parsed.data : [parsed.data];
   const bySource = new Map<string, typeof list>();
   for (const r of list) {
-    const s = r.source ?? "api";
+    // Automations may name their tool, but never pose as a device file or a provider.
+    const s = ingestSource(r.source);
     bySource.set(s, [...(bySource.get(s) ?? []), r]);
   }
   let inserted = 0;
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
     const res = await storeRuns(
       row.userId,
       source,
-      rs.map((r) => ({ ...r, externalId: r.externalId ?? `${source}:${r.startedAt.toISOString()}` })),
+      rs.map((r) => ({ ...r, walkKnown: r.walkBreaks !== undefined, externalId: r.externalId ?? `${source}:${r.startedAt.toISOString()}` })),
     );
     inserted += res.inserted;
     skipped += res.skipped;
