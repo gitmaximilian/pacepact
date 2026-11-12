@@ -255,10 +255,10 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             <p className="since">
               <b>{s_.since}:</b>{" "}
               {[
-                since.runs ? fmt(s_.sinceRuns, { n: since.runs }) : null,
+                since.runs ? (since.runs === 1 ? s_.sinceRunsOne : fmt(s_.sinceRuns, { n: since.runs })) : null,
                 since.kudos ? fmt(s_.sinceKudos, { n: since.kudos }) : null,
-                since.comments ? fmt(s_.sinceComments, { n: since.comments }) : null,
-                myInvites.length ? fmt(s_.sinceInvites, { n: myInvites.length }) : null,
+                since.comments ? (since.comments === 1 ? s_.sinceCommentsOne : fmt(s_.sinceComments, { n: since.comments })) : null,
+                myInvites.length ? (myInvites.length === 1 ? s_.sinceInvitesOne : fmt(s_.sinceInvites, { n: myInvites.length })) : null,
               ].filter(Boolean).join(" · ")}
             </p>
           ) : null}
