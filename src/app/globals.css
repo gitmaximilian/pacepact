@@ -81,7 +81,7 @@ p { margin: 0; max-width: 65ch; }
   .desktop-only { display: none !important; }
   main { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
   .tabbar {
-    display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
     background: var(--track-deep); color: var(--lane);
     padding: 6px max(6px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -6px 24px rgba(8, 14, 30, 0.18);
@@ -321,3 +321,91 @@ details > summary { cursor: pointer; }
 .steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
 .copy-row { display: flex; gap: 8px; align-items: center; min-width: 0; }
 .copy-row code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 0.8rem; }
+
+/* ------------------------- Crew home (one glance) ------------------------- */
+.crew-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.crew-head h1 { font-size: clamp(1.8rem, 7vw, 2.8rem); overflow-wrap: anywhere; }
+.crew-head .eyebrow { display: block; }
+.nowrap { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.share-btn { flex: none; min-height: 40px; }
+.week-board { gap: 10px; }
+.week-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.week-head > div { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.big-num { font-size: 3.2rem; line-height: 0.9; }
+.big-num .of { font-size: 1.8rem; color: var(--muted); }
+.big-label { font-family: var(--f-display); font-weight: 800; font-size: 1.35rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.you-line { font-weight: 500; }
+.you-line.done { color: var(--good); }
+.btn.block { width: 100%; min-height: 48px; font-size: 1.05rem; }
+h2.h-small { font-size: 1.35rem; }
+.lanes li.me .name { font-weight: 800; }
+.lanes li.me { box-shadow: inset 4px 0 0 var(--signal); }
+table.compare { min-width: 0; width: 100%; }
+table.compare th, table.compare td { padding: 8px 6px; }
+table.compare th { font-size: 0.78rem; }
+table.compare .r { text-align: right; }
+table.compare .rank { width: 28px; color: var(--muted); font-size: 1.2rem; }
+table.compare td.num { font-size: 1.3rem; white-space: nowrap; }
+table.compare small { font-family: var(--f-body); font-size: 0.72rem; font-weight: 500; color: var(--muted); }
+table.compare .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; width: 100%; font-weight: 600; }
+table.compare tr.me td { background: color-mix(in srgb, var(--signal) 18%, var(--surface)); }
+.admin > summary { display: flex; gap: 8px; align-items: center; min-height: 32px; }
+.admin[open] > summary { margin-bottom: 8px; }
+.admin { gap: 18px; }
+.kudo { min-height: 40px; min-width: 44px; justify-content: center; }
+.comment-box summary { min-height: 32px; display: inline-flex; align-items: center; }
+
+/* Me */
+.me-week { gap: 10px; }
+.hero-num { font-size: 3.4rem; line-height: 1; }
+.hero-num .of { font-size: 1.8rem; opacity: 0.7; }
+.me-week a { color: var(--lane); }
+.lane-tile { grid-template-columns: 64px 1fr auto; }
+.lane-tile .tick { width: 32px; height: 32px; border-radius: 50%; background: var(--good); color: #fff; display: grid; place-items: center; font-weight: 800; }
+.lane-tile.done .lane-no { background: color-mix(in srgb, var(--track) 55%, var(--surface)); }
+.run-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.run-list li { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "day min" "type min"; column-gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.run-list li:last-child { border-bottom: 0; }
+.run-list li > :nth-child(1) { grid-area: day; }
+.run-list li > :nth-child(2) { grid-area: min; align-self: center; font-size: 1.4rem; }
+.run-list li > :nth-child(3) { grid-area: type; }
+
+/* Log a run */
+.log-form { gap: 18px; }
+.fields.two { grid-template-columns: 1fr 1fr; }
+.big-input { font-family: var(--f-display); font-weight: 800; font-size: 1.8rem; padding: 8px 12px; }
+.type-pick { border: 0; margin: 0; padding: 0; }
+.type-pick legend { font-weight: 600; font-size: 0.9rem; padding: 0; margin-bottom: 6px; }
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; }
+.seg span { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 14px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 600; font-size: 0.92rem; cursor: pointer; }
+.seg input:checked + span { background: var(--track); border-color: var(--track); color: var(--lane); }
+.seg input:focus-visible + span { outline: 3px solid var(--signal); outline-offset: 2px; }
+details.more > summary { color: var(--muted); font-size: 0.92rem; min-height: 32px; }
+.import-hint a { font-weight: 600; }
+
+/* Runs list */
+.run-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.run-cards .panel { padding: 12px 14px; gap: 6px; }
+.run-top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.big-min { font-size: 2rem; line-height: 1; min-width: 64px; }
+.big-min small { font-family: var(--f-body); font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+.run-meta { display: flex; flex-direction: column; min-width: 0; }
+@media (max-width: 420px) { .run-top .src { grid-column: 2; justify-self: start; } }
+.saved-tag { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--good) 16%, var(--surface)); color: var(--good); font-weight: 700; font-size: 0.85rem; }
+@media (max-width: 760px) {
+  main { padding-top: 16px; }
+  main .wrap.stack { gap: 16px; }
+  .crew-head h1 { font-size: 1.9rem; }
+  .crew-head .share-btn { padding: 6px 10px; }
+  .tabs { margin-top: -6px; }
+  .tabs a { padding: 8px 10px; }
+  .week-board { padding: 14px; gap: 8px; }
+  .big-num { font-size: 2.6rem; }
+  .big-num .of { font-size: 1.5rem; }
+  .big-label { font-size: 1.15rem; }
+  .lanes li { min-height: 46px; padding-block: 6px; }
+  .lanes .lane-n { margin-block: -6px; font-size: 1.3rem; }
+}
+main > .wrap { max-width: 760px; }

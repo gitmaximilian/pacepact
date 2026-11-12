@@ -20,21 +20,18 @@ export function LangSwitch({ locale, back }: { locale: Locale; back: string }) {
   );
 }
 
+/** Three places only: the crew, logging a run, and me (my week, runs and plan). */
 const NAV = [
   ["/groups", "groups"],
+  ["/runs/new", "log"],
   ["/dashboard", "dashboard"],
-  ["/runs", "runs"],
-  ["/plan", "plan"],
-  ["/import", "connections"],
   ["/settings", "settings"],
 ] as const;
 
 const TABS = [
   ["/groups", "groups", "crew"],
-  ["/dashboard", "dashboard", "today"],
   ["/runs/new", "log", "plus"],
-  ["/runs", "runs", "runs"],
-  ["/plan", "plan", "plan"],
+  ["/dashboard", "dashboard", "user"],
 ] as const;
 
 export function Shell({

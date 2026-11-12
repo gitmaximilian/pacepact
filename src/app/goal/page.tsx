@@ -22,7 +22,7 @@ export default async function GoalPage({ searchParams }: { searchParams: SearchP
   const preset = goal && presets.some(([v]) => Number(v) === goal.distanceKm) ? String(goal.distanceKm) : goal ? "custom" : String(HALF_MARATHON_KM);
   const error = param(sp, "error");
   return (
-    <Shell t={t} locale={locale} active="/goal">
+    <Shell t={t} locale={locale} active="/dashboard">
       <h1>{t.goal.title}</h1>
       <Flash err={error === "date" ? t.goal.errDate : error ? t.auth.errInput : null} />
       <form action={saveGoal} className="panel form">

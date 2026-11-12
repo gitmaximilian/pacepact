@@ -9,7 +9,7 @@ import { getLocale } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: { default: "Pacepact", template: "%s · Pacepact" },
-  description: "Set a race goal, follow a simple plan, log runs automatically and train together in groups.",
+  description: "Run together in a crew and compare fairly: who ran this week, and where do you stand.",
   applicationName: "Pacepact",
   appleWebApp: { capable: true, title: "Pacepact", statusBarStyle: "default" },
   icons: { apple: "/apple-touch-icon.png" },

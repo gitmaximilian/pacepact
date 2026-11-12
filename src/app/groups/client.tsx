@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { Icon } from "../icons";
 
 /** Opens the system share sheet (phones) or copies the invite link. */
-export function ShareInvite({ url, text, labels }: { url: string; text: string; labels: { share: string; copy: string; copied: string } }) {
+export function ShareInvite({ url, text, labels, compact }: { url: string; text: string; labels: { share: string; copy: string; copied: string }; compact?: boolean }) {
   const [copied, setCopied] = useState(false);
   async function onClick() {
     if (typeof navigator !== "undefined" && "share" in navigator) {
@@ -23,7 +24,8 @@ export function ShareInvite({ url, text, labels }: { url: string; text: string; 
     }
   }
   return (
-    <button type="button" className="btn signal" onClick={onClick}>
+    <button type="button" className={compact ? "btn ghost small share-btn" : "btn signal"} onClick={onClick}>
+      {compact ? <Icon name="share" size={18} /> : null}
       {copied ? labels.copied : labels.share}
     </button>
   );

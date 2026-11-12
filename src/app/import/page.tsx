@@ -21,7 +21,7 @@ export default async function ImportPage() {
     .where(and(eq(schema.runs.userId, user.id), eq(schema.runs.source, APPLE_HEALTH)));
   const day = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Vienna" });
   return (
-    <Shell t={t} locale={locale} active="/import">
+    <Shell t={t} locale={locale} active="/runs/new">
       <h1>{c.title}</h1>
       <p className="muted">{c.intro}</p>
 

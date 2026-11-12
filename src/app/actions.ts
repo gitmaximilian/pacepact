@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -174,7 +174,20 @@ export async function addRun(fd: FormData) {
       externalId: `manual:${randomToken(9)}`,
     },
   ]);
-  redirect(safeLocalPath(str(fd, "back"), "/runs?saved=1"));
+  redirect(await afterRun(user.id, str(fd, "back")));
+}
+
+/** After logging, show the runner where they stand: back to the crew they came from, or their first crew. */
+async function afterRun(userId: string, back: string): Promise<string> {
+  if (back.startsWith("/groups/") && safeLocalPath(back, "") === back && !back.includes("?")) return `${back}?saved=1`;
+  const db = await getDb();
+  const [first] = await db
+    .select({ id: schema.groupMembers.groupId })
+    .from(schema.groupMembers)
+    .where(eq(schema.groupMembers.userId, userId))
+    .orderBy(asc(schema.groupMembers.joinedAt))
+    .limit(1);
+  return first ? `/groups/${first.id}?saved=1` : "/dashboard";
 }
 
 export async function deleteRun(fd: FormData) {

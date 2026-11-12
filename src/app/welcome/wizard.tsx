@@ -30,7 +30,8 @@ function inWeeks(weeks: number) {
 function Choice({ name, value, checked, onChange, title, desc }: { name: string; value: string; checked: boolean; onChange: (v: string) => void; title: string; desc: string }) {
   return (
     <label className={`choice${checked ? " on" : ""}`}>
-      <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} />
+      {/* A click on the already chosen answer fires no change event, but should still move on. */}
+      <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} onClick={() => checked && onChange(value)} />
       <span className="choice-title">{title}</span>
       <span className="choice-desc">{desc}</span>
     </label>
@@ -42,6 +43,11 @@ export function Wizard({ t, initial, action, skip, error, join }: { t: Dictionar
   const [step, setStep] = useState(0);
   const [v, setV] = useState<WizardInitial>(initial);
   const set = <K extends keyof WizardInitial>(k: K, val: WizardInitial[K]) => setV((x) => ({ ...x, [k]: val }));
+  // Single-choice questions move on by themselves: one tap per question.
+  const pick = <K extends keyof WizardInitial>(k: K, val: WizardInitial[K]) => {
+    set(k, val);
+    window.setTimeout(() => setStep((n) => n + 1), 160);
+  };
   const today = new Date().toISOString().slice(0, 10);
   const total = 4;
 
@@ -113,7 +119,7 @@ export function Wizard({ t, initial, action, skip, error, join }: { t: Dictionar
         <fieldset className="stack" style={{ gap: 14 }}>
           <legend><h2>{w.levelQ}</h2></legend>
           <div className="choices">
-            {LEVELS.map((l) => <Choice key={l} name="level-choice" value={l} checked={v.experience === l} title={w.levels[l].t} desc={w.levels[l].d} onChange={(val) => set("experience", val as WizardInitial["experience"])} />)}
+            {LEVELS.map((l) => <Choice key={l} name="level-choice" value={l} checked={v.experience === l} title={w.levels[l].t} desc={w.levels[l].d} onChange={(val) => pick("experience", val as WizardInitial["experience"])} />)}
           </div>
         </fieldset>
       ) : null}
@@ -122,7 +128,7 @@ export function Wizard({ t, initial, action, skip, error, join }: { t: Dictionar
         <fieldset className="stack" style={{ gap: 14 }}>
           <legend><h2>{w.runsQ}</h2></legend>
           <div className="choices">
-            {RUNS.map((r) => <Choice key={r} name="runs-choice" value={r} checked={v.runsPerWeek === r} title={w.runs[r].t} desc={w.runs[r].d} onChange={(val) => set("runsPerWeek", val)} />)}
+            {RUNS.map((r) => <Choice key={r} name="runs-choice" value={r} checked={v.runsPerWeek === r} title={w.runs[r].t} desc={w.runs[r].d} onChange={(val) => pick("runsPerWeek", val)} />)}
           </div>
         </fieldset>
       ) : null}
@@ -131,7 +137,7 @@ export function Wizard({ t, initial, action, skip, error, join }: { t: Dictionar
         <fieldset className="stack" style={{ gap: 14 }}>
           <legend><h2>{w.strengthQ}</h2></legend>
           <div className="choices">
-            {(["yes", "no"] as const).map((s) => <Choice key={s} name="strength-choice" value={s} checked={v.strength === s} title={w.strength[s].t} desc={w.strength[s].d} onChange={(val) => set("strength", val as WizardInitial["strength"])} />)}
+            {(["yes", "no"] as const).map((s) => <Choice key={s} name="strength-choice" value={s} checked={v.strength === s} title={w.strength[s].t} desc={w.strength[s].d} onChange={(val) => pick("strength", val as WizardInitial["strength"])} />)}
           </div>
         </fieldset>
       ) : null}

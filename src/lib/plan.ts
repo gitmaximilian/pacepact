@@ -138,3 +138,23 @@ export function weekTarget(runsPerWeek: number, raceDate: string | null, week: s
   const minutes = lanes.reduce((a, l) => a + upper(l), 0);
   return { runs: lanes.length, capSec: Math.round(minutes * 60 * 1.1), lighter, taper: phase.id === "taper", raceWeek };
 }
+
+/**
+ * Which of this week's planned runs are done. A run logged as "Run 2" ticks Run 2; runs
+ * without a matching lane (imports are "other", tests, or a second "Run 1") tick the first
+ * open lanes in order, so imported runs count without retyping them.
+ */
+export function laneProgress(lanes: Lane[], runTypes: string[]): Record<Lane, boolean> {
+  const done = Object.fromEntries(lanes.map((l) => [l, false])) as Record<Lane, boolean>;
+  const rest: string[] = [];
+  for (const rt of runTypes) {
+    if ((lanes as string[]).includes(rt) && !done[rt as Lane]) done[rt as Lane] = true;
+    else rest.push(rt);
+  }
+  for (const _ of rest) {
+    const open = lanes.find((l) => !done[l]);
+    if (!open) break;
+    done[open] = true;
+  }
+  return done;
+}

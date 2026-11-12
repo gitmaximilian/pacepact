@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { REACTIONS, type Contest, type Reaction, type TargetType } from "@/db/schema";
 import { fmt, type Dictionary } from "@/lib/i18n";
@@ -180,17 +179,5 @@ export function ContestCard({
       ) : null}
       {footer}
     </article>
-  );
-}
-
-export function Chips<T extends string>({ items, current, href, label }: { items: readonly T[]; current: T; href: (v: T) => string; label: (v: T) => string }) {
-  return (
-    <div className="chips" role="tablist">
-      {items.map((v) => (
-        <Link key={v} href={href(v)} role="tab" aria-selected={v === current} className={`chip${v === current ? " on" : ""}`} scroll={false}>
-          {label(v)}
-        </Link>
-      ))}
-    </div>
   );
 }

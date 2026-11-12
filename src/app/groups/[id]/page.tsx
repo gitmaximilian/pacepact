@@ -11,7 +11,7 @@ import { appUrl } from "@/lib/app-url";
 import { param, type SearchParams } from "@/lib/queries";
 import { contestEnd, evaluate } from "@/lib/social/contests";
 import { currentWeek, feedMilestones, feedRuns, finalizeDue, groupMembers, memberData, membership, milestoneId } from "@/lib/social/groups";
-import { BOARDS, PERIODS, board, countedWeek, type Board, type Period } from "@/lib/social/scoring";
+import { fourWeeks, topMilestones, weekLanes, weekSummary } from "@/lib/social/overview";
 import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
 import { LEGAL } from "@/lib/legal";
@@ -21,11 +21,11 @@ import {
   deleteContest, deleteGroup, dismissReports, deleteComment, leaveGroup, removeMember, rotateInviteCode, saveGroupSettings, saveSharing,
 } from "../actions";
 import { ConfirmButton, ShareInvite } from "../client";
-import { Avatar, Chips, ContestCard, contestTitle, Hidden, Interactions, STICKER, stickerOf, type Social } from "./ui";
+import { Avatar, ContestCard, contestTitle, Hidden, Interactions, STICKER, stickerOf, type Social } from "./ui";
 
 export const metadata = { title: "Crew" };
 
-const TABS = ["overview", "board", "challenges", "crew"] as const;
+const TABS = ["overview", "challenges", "crew"] as const;
 type Tab = (typeof TABS)[number];
 const DAY = 86400_000;
 
@@ -74,7 +74,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   let social: Social | null = null;
   let reported: { id: string; body: string; userId: string; reports: number }[] = [];
   if (tab === "overview") {
-    const [runs, ms, personal] = await Promise.all([
+    const [runs, allMs, personal] = await Promise.all([
       feedRuns(members),
       feedMilestones(members),
       db
@@ -84,6 +84,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         .where(and(isNull(schema.contests.groupId), eq(schema.contests.status, "done"), inArray(schema.contests.createdBy, memberIds)))
         .limit(40),
     ]);
+    const ms = topMilestones(allMs);
     const recentDone = contests.filter((c) => c.status === "done" && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
     const personalDone = personal.filter(({ c, e }) => e.badge && e.userId === c.createdBy && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
     const targetIds = [...runs.map((r) => r.id), ...ms.map(milestoneId), ...recentDone.map((c) => c.id), ...personalDone.map(({ c }) => c.id)];
@@ -129,12 +130,12 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 <div style={{ minWidth: 0 }}>
                   <b>{names.get(r.userId)}</b> <span className="muted small">· {timeFmt.format(r.startedAt)}</span>
                   <div className="run-line">
-                    <span className="lane-chip">{t.runTypes[r.runType]}</span>
+                    {r.runType !== "other" ? <span className="lane-chip">{t.runTypes[r.runType]}</span> : null}
                     <span className="num">{Math.round(r.durationSec / 60)} {s_.minutes}</span>
                     {showKm && r.distanceKm > 0 ? <span className="num">{formatKm(r.distanceKm, locale, 1)} km</span> : null}
                     {showPace && r.distanceKm > 0 ? <span className="num">{formatPace(paceSecPerKm(r.durationSec, r.distanceKm))} /km</span> : null}
                     {r.walkBreaks ? <span className="small muted">{s_.walk}</span> : null}
-                    <span className={`src ${kind}`} title={kind === "device" ? s_.deviceTitle : s_.manualTitle}>{kind === "device" ? `⌚ ${r.source === "apple-health" ? "Apple Health" : s_.device}` : `✍️ ${s_.manual}`}</span>
+                    <span className={`src ${kind}`} title={kind === "device" ? s_.deviceTitle : s_.manualTitle}>{kind === "device" ? "⌚ Apple Health" : `✍️ ${s_.manual}`}</span>
                   </div>
                 </div>
               </div>
@@ -203,40 +204,36 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const tabHref = (v: Tab) => `/groups/${id}${v === "overview" ? "" : `?tab=${v}`}`;
   const flash =
     param(sp, "joined") ? s_.joined : param(sp, "new") ? s_.created : null;
+  const saved = !!param(sp, "saved");
 
   // This week's lanes
-  const lanes = members.map((x) => {
-    const d = dataOf.get(x.id)!;
-    const c = countedWeek(d, cw, d.weeks.get(cw));
-    return { m: x, c, raw: d.weeks.get(cw) };
-  });
-  lanes.sort((a, b) => Number(b.c.met) - Number(a.c.met) || b.c.runs - a.c.runs || b.c.sec - a.c.sec);
-  const wt = lanes[0]?.c.target;
+  const memberOf = new Map(members.map((x) => [x.id, x]));
+  const rawLanes = weekLanes(data, cw);
+  const lanes = rawLanes.map((l) => ({ m: memberOf.get(l.userId)!, c: l.c }));
+  const summary = weekSummary(rawLanes, user.id);
+  const wt = dataOf.get(user.id) ? lanes.find((l) => l.m.id === user.id)?.c.target : lanes[0]?.c.target;
+  const table = tab === "overview" ? fourWeeks(data, cw, weekRange(fromWeek, cw)) : [];
+  const myActive = contests.filter((c) => c.status === "active" && !myInvites.includes(c) && entriesOf(c).some((e) => e.userId === user.id && e.status === "accepted"));
+
+  const countdown =
+    group.raceDate && daysToRace != null && daysToRace >= 0
+      ? daysToRace === 0
+        ? fmt(s_.raceDay, { race: group.raceName ?? "" })
+        : `${daysToRace} ${fmt(daysToRace === 1 ? s_.countdownOne : s_.countdown, { race: group.raceName ?? "" })}`
+      : null;
+  const logHref = `/runs/new?back=${encodeURIComponent(`/groups/${id}`)}`;
 
   return (
     <Shell t={t} locale={locale} active="/groups">
-      <section className="crew-hero track">
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ minWidth: 0 }}>
-            <span className="eyebrow light">{s_.eyebrow} · {fmt(s_.runners, { n: members.length })}</span>
-            <h1>{group.name}</h1>
-          </div>
-          <div className="avatars" aria-hidden="true">
-            {members.slice(0, 6).map((x) => <Avatar key={x.id} id={x.id} name={x.name} size={34} />)}
-            {members.length > 6 ? <span className="avatar more">+{members.length - 6}</span> : null}
-          </div>
+      <header className="crew-head">
+        <div style={{ minWidth: 0 }}>
+          <span className="eyebrow">
+            {countdown ? <span className="nowrap"><Icon name="flag" size={13} /> {countdown}</span> : fmt(s_.runners, { n: members.length })}
+          </span>
+          <h1>{group.name}</h1>
         </div>
-        {group.raceDate && daysToRace != null && daysToRace >= 0 ? (
-          <div className="countdown">
-            <Icon name="flag" size={18} />
-            {daysToRace === 0 ? fmt(s_.raceDay, { race: group.raceName ?? "" }) : <><span className="num">{daysToRace}</span> {fmt(daysToRace === 1 ? s_.countdownOne : s_.countdown, { race: group.raceName ?? "" })}</>}
-          </div>
-        ) : null}
-        <div className="row">
-          <ShareInvite url={inviteUrl} text={fmt(s_.inviteText, { name: group.name })} labels={{ share: s_.invite, copy: s_.copy, copied: s_.copied }} />
-          <Link href={`/runs/new?back=${encodeURIComponent(`/groups/${id}`)}`} className="btn ghost-light">{s_.logRun}</Link>
-        </div>
-      </section>
+        <ShareInvite url={inviteUrl} text={fmt(s_.inviteText, { name: group.name })} labels={{ share: s_.invite, copy: s_.copy, copied: s_.copied }} compact />
+      </header>
 
       <Flash ok={flash} />
 
@@ -251,6 +248,44 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       {tab === "overview" ? (
         <>
+          <section className="panel week-board">
+            <div className="week-head">
+              <div>
+                <span className="big-num num">{summary.ran}<span className="of">/{summary.total}</span></span>
+                <span className="big-label">{s_.ranThisWeek}</span>
+              </div>
+              {wt?.raceWeek ? <span className="pill">{s_.raceWeek}</span> : wt?.taper ? <span className="pill">{s_.taper}</span> : wt?.lighter ? <span className="pill">{s_.lighter}</span> : null}
+            </div>
+            {summary.me ? (
+              <p className={`you-line${summary.me.met ? " done" : ""}`} role={saved ? "status" : undefined}>
+                {saved ? <span className="saved-tag">✓ {s_.runSaved}</span> : null}
+                <b>{s_.youLabel}:</b>{" "}
+                {summary.me.met
+                  ? s_.youDone
+                  : summary.me.target - summary.me.runs === 1
+                    ? s_.youToGoOne
+                    : fmt(s_.youToGo, { n: summary.me.target - summary.me.runs })}
+                {" · "}
+                {fmt(s_.youPlace, { n: summary.me.place })}
+              </p>
+            ) : null}
+            <ol className="lanes">
+              {lanes.map(({ m: x, c }, i) => (
+                <li key={x.id} className={`${c.met ? "met" : ""}${x.id === user.id ? " me" : ""}`}>
+                  <span className="lane-n">{i + 1}</span>
+                  <span className="who"><Avatar id={x.id} name={x.name} size={28} /> <span className="name">{x.id === user.id ? <>{s_.youLabel}<span className="sr-only"> ({x.name})</span></> : x.name}</span></span>
+                  <span className="dots" role="img" aria-label={fmt(s_.runsOf, { n: c.runs, of: c.target.runs })}>
+                    {Array.from({ length: c.target.runs }, (_, k) => <span key={k} className={k < c.runs ? "on" : ""} />)}
+                  </span>
+                  <span className="mins num">{Math.round(c.sec / 60)}<small> {s_.minutes}</small></span>
+                  {c.met ? <span className="check" title={s_.weekDone} aria-label={s_.weekDone}>✓</span> : <span className="check off" />}
+                </li>
+              ))}
+            </ol>
+            {summary.me && !summary.me.met ? <Link href={logHref} className="btn signal block">{s_.logRun}</Link> : null}
+            <p className="small muted">{s_.weekHint}</p>
+          </section>
+
           {since && (since.runs || since.kudos || since.comments || myInvites.length) ? (
             <p className="since">
               <b>{s_.since}:</b>{" "}
@@ -267,85 +302,48 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} />
           ))}
 
-          <section className="panel week-board">
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <h2>{s_.weekTitle}</h2>
-              {wt?.raceWeek ? <span className="pill">{s_.raceWeek}</span> : wt?.taper ? <span className="pill">{s_.taper}</span> : wt?.lighter ? <span className="pill">{s_.lighter}</span> : null}
-            </div>
-            <ol className="lanes">
-              {lanes.map(({ m: x, c }, i) => (
-                <li key={x.id} className={`${c.met ? "met" : ""}${x.id === user.id ? " me" : ""}`}>
-                  <span className="lane-n">{i + 1}</span>
-                  <span className="who"><Avatar id={x.id} name={x.name} size={28} /> <span className="name">{x.name}</span></span>
-                  <span className="dots" aria-label={`${c.runs}/${c.target.runs}`}>
-                    {Array.from({ length: c.target.runs }, (_, k) => <span key={k} className={k < c.runs ? "on" : ""} />)}
-                  </span>
-                  <span className="mins num">{Math.round(c.sec / 60)}<small> {s_.minutes}</small></span>
-                  {c.met ? <span className="check" title={s_.weekDone}>✓</span> : <span className="check off" />}
-                </li>
-              ))}
-            </ol>
-            <p className="small muted">{s_.weekHint}</p>
-          </section>
+          {members.length > 1 ? (
+            <section className="panel">
+              <h2 className="h-small">{s_.fourWeeksTitle}</h2>
+              <table className="compare">
+                <thead>
+                  <tr><th scope="col"><span className="sr-only">#</span></th><th scope="col">{s_.runnerCol}</th><th scope="col" className="r">{s_.streakCol}</th><th scope="col" className="r">{s_.minutesCol}</th></tr>
+                </thead>
+                <tbody>
+                  {table.map((r) => (
+                    <tr key={r.userId} className={r.userId === user.id ? "me" : undefined}>
+                      <td className="rank num">{r.rank}</td>
+                      <td className="who">{r.userId === user.id ? s_.youLabel : names.get(r.userId)}</td>
+                      <td className="r num">{r.streak}<small> {s_.wk}</small></td>
+                      <td className="r num">{r.minutes}<small> {s_.minutes}</small></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="small muted">{s_.fourWeeksHint}{group.onlyImported ? ` ${s_.onlyImportedNote}` : ""}</p>
+            </section>
+          ) : null}
 
-          {contests.filter((c) => c.status === "active" && !myInvites.includes(c) && entriesOf(c).some((e) => e.userId === user.id && e.status === "accepted")).slice(0, 3).map((c) => (
+          {myActive.slice(0, 1).map((c) => (
             <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} />
           ))}
 
           <section className="stack" style={{ gap: 12 }}>
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <h2>{s_.feedTitle}</h2>
-              <Link href="/rules" className="small">{s_.rulesLink}</Link>
-            </div>
+            <h2 className="h-small">{s_.feedTitle}</h2>
             {feed.length ? (
               <ul className="feed">{feed.map((f) => <li key={f.key} className="panel">{f.node}</li>)}</ul>
             ) : (
               <p className="panel muted">{s_.feedEmpty}</p>
             )}
-            <p className="small muted">{s_.feedHint}</p>
+            <p className="small muted">{s_.feedHint} <Link href="/rules">{s_.rulesLink}</Link></p>
           </section>
         </>
       ) : null}
 
-      {tab === "board" ? <BoardTab /> : null}
       {tab === "challenges" ? <ChallengesTab /> : null}
       {tab === "crew" ? <CrewTab /> : null}
     </Shell>
   );
-
-  function BoardTab() {
-    const b = (BOARDS as readonly string[]).includes(param(sp, "b") ?? "") ? (param(sp, "b") as Board) : "consistency";
-    const p = (PERIODS as readonly string[]).includes(param(sp, "p") ?? "") ? (param(sp, "p") as Period) : "month";
-    const period = p === "week" ? [cw] : p === "month" ? weekRange(addWeeks(cw, -3), cw) : weekRange(prepStart, cw);
-    const rows = board(b, data, period, cw, weekRange(fromWeek, cw));
-    const href = (nb: Board, np: Period) => `/groups/${id}?tab=board&b=${nb}&p=${np}`;
-    const max = Math.max(1, ...rows.map((r) => Math.abs(r.value ?? 0)));
-    const unit = s_.units[b];
-    return (
-      <section className="stack" style={{ gap: 14 }}>
-        <Chips items={BOARDS} current={b} href={(v) => href(v, p)} label={(v) => s_.boards[v]} />
-        {b !== "endurance" && b !== "easyPace" ? <Chips items={PERIODS} current={p} href={(v) => href(b, v)} label={(v) => s_.periods[v]} /> : null}
-        <p className="small muted">{s_.boardHints[b]}</p>
-        <ol className="lanes board">
-          {rows.map((r) => {
-            const x = members.find((mm) => mm.id === r.userId)!;
-            const v = r.value;
-            const shown = v == null ? s_.noData : b === "endurance" ? `${v > 0 ? "+" : ""}${v}` : b === "easyPace" ? `${v > 0 ? "+" : ""}${v.toLocaleString(lc)}` : v.toLocaleString(lc);
-            return (
-              <li key={r.userId} className={`${r.done ? "met" : ""}${r.userId === user.id ? " me" : ""}`}>
-                <span className="lane-n">{r.rank ?? "–"}</span>
-                <span className="who"><Avatar id={x.id} name={x.name} size={28} /> <span className="name">{x.name}</span></span>
-                <span className="bar"><span style={{ width: `${v == null ? 0 : Math.max(4, (Math.abs(v) / max) * 100)}%` }} /></span>
-                <span className="val num">{shown}{v != null ? <small> {unit}</small> : null}</span>
-                {r.done ? <span className="check" title={s_.onPlan}>✓</span> : <span className="check off" />}
-              </li>
-            );
-          })}
-        </ol>
-        <p className="small muted">{s_.boardFair} {group.onlyImported ? s_.onlyImportedNote : ""}</p>
-      </section>
-    );
-  }
 
   function ChallengesTab() {
     const active = contests.filter((c) => c.status === "active");
@@ -448,10 +446,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         </form>
 
         {isOwner ? (
-          <>
-            <form action={saveGroupSettings} className="panel form">
+          <details className="panel admin" open={reported.length > 0 || !!err}>
+            <summary><strong>{s_.adminMore}</strong>{reported.length ? <span className="dot">{reported.length}</span> : null}</summary>
+            <form action={saveGroupSettings} className="form">
               <Hidden v={{ groupId: id }} />
-              <h3>{s_.adminTitle} · {s_.settingsTitle}</h3>
+              <h3>{s_.settingsTitle}</h3>
               <div className="fields">
                 <div className="field"><label htmlFor="gname">{s_.groupName}</label><input id="gname" name="name" defaultValue={group.name} maxLength={60} required /></div>
                 <div className="field"><label htmlFor="raceName">{s_.raceName}</label><input id="raceName" name="raceName" defaultValue={group.raceName ?? ""} maxLength={80} /></div>
@@ -460,7 +459,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               <label className="check"><input type="checkbox" name="onlyImported" defaultChecked={group.onlyImported} /> {s_.onlyImported}</label>
               <div><button className="btn">{s_.save}</button></div>
             </form>
-            <div className="panel">
+            <div className="stack" style={{ gap: 10 }}>
               <h3>{s_.reportsTitle}</h3>
               {reported.length ? (
                 <ul className="members">
@@ -476,23 +475,20 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 <p className="small muted">{s_.noReports}</p>
               )}
             </div>
-          </>
+            <form action={deleteGroup} className="form danger-zone">
+              <Hidden v={{ groupId: id }} />
+              <h3>{s_.deleteTitle}</h3>
+              <p className="small muted">{s_.deleteHint}</p>
+              <input name="confirm" placeholder={group.name} aria-label={s_.groupName} autoComplete="off" />
+              <div><button className="btn danger">{s_.deleteBtn}</button></div>
+            </form>
+          </details>
         ) : null}
 
         <form action={leaveGroup}>
           <Hidden v={{ groupId: id }} />
           <ConfirmButton message={s_.leaveConfirm} className="btn danger">{s_.leave}</ConfirmButton>
         </form>
-
-        {isOwner ? (
-          <form action={deleteGroup} className="panel form danger-zone">
-            <Hidden v={{ groupId: id }} />
-            <h3>{s_.deleteTitle}</h3>
-            <p className="small muted">{s_.deleteHint}</p>
-            <input name="confirm" placeholder={group.name} aria-label={s_.groupName} autoComplete="off" />
-            <div><button className="btn danger">{s_.deleteBtn}</button></div>
-          </form>
-        ) : null}
         <p className="small muted">{fmt(s_.rulesContact, { email: LEGAL.email })}</p>
       </section>
     );

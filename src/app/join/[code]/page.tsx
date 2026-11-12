@@ -49,7 +49,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
               <span className="eyebrow">{t.social.eyebrow} · {fmt(t.social.joinSub, { n: count.n })}</span>
               <h1>{group.name}</h1>
               {group.raceName ? <p className="muted"><Icon name="flag" size={16} /> {fmt(t.social.joinRace, { race: group.raceName })}</p> : null}
-              <p className="small muted">{t.landing.f4d}</p>
+              <p className="small muted">{t.landing.f2d}</p>
               {user ? (
                 <form action={joinGroup}>
                   <input type="hidden" name="code" value={code} />

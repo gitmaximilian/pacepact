@@ -21,61 +21,59 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
   const dateFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Vienna" });
 
   return (
-    <Shell t={t} locale={locale} active="/runs">
+    <Shell t={t} locale={locale} active="/dashboard">
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.runs.title}</h1>
         <Link className="btn signal" href="/runs/new">{t.runs.add}</Link>
       </div>
       <Flash ok={ok} err={importError ? fmt(t.runs.importFailed, { msg: importError }) : null} />
 
-      <p className="panel small">{t.runs.importHint} <Link href="/import">{t.nav.connections} →</Link></p>
-
       {runs.length === 0 ? (
-        <p className="panel muted">{t.runs.empty}</p>
+        <p className="panel muted">{t.runs.empty} <Link href="/import">{t.dashboard.importApple} →</Link></p>
       ) : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>{t.runs.date}</th><th>{t.runs.type}</th><th>km</th><th>{t.runs.duration.split(" (")[0]}</th>
-                <th>{t.runs.pace}</th><th>{t.runs.avgHr}</th><th>{t.runs.effort.split(" ")[0]}</th><th>{t.runs.source}</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r) => (
-                <tr key={r.id}>
-                  <td>{dateFmt.format(r.startedAt)}</td>
-                  <td>
-                    <form action={updateRunType} className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <select name="runType" defaultValue={r.runType} aria-label={t.runs.type} style={{ width: "auto" }}>
-                        {RUN_TYPES.map((rt) => <option key={rt} value={rt}>{t.runTypes[rt]}</option>)}
-                      </select>
-                      <select name="walk" defaultValue={!r.walkKnown ? "" : r.walkBreaks ? "yes" : "no"} aria-label={t.runs.walkBreaks} style={{ width: "auto" }}>
-                        <option value="">{t.runs.walkUnknown}</option>
-                        <option value="no">{t.runs.walkNo}</option>
-                        <option value="yes">{t.runs.walk}</option>
-                      </select>
-                      <button className="btn ghost small">{t.runs.change}</button>
-                    </form>
-                  </td>
-                  <td className="num">{formatKm(r.distanceKm, locale)}</td>
-                  <td className="num">{formatDuration(r.durationSec)}</td>
-                  <td className="num">{formatPace(paceSecPerKm(r.durationSec, r.distanceKm))}</td>
-                  <td>{r.avgHr ?? "–"}</td>
-                  <td>{r.effort ?? "–"}</td>
-                  <td><span className="pill">{r.source}</span></td>
-                  <td>
-                    <form action={deleteRun}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <button className="btn danger small">{t.runs.delete}</button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="run-cards">
+          {runs.map((r) => (
+            <li key={r.id} className="panel">
+              <div className="run-top">
+                <span className="num big-min">{Math.round(r.durationSec / 60)}<small> {t.common.min}</small></span>
+                <div className="run-meta">
+                  <b>{dateFmt.format(r.startedAt)}</b>
+                  <span className="small muted">
+                    {[
+                      r.distanceKm > 0 ? `${formatKm(r.distanceKm, locale)} km` : null,
+                      r.distanceKm > 0 ? `${formatPace(paceSecPerKm(r.durationSec, r.distanceKm))} /km` : null,
+                      formatDuration(r.durationSec),
+                      r.effort ? `${t.runs.effort.split(" ")[0]} ${r.effort}` : null,
+                      r.avgHr ? `${r.avgHr} ${t.common.bpm}` : null,
+                    ].filter(Boolean).join(" · ")}
+                  </span>
+                </div>
+                <span className={`src ${r.source === "manual" ? "manual" : "device"}`}>{r.source === "manual" ? `✍️ ${t.social.manual}` : "⌚ Apple Health"}</span>
+              </div>
+              <details className="more">
+                <summary>{t.runTypes[r.runType]} · {!r.walkKnown ? t.runs.walkUnknown : r.walkBreaks ? t.runs.walk : t.runs.walkNo} · {t.runs.change}</summary>
+                <div className="row" style={{ marginTop: 10, justifyContent: "space-between" }}>
+                  <form action={updateRunType} className="row" style={{ gap: 8 }}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <select name="runType" defaultValue={r.runType} aria-label={t.runs.type} className="compact">
+                      {RUN_TYPES.map((rt) => <option key={rt} value={rt}>{t.runTypes[rt]}</option>)}
+                    </select>
+                    <select name="walk" defaultValue={!r.walkKnown ? "" : r.walkBreaks ? "yes" : "no"} aria-label={t.runs.walkBreaks} className="compact">
+                      <option value="">{t.runs.walkUnknown}</option>
+                      <option value="no">{t.runs.walkNo}</option>
+                      <option value="yes">{t.runs.walk}</option>
+                    </select>
+                    <button className="btn small">{t.common.save}</button>
+                  </form>
+                  <form action={deleteRun}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button className="btn danger small">{t.runs.delete}</button>
+                  </form>
+                </div>
+              </details>
+            </li>
+          ))}
+        </ul>
       )}
     </Shell>
   );

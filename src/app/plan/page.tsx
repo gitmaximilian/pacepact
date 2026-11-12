@@ -24,7 +24,7 @@ export default async function PlanPage() {
   const laneName = { run1: t.plan.run1, run2: t.plan.run2, run3: t.plan.run3, run4: t.plan.run4 };
   const now = goal ? currentPhase(goal.raceDate) : null;
   return (
-    <Shell t={t} locale={locale} active="/plan">
+    <Shell t={t} locale={locale} active="/dashboard">
       <h1>{t.plan.title}</h1>
       <p className="muted">{t.plan.intro}</p>
       <p className="row" style={{ gap: 8 }}>

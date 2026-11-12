@@ -36,3 +36,11 @@ test("tempo unlock: measured beats self-reported, beginners stay locked", () => 
   assert.equal(tempoUnlock(false, "new"), null);
   assert.equal(tempoUnlock(false, null), null);
 });
+
+test("lane progress: typed runs tick their lane, the rest fill open lanes in order", async () => {
+  const { laneProgress } = await import("../src/lib/plan.ts");
+  assert.deepEqual(laneProgress(["run1", "run2", "run3"], ["run3"]), { run1: false, run2: false, run3: true });
+  assert.deepEqual(laneProgress(["run1", "run2", "run3"], ["other", "run3", "other"]), { run1: true, run2: true, run3: true });
+  assert.deepEqual(laneProgress(["run1", "run3"], ["run1", "run1"]), { run1: true, run3: true });
+  assert.deepEqual(laneProgress(["run1", "run2", "run3"], []), { run1: false, run2: false, run3: false });
+});

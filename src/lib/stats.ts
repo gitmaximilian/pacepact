@@ -57,13 +57,14 @@ export function weeklyKm(runs: RunLike[], weeks = 12, now = new Date()) {
   const start = weekStart(now);
   const buckets = Array.from({ length: weeks }, (_, i) => {
     const from = new Date(start.getTime() - (weeks - 1 - i) * 7 * 86400_000);
-    return { weekStart: from, km: 0, runs: 0 };
+    return { weekStart: from, km: 0, sec: 0, runs: 0 };
   });
   for (const r of runs) {
     const ws = weekStart(r.startedAt).getTime();
     const b = buckets.find((x) => x.weekStart.getTime() === ws);
     if (b) {
       b.km += r.distanceKm;
+      b.sec += r.durationSec;
       b.runs += 1;
     }
   }
