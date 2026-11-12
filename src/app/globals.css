@@ -409,3 +409,6 @@ details.more > summary { color: var(--muted); font-size: 0.92rem; min-height: 32
   .lanes .lane-n { margin-block: -6px; font-size: 1.3rem; }
 }
 main > .wrap { max-width: 760px; }
+.hr-field .big-input { max-width: 50%; }
+.hr-off { background: color-mix(in srgb, var(--bad) 7%, var(--surface)); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.hr-off a { font-weight: 600; }

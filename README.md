@@ -17,8 +17,9 @@ Planned address: `https://pacepact.maximilianauer.at`
   "Share → Add to Home Screen" guide (as in Rookie).
 - **Navigation:** three places only: Crew, Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
-- **Log a run:** minutes and km are the only required fields; the run type is preselected (the next open planned run);
-  time, effort, walk breaks and notes are under "More details". After saving, the runner lands in their crew.
+- **Log a run:** minutes and km are the only required fields; average heart rate is a standard field for runners who
+  consented to storing heart rate (otherwise a visible hint links to the consent in Settings); the run type is
+  preselected (the next open planned run); time, max heart rate, effort, walk breaks and notes are under "More details". After saving, the runner lands in their crew.
 - **Languages:** English by default, German selectable in the intro (landing, sign-up, invite) and in Settings, saved per account.
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.
 - **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Two runs a week drop

@@ -112,7 +112,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
               <li key={r.id}>
                 <span className="muted small">{dayFmt.format(r.startedAt)}</span>
                 <span className="num">{Math.round(r.durationSec / 60)} {t.common.min}</span>
-                <span className="small muted">{r.runType !== "other" ? t.runTypes[r.runType] : ""}</span>
+                <span className="small muted">{[r.runType !== "other" ? t.runTypes[r.runType] : null, r.avgHr ? `Ø ${r.avgHr} ${t.common.bpm}` : null].filter(Boolean).join(" · ")}</span>
               </li>
             ))}
           </ul>

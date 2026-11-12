@@ -47,6 +47,15 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
             <input id="distanceKm" name="distanceKm" inputMode="decimal" placeholder="6.5" autoComplete="off" required className="big-input" />
           </div>
         </div>
+        {user.hrConsentAt ? (
+          <div className="field hr-field">
+            <label htmlFor="avgHr">{t.runs.avgHr} <span className="muted">({t.runs.bpmOptional})</span></label>
+            <input id="avgHr" name="avgHr" type="number" min={25} max={250} inputMode="numeric" placeholder="148" className="big-input" />
+            <span className="hint">{t.runs.hrPrivate}</span>
+          </div>
+        ) : (
+          <p className="small hr-off">❤️ {t.runs.hrOffShort} <Link href="/settings#hr">{t.runs.hrEnable} →</Link></p>
+        )}
         <fieldset className="field type-pick">
           <legend>{t.runs.type}</legend>
           <div className="seg">
@@ -63,21 +72,17 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
           <input id="date" name="date" type="date" defaultValue={today} max={today} required />
         </div>
         <details className="more">
-          <summary>{t.runs.more}</summary>
+          <summary>{user.hrConsentAt ? t.runs.moreHr : t.runs.more}</summary>
           <div className="form" style={{ marginTop: 12 }}>
             <div className="fields">
               <div className="field"><label htmlFor="time">{t.runs.time}</label><input id="time" name="time" type="time" /></div>
               <div className="field"><label htmlFor="effort">{t.runs.effort}</label><input id="effort" name="effort" type="number" min={1} max={10} inputMode="numeric" /></div>
               {user.hrConsentAt ? (
-                <>
-                  <div className="field"><label htmlFor="avgHr">{t.runs.avgHr}</label><input id="avgHr" name="avgHr" type="number" min={25} max={250} /></div>
-                  <div className="field"><label htmlFor="maxHr">{t.runs.maxHr}</label><input id="maxHr" name="maxHr" type="number" min={25} max={250} /></div>
-                </>
+                <div className="field"><label htmlFor="maxHr">{t.runs.maxHr}</label><input id="maxHr" name="maxHr" type="number" min={25} max={250} inputMode="numeric" /></div>
               ) : null}
             </div>
             <label className="check"><input type="checkbox" name="walkBreaks" /> {t.runs.walkBreaks}</label>
             <div className="field"><label htmlFor="notes">{t.runs.notes}</label><textarea id="notes" name="notes" maxLength={1000} /></div>
-            {user.hrConsentAt ? null : <p className="small muted">{t.runs.hrOff}</p>}
           </div>
         </details>
         <button className="btn signal block">{t.runs.save}</button>

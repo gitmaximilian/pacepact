@@ -73,7 +73,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
         <div><button className="btn">{t.settings.saveLanguage}</button></div>
       </form>
 
-      <section className="panel">
+      <section className="panel" id="hr">
         <h3>{t.settings.privacy}</h3>
         <strong>{t.settings.hrTitle}</strong>
         {user.hrConsentAt ? (

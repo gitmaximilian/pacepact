@@ -92,6 +92,11 @@ export const en = {
     errDate: "Pick a race day in the future.",
   },
   runs: {
+    bpmOptional: "bpm, optional",
+    hrPrivate: "Only you see it. Never shown to your crew.",
+    hrOffShort: "Want to track your average heart rate? It is health data, so we store it only with your consent.",
+    hrEnable: "Turn on in Settings",
+    moreHr: "More details (optional): time, max heart rate, effort, walk breaks, notes",
     minutesLabel: "Minutes",
     durationHint: "e.g. 45 or 1:05:00",
     more: "More details (optional): time, effort, walk breaks, notes",

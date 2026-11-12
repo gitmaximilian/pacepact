@@ -93,6 +93,11 @@ export const de: Dictionary = {
     errDate: "Wähl einen Renntag in der Zukunft.",
   },
   runs: {
+    bpmOptional: "Schläge/Min., optional",
+    hrPrivate: "Nur du siehst ihn. Nie für deine Crew sichtbar.",
+    hrOffShort: "Durchschnittspuls mittracken? Das sind Gesundheitsdaten, daher speichern wir ihn nur mit deiner Einwilligung.",
+    hrEnable: "In den Einstellungen einschalten",
+    moreHr: "Mehr Angaben (optional): Uhrzeit, Maximalpuls, Anstrengung, Gehpausen, Notizen",
     minutesLabel: "Minuten",
     durationHint: "z. B. 45 oder 1:05:00",
     more: "Mehr Angaben (optional): Uhrzeit, Anstrengung, Gehpausen, Notizen",
