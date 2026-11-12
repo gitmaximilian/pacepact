@@ -189,6 +189,18 @@ export const de: Dictionary = {
     appleTitle: "Apple Health (iPhone & Apple Watch)",
     appleText: "Neue Läufe aus Apple Health kommen automatisch über die iPhone-App „Health Auto Export“. Sie zählen in deiner Crew und sind als Gerätedaten markiert.",
     appleStatus: "{n} Läufe aus Apple Health · zuletzt synchronisiert {when}",
+    appleTextFree: "Gratis mit einem Apple-Kurzbefehl: Wenn du einen Lauf auf der Apple Watch beendest, geht er automatisch an Pacepact. Läufe aus Apple Health zählen in deiner Crew.",
+    shortcut: {
+      title: "Gratis: Apple-Kurzbefehl (Apple Watch)",
+      install: "Pacepact-Kurzbefehl laden",
+      keyLabel: "Wenn Kurzbefehle nach deinem Schlüssel fragt, füg diesen ein:",
+      steps: [
+        "In Kurzbefehle: Automation → + → „Apple Watch-Training“ → „Endet“, Laufen (Outdoor und Indoor) wählen und „Sofort ausführen“.",
+        "Als Aktion „Kurzbefehl ausführen“ → „Pacepact Lauf“ wählen. Fertig: Nach dem nächsten Lauf kommt kurz „Lauf gespeichert“.",
+        "Bisherige Läufe und Läufe ohne Apple Watch: Health Auto Export unten oder Datei hochladen.",
+      ],
+      haeTitle: "Alternative: Health Auto Export (kostenpflichtig, holt auch bisherige Läufe)",
+    },
     appleSetup: "Apple-Health-Sync einrichten",
     appleAgain: "Auf einem weiteren iPhone einrichten",
     appleStep1: "Installier Health Auto Export auf deinem iPhone. Automatisches Senden braucht dort das Premium-Abo (einmalig oder jährlich, bezahlt an den Entwickler der App).",

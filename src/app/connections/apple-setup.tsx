@@ -20,6 +20,13 @@ export interface AppleLabels {
   tokenOnce: string;
   copy: string;
   copied: string;
+  shortcut: {
+    title: string;
+    install: string;
+    steps: string[];
+    keyLabel: string;
+    haeTitle: string;
+  };
 }
 
 function Copy({ value, labels }: { value: string; labels: Pick<AppleLabels, "copy" | "copied"> }) {
@@ -50,7 +57,7 @@ function Copy({ value, labels }: { value: string; labels: Pick<AppleLabels, "cop
  * Creates a sync token and shows how to point Health Auto Export at Pacepact.
  * The token is shown once; only its hash is stored.
  */
-export function AppleSetup({ url, labels: l, hasToken }: { url: string; labels: AppleLabels; hasToken: boolean }) {
+export function AppleSetup({ url, labels: l, hasToken, shortcutUrl }: { url: string; labels: AppleLabels; hasToken: boolean; shortcutUrl: string | null }) {
   const [state, action, pending] = useActionState(createAppleToken, { token: null });
   if (!state.token) {
     return (
@@ -74,7 +81,7 @@ export function AppleSetup({ url, labels: l, hasToken }: { url: string; labels: 
       syncquantity: "1",
       enabled: "true",
     }).toString();
-  return (
+  const hae = (
     <ol className="steps">
       <li>
         {l.step1} <a href="https://apps.apple.com/app/id1115567069" rel="noopener">{l.step1Link}</a>
@@ -99,5 +106,28 @@ export function AppleSetup({ url, labels: l, hasToken }: { url: string; labels: 
       <li>{l.step3}</li>
       <li className="small muted">{l.tokenOnce}</li>
     </ol>
+  );
+  if (!shortcutUrl) return hae;
+  return (
+    <div className="stack" style={{ gap: 14 }}>
+      <div className="stack" style={{ gap: 8 }}>
+        <strong>{l.shortcut.title}</strong>
+        <ol className="steps">
+          <li>
+            <a className="btn signal" href={shortcutUrl} rel="noopener">{l.shortcut.install}</a>
+          </li>
+          <li>
+            {l.shortcut.keyLabel}
+            <Copy value={state.token} labels={l} />
+          </li>
+          {l.shortcut.steps.map((s) => <li key={s}>{s}</li>)}
+          <li className="small muted">{l.tokenOnce}</li>
+        </ol>
+      </div>
+      <details>
+        <summary><strong>{l.shortcut.haeTitle}</strong></summary>
+        <div style={{ marginTop: 10 }}>{hae}</div>
+      </details>
+    </div>
   );
 }

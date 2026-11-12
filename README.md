@@ -29,7 +29,8 @@ Planned address: `https://pacepact.maximilianauer.at`
   - **Apple Health** (iPhone, Apple Watch, and every app that writes workouts to Health, such as Garmin Connect, Polar
     Flow, COROS, Suunto and Strava): the iOS app "Health Auto Export" posts workouts to `/api/ingest/apple-health`
     (one-tap setup via deep link, or by hand). Past runs: "Export Existing Data" in the app with Batch Requests on.
-    Only running workouts are kept. Runs from Apple Health count in crews.
+    Only running workouts are kept. Runs from Apple Health count in crews. Free alternative: the Pacepact Apple
+    Shortcut (automation "Apple Watch workout ends"), see `docs/apple-shortcut.md`.
   - **Strava** (OAuth and push webhook): the last 4 weeks on connect, older runs via "Import past runs" (one page of
     50 activities per request, driven by the browser), new runs by webhook. Visible only to the runner (Strava API terms). Disconnecting revokes access at
     Strava and deletes Strava runs by default. Strava can write to Apple Health; then the run counts in crews.

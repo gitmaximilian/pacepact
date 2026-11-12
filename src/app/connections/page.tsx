@@ -52,7 +52,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
           <h2>{c.appleTitle}</h2>
           {lastApple ? <span className="pill done">{c.active}</span> : null}
         </div>
-        <p>{c.appleText}</p>
+        <p>{process.env.APPLE_SHORTCUT_URL ? c.appleTextFree : c.appleText}</p>
         {lastApple ? (
           <p className="small muted">
             {fmt(c.appleStatus, { n: apple?.n ?? 0, when: dateFmt.format(new Date(lastApple)) })}
@@ -62,6 +62,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
         <AppleSetup
           url={`${appUrl()}/api/ingest/apple-health`}
           hasToken={appleTokens.length > 0}
+          shortcutUrl={process.env.APPLE_SHORTCUT_URL?.startsWith("https://www.icloud.com/shortcuts/") ? process.env.APPLE_SHORTCUT_URL : null}
           labels={{
             setup: c.appleSetup,
             again: c.appleAgain,
@@ -79,6 +80,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
             tokenOnce: c.appleTokenOnce,
             copy: c.copy,
             copied: c.copied,
+            shortcut: c.shortcut,
           }}
         />
         <details className="history">

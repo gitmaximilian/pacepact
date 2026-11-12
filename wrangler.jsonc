@@ -6,7 +6,11 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": false },
-  "vars": { "APP_URL": "https://pacepact.maximilianauer.at" },
+  "vars": {
+    "APP_URL": "https://pacepact.maximilianauer.at",
+    // iCloud link of the shared "Pacepact run" shortcut (https://www.icloud.com/shortcuts/…); empty = not offered yet.
+    "APPLE_SHORTCUT_URL": ""
+  },
   "d1_databases": [
     {
       "binding": "DB",

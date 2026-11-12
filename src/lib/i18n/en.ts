@@ -188,6 +188,18 @@ export const en = {
     appleTitle: "Apple Health (iPhone & Apple Watch)",
     appleText: "New runs from Apple Health arrive automatically through the iPhone app “Health Auto Export”. They count in your crew, marked as from a device.",
     appleStatus: "{n} runs from Apple Health · last sync {when}",
+    appleTextFree: "Free with an Apple Shortcut: when you finish a run on your Apple Watch, it is sent to Pacepact automatically. Runs from Apple Health count in your crew.",
+    shortcut: {
+      title: "Free: Apple Shortcut (Apple Watch)",
+      install: "Get the Pacepact shortcut",
+      keyLabel: "When the Shortcuts app asks for your key, paste this:",
+      steps: [
+        "In Shortcuts open Automation → + → “Apple Watch Workout” → “Ends”, pick Running (outdoor and indoor) and choose “Run Immediately”.",
+        "As the action pick “Run Shortcut” → “Pacepact run”. Done: after your next run you get a short “Run saved” notification.",
+        "Past runs and runs without Apple Watch: use Health Auto Export below or upload a file.",
+      ],
+      haeTitle: "Alternative: Health Auto Export (paid, also imports past runs)",
+    },
     appleSetup: "Set up Apple Health sync",
     appleAgain: "Set up on another iPhone",
     appleStep1: "Install Health Auto Export on your iPhone. Automatic sending needs its Premium plan (one-time or yearly, paid to the app's developer).",
