@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
+import { isPlausibleRun } from "@/lib/plausibility";
 import { leaveGroup } from "../../actions";
 import { Shell, Stat } from "../../components";
 
@@ -48,7 +49,9 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
     .from(schema.runs)
     // Strava API terms: Strava data may only be shown to the athlete it belongs to.
     .where(and(inArray(schema.runs.userId, ids), ne(schema.runs.source, "strava")))
-    .orderBy(desc(schema.runs.startedAt));
+    .orderBy(desc(schema.runs.startedAt))
+    // Implausible runs (e.g. faster than 2:30 min/km) stay in the owner's log but never count here.
+    .then((rows) => rows.filter(isPlausibleRun));
   const since = new Date(Date.now() - 28 * 86400_000);
   const recent = runs.filter((r) => r.startedAt >= since);
   const name = new Map(members.map((m) => [m.id, m.name]));

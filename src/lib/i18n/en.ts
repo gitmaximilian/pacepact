@@ -105,6 +105,7 @@ export const en = {
     source: "Source",
     empty: "No runs yet.",
     errInput: "Check distance and duration. Duration accepts 15:09, 1:05:00 or 45.",
+    errPace: "That is faster than 2:30 min/km – check distance and duration.",
     importTitle: "Import files",
     importHint: "GPX, TCX, FIT or CSV. CSV can be an export of the old team spreadsheet.",
     importButton: "Import",

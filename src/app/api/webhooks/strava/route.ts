@@ -21,8 +21,10 @@ export async function POST(req: NextRequest) {
   // Untrusted input: every field is checked before use.
   const event = (await req.json().catch(() => null)) as Record<string, any> | null;
   if (!event || event.owner_id == null) return NextResponse.json({ ok: true });
+  // Events carry no signature, so the subscription ID is the only proof they come from Strava.
+  // Without it configured, events are ignored (otherwise anyone could delete runs or revoke connections).
   const expectedSub = process.env.STRAVA_SUBSCRIPTION_ID;
-  if (expectedSub && String(event.subscription_id) !== expectedSub) return NextResponse.json({ ok: true });
+  if (!expectedSub || String(event.subscription_id) !== expectedSub) return NextResponse.json({ ok: true });
 
   const db = await getDb();
   // The athlete revoked access at Strava: delete the stored tokens.

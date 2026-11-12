@@ -108,7 +108,7 @@ https://<your-domain>/api/connections/<provider>/callback
 
 | Service | Where to register | Environment variables |
 | --- | --- | --- |
-| Strava | https://www.strava.com/settings/api (set "Authorization Callback Domain" to your domain) | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, optional `STRAVA_SUBSCRIPTION_ID` |
+| Strava | https://www.strava.com/settings/api (set "Authorization Callback Domain" to your domain) | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_SUBSCRIPTION_ID` (required for webhook events; without it they are ignored) |
 | Polar | https://admin.polaraccesslink.com | `POLAR_CLIENT_ID`, `POLAR_CLIENT_SECRET` |
 | Fitbit | https://dev.fitbit.com/apps (type "Server") | `FITBIT_CLIENT_ID`, `FITBIT_CLIENT_SECRET` |
 | Wahoo | https://developers.wahooligan.com | `WAHOO_CLIENT_ID`, `WAHOO_CLIENT_SECRET` |

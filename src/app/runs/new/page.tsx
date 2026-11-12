@@ -15,7 +15,7 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
   return (
     <Shell t={t} locale={locale} active="/runs">
       <h1>{t.runs.add}</h1>
-      <Flash err={error ? t.runs.errInput : null} />
+      <Flash err={error === "pace" ? t.runs.errPace : error ? t.runs.errInput : null} />
       <form action={addRun} className="panel form">
         <div className="fields">
           <div className="field"><label htmlFor="date">{t.runs.date}</label><input id="date" name="date" type="date" defaultValue={today} max={today} required /></div>

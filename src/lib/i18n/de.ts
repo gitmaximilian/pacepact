@@ -107,6 +107,7 @@ export const de: Dictionary = {
     source: "Quelle",
     empty: "Noch keine Läufe.",
     errInput: "Prüf Distanz und Dauer. Dauer geht als 15:09, 1:05:00 oder 45.",
+    errPace: "Das wäre schneller als 2:30 min/km – prüf Distanz und Dauer.",
     importTitle: "Dateien importieren",
     importHint: "GPX, TCX, FIT oder CSV. CSV kann auch ein Export der alten Team-Tabelle sein.",
     importButton: "Importieren",

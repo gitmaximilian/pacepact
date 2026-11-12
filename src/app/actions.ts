@@ -11,6 +11,7 @@ import { inviteCode, randomToken, sha256 } from "@/lib/crypto";
 import { isLocale, LOCALE_COOKIE } from "@/lib/i18n";
 import { ImportError, parseActivityFile } from "@/lib/import";
 import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
+import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
 import { getOAuthProvider } from "@/lib/providers/registry";
 import { syncConnection } from "@/lib/providers/sync";
 import { storeRuns } from "@/lib/runs-store";
@@ -47,8 +48,7 @@ export async function setLocale(fd: FormData) {
     const db = await getDb();
     await db.update(schema.users).set({ locale }).where(eq(schema.users.id, user.id));
   }
-  const back = str(fd, "back");
-  redirect(back.startsWith("/") && !back.startsWith("//") ? back : "/");
+  redirect(safeLocalPath(str(fd, "back")));
 }
 
 /* ------------------------- Heart-rate consent ---------------------------- */
@@ -157,6 +157,7 @@ export async function addRun(fd: FormData) {
   if (Number.isNaN(startedAt.getTime()) || !(distanceKm >= 0) || !durationSec || !(RUN_TYPES as readonly string[]).includes(runType)) {
     redirect("/runs/new?error=input");
   }
+  if (!isPlausibleRun({ distanceKm, durationSec: durationSec! })) redirect("/runs/new?error=pace");
   await storeRuns(user.id, "manual", [
     {
       startedAt,
