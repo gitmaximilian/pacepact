@@ -18,7 +18,9 @@ Planned address: `https://pacepact.maximilianauer.at`
 - **Navigation:** three places only: Crew, Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
 - **Log a run:** minutes and km are the only required fields; average heart rate is a standard field for runners who
-  consented to storing heart rate (otherwise a visible hint links to the consent in Settings); the run type is
+  consented to storing heart rate; others can give that consent right in the form with a separate, unticked checkbox
+  (the field appears only once it is ticked). The Me page shows "pace at the same heart rate" (12 weeks, ±5 bpm around
+  the typical average heart rate, `hrTrend` in `src/lib/stats.ts`), visible only to the runner. The run type is
   preselected (the next open planned run); time, max heart rate, effort, walk breaks and notes are under "More details". After saving, the runner lands in their crew.
 - **Languages:** English by default, German selectable in the intro (landing, sign-up, invite) and in Settings, saved per account.
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.

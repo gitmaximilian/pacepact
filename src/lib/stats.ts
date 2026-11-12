@@ -82,3 +82,35 @@ export function paceAtHeartRate(runs: RunLike[], refHr: number, band = 5) {
     .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime())
     .map((r) => ({ startedAt: r.startedAt, pace: paceSecPerKm(r.durationSec, r.distanceKm), avgHr: r.avgHr }));
 }
+
+export interface HrTrend {
+  /** Typical average heart rate of recent runs (median), the reference point. */
+  refHr: number;
+  /** Mean pace (s/km) of the earliest and the latest matching runs. */
+  firstPace: number;
+  lastPace: number;
+  /** Seconds per km faster at the same heart rate (negative = slower). */
+  fasterSec: number;
+  /** Matching runs, oldest first, for a small chart. */
+  points: { startedAt: Date; pace: number }[];
+}
+
+/**
+ * "Pace at the same heart rate" over the last `weeks` weeks: picks the runner's typical
+ * average heart rate (median), keeps runs within ±5 bpm of it (tests excluded), and compares
+ * the first third with the last third. Needs at least four matching runs, otherwise null.
+ */
+export function hrTrend(runs: RunLike[], now = new Date(), weeks = 12): HrTrend | null {
+  const since = now.getTime() - weeks * 7 * 86400_000;
+  const recent = runs.filter((r) => r.avgHr != null && r.distanceKm > 0 && r.runType !== "test" && r.startedAt.getTime() >= since);
+  if (recent.length < 4) return null;
+  const hrs = recent.map((r) => r.avgHr as number).sort((a, b) => a - b);
+  const refHr = Math.round(hrs.length % 2 ? hrs[(hrs.length - 1) / 2] : (hrs[hrs.length / 2 - 1] + hrs[hrs.length / 2]) / 2);
+  const points = paceAtHeartRate(recent, refHr).map(({ startedAt, pace }) => ({ startedAt, pace: pace as number }));
+  if (points.length < 4) return null;
+  const n = Math.max(2, Math.floor(points.length / 3));
+  const mean = (xs: { pace: number }[]) => xs.reduce((a, x) => a + x.pace, 0) / xs.length;
+  const firstPace = Math.round(mean(points.slice(0, n)));
+  const lastPace = Math.round(mean(points.slice(-n)));
+  return { refHr, firstPace, lastPace, fasterSec: firstPace - lastPace, points };
+}

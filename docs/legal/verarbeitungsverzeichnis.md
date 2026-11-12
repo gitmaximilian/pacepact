@@ -26,7 +26,7 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 | Punkt | Inhalt |
 | --- | --- |
 | Zweck | Trainingsauswertung (z. B. Pace bei vergleichbarem Puls) |
-| Rechtsgrundlage | Ausdrückliche Einwilligung, Art. 9 Abs. 2 lit. a DSGVO (separates, nicht vorausgewähltes Häkchen bei Registrierung oder in den Einstellungen; Zeitpunkt wird gespeichert als Nachweis nach Art. 7 Abs. 1) |
+| Rechtsgrundlage | Ausdrückliche Einwilligung, Art. 9 Abs. 2 lit. a DSGVO (separates, nicht vorausgewähltes Häkchen bei Registrierung, im Formular „Lauf eintragen“ oder in den Einstellungen; Zeitpunkt wird gespeichert als Nachweis nach Art. 7 Abs. 1) |
 | Datenkategorien | Durchschnitts- und Maximalpuls je Lauf |
 | Ohne Einwilligung | Pulswerte werden bei Import und Eingabe verworfen, nicht gespeichert |
 | Widerruf | Jederzeit in den Einstellungen; löscht sofort alle gespeicherten Pulswerte |

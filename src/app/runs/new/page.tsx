@@ -7,6 +7,7 @@ import { param, userRuns, type SearchParams } from "@/lib/queries";
 import { weekStart } from "@/lib/stats";
 import { addRun } from "../../actions";
 import { TzField } from "./tz-field";
+import { HrField } from "./hr-field";
 import { Flash, Shell } from "../../components";
 
 export const metadata = { title: "Log a run" };
@@ -47,15 +48,10 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
             <input id="distanceKm" name="distanceKm" inputMode="decimal" placeholder="6.5" autoComplete="off" required className="big-input" />
           </div>
         </div>
-        {user.hrConsentAt ? (
-          <div className="field hr-field">
-            <label htmlFor="avgHr">{t.runs.avgHr} <span className="muted">({t.runs.bpmOptional})</span></label>
-            <input id="avgHr" name="avgHr" type="number" min={25} max={250} inputMode="numeric" placeholder="148" className="big-input" />
-            <span className="hint">{t.runs.hrPrivate}</span>
-          </div>
-        ) : (
-          <p className="small hr-off">❤️ {t.runs.hrOffShort} <Link href="/settings#hr">{t.runs.hrEnable} →</Link></p>
-        )}
+        <HrField
+          consented={!!user.hrConsentAt}
+          labels={{ avgHr: t.runs.avgHr, optional: t.runs.bpmOptional, private: t.runs.hrPrivate, consentTitle: t.runs.hrConsentTitle, consentText: t.settings.hrGrantText }}
+        />
         <fieldset className="field type-pick">
           <legend>{t.runs.type}</legend>
           <div className="seg">

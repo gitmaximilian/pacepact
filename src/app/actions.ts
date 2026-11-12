@@ -160,6 +160,12 @@ export async function addRun(fd: FormData) {
     redirect("/runs/new?error=input");
   }
   if (!isPlausibleRun({ distanceKm, durationSec: durationSec! })) redirect("/runs/new?error=pace");
+  // Heart-rate consent given right in the form: a separate, unticked checkbox with the full text
+  // (Art. 9 Abs. 2 lit. a DSGVO). Stored before the run, so the run keeps its heart rate.
+  if (!user.hrConsentAt && fd.get("hrConsent") === "on") {
+    const db = await getDb();
+    await db.update(schema.users).set({ hrConsentAt: new Date() }).where(eq(schema.users.id, user.id));
+  }
   await storeRuns(user.id, "manual", [
     {
       startedAt,

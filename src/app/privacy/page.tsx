@@ -51,7 +51,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Zweck und Rechtsgrundlage",
       <ul key="s">
         <li>Konto, Ziele, Läufe, Plan, Gruppen und Importe: Bereitstellung des Dienstes, den du nutzt (Art. 6 Abs. 1 lit. b DSGVO).</li>
-        <li>Puls: deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO). Freiwillig; ohne Einwilligung funktioniert alles andere genauso. Widerruf jederzeit in den Einstellungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
+        <li>Puls: deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO). Du gibst sie mit einem eigenen, nicht vorausgewählten Häkchen bei der Registrierung, beim Eintragen eines Laufs oder in den Einstellungen. Freiwillig; ohne Einwilligung funktioniert alles andere genauso. Der Puls dient nur deiner eigenen Auswertung („Pace bei gleichem Puls“) und ist für deine Crews nie sichtbar. Widerruf jederzeit in den Einstellungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
         <li>Crews, Wochenvergleich, Challenges, Kudos und Kommentare: Bereitstellung der Gemeinschaftsfunktionen, die du nutzt, wenn du einer Crew beitrittst (Art. 6 Abs. 1 lit. b DSGVO).</li>
         <li>Schutz vor Missbrauch, z. B. Begrenzung von Anmelde- und Beitrittsversuchen, sowie Moderation gemeldeter Inhalte: berechtigtes Interesse am sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Für Zähler speichern wir nur eine Prüfsumme (SHA-256) aus IP-Adresse bzw. Konto-ID und Zweck, höchstens 24 Stunden lang, nie die IP-Adresse selbst.</li>
       </ul>,
@@ -173,7 +173,7 @@ const en: typeof de = {
       "Purpose and legal basis",
       <ul key="s">
         <li>Account, goals, runs, plan, groups and imports: providing the service you use (Art. 6(1)(b) GDPR).</li>
-        <li>Heart rate: your explicit consent (Art. 9(2)(a) GDPR). Voluntary; everything else works the same without it. Withdraw at any time in Settings, with effect for the future (Art. 7(3) GDPR).</li>
+        <li>Heart rate: your explicit consent (Art. 9(2)(a) GDPR). You give it with a separate, unticked checkbox at sign-up, when logging a run, or in Settings. Voluntary; everything else works the same without it. Heart rate is only used for your own analysis ("pace at the same heart rate") and is never visible to your crews. Withdraw at any time in Settings, with effect for the future (Art. 7(3) GDPR).</li>
         <li>Crews, weekly comparison, challenges, kudos and comments: providing the community features you use when you join a crew (Art. 6(1)(b) GDPR).</li>
         <li>Abuse protection such as limiting sign-in and join attempts, and moderating reported content: legitimate interest in secure operation (Art. 6(1)(f) GDPR). Counters store only a checksum (SHA-256) of IP address or account ID and purpose, for at most 24 hours, never the IP address itself.</li>
       </ul>,

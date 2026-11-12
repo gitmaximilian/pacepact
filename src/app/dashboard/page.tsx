@@ -7,7 +7,7 @@ import { currentPhase, isLighterWeek, isRaceWeek, laneProgress, run2Prescription
 import { weekKey } from "@/lib/social/weeks";
 import { redirect } from "next/navigation";
 import { activeGoal, param, userRuns, type SearchParams } from "@/lib/queries";
-import { summarize, weekStart, weeklyKm } from "@/lib/stats";
+import { hrTrend, summarize, weekStart, weeklyKm } from "@/lib/stats";
 import { Flash, LaneNo, Shell } from "../components";
 import { describeEasy, describeRun2 } from "../plan-text";
 
@@ -39,6 +39,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
   const done = laneProgress(lanes, weekRuns.map((r) => r.runType));
   const doneCount = lanes.filter((l) => done[l]).length;
   const dayFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Vienna" });
+  const trend = user.hrConsentAt ? hrTrend(runs) : null;
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
 
   return (
@@ -132,6 +133,27 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
         </section>
       ) : null}
 
+      {user.hrConsentAt ? (
+        <section className="panel">
+          <h2 className="h-small">{d.hrTitle}</h2>
+          {trend ? (
+            <>
+              <p>
+                {fmt(d.hrAt, { hr: trend.refHr })}{" "}
+                <b className="num big-pace">{formatPace(trend.firstPace)} → {formatPace(trend.lastPace)}</b> /km
+              </p>
+              <p className={`small ${trend.fasterSec > 0 ? "good" : "muted"}`}>
+                {trend.fasterSec > 0 ? fmt(d.hrFaster, { s: trend.fasterSec }) : trend.fasterSec < 0 ? fmt(d.hrSlower, { s: -trend.fasterSec }) : d.hrSame}
+              </p>
+              <HrChart points={trend.points} label={fmt(d.hrAt, { hr: trend.refHr })} />
+              <p className="small muted">{d.hrHint}</p>
+            </>
+          ) : (
+            <p className="small muted">{d.hrEmpty}</p>
+          )}
+        </section>
+      ) : null}
+
       {!s.reached30MinContinuous ? (
         <section className="panel">
           <h2 className="h-small">{d.milestone30}</h2>
@@ -144,5 +166,25 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
 
       <p className="small"><Link href="/challenges">{t.social.personalTitle} →</Link></p>
     </Shell>
+  );
+}
+
+/** Pace per matching run, faster = higher. Only the runner sees it. */
+function HrChart({ points, label }: { points: { startedAt: Date; pace: number }[]; label: string }) {
+  const w = 300, h = 80, pad = 8;
+  const paces = points.map((p) => p.pace);
+  const lo = Math.min(...paces), hi = Math.max(...paces);
+  const t0 = points[0].startedAt.getTime(), t1 = points[points.length - 1].startedAt.getTime();
+  const x = (t: number) => pad + ((t - t0) / Math.max(1, t1 - t0)) * (w - 2 * pad);
+  const y = (p: number) => pad + ((p - lo) / Math.max(1, hi - lo)) * (h - 2 * pad);
+  const xy = points.map((p) => `${x(p.startedAt.getTime()).toFixed(1)},${y(p.pace).toFixed(1)}`);
+  return (
+    <svg className="hr-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} preserveAspectRatio="none">
+      <polyline points={xy.join(" ")} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      {xy.map((p, i) => {
+        const [cx, cy] = p.split(",");
+        return <circle key={i} cx={cx} cy={cy} r="3.5" />;
+      })}
+    </svg>
   );
 }

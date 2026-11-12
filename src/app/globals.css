@@ -410,5 +410,10 @@ details.more > summary { color: var(--muted); font-size: 0.92rem; min-height: 32
 }
 main > .wrap { max-width: 760px; }
 .hr-field .big-input { max-width: 50%; }
-.hr-off { background: color-mix(in srgb, var(--bad) 7%, var(--surface)); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
-.hr-off a { font-weight: 600; }
+.hr-consent { align-items: flex-start; background: color-mix(in srgb, var(--bad) 6%, var(--surface)); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.hr-consent input { margin-top: 2px; flex: none; }
+.hr-consent > span { display: flex; flex-direction: column; gap: 4px; }
+.big-pace { font-size: 1.6rem; }
+.good { color: var(--good); font-weight: 600; }
+.hr-chart { width: 100%; height: 80px; color: var(--track); fill: var(--signal); stroke-linejoin: round; }
+.hr-chart circle { stroke: var(--track); stroke-width: 1.5; }
