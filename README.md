@@ -11,10 +11,15 @@ Planned address: `https://pacepact.maximilianauer.at`
 - **Accounts:** open sign-up with passkeys only (Face ID, Touch ID, Windows Hello, phone). No email, no password.
   Users can add more passkeys in Settings.
 - **Welcome flow:** four questions after sign-up (goal and date, starting point, runs per week, strength training)
-  that set up the plan. It can be repeated from Settings.
+  that set up the plan; single-choice answers move on with one tap, and invited runners get the crew's race prefilled.
+  It can be repeated from Settings.
 - **Install as app:** web app manifest and icons; Android/Chrome gets a real install button, iPhone/iPad a short
   "Share → Add to Home Screen" guide (as in Rookie).
-- **Languages:** English by default, German selectable on every page and saved per account.
+- **Navigation:** three places only: Crew, Log a run (+) and Me (my week against the plan, recent runs, links to
+  the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
+- **Log a run:** minutes and km are the only required fields; the run type is preselected (the next open planned run);
+  time, effort, walk breaks and notes are under "More details". After saving, the runner lands in their crew.
+- **Languages:** English by default, German selectable in the intro (landing, sign-up, invite) and in Settings, saved per account.
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.
 - **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Two runs a week drop
   Run 2; four add an easy Run 4. Phases are counted back from race day.
@@ -35,13 +40,15 @@ Planned address: `https://pacepact.maximilianauer.at`
     run type typed by the runner are kept.
 - **Crews (groups) – the heart of the app:** signed-in runners land in their crew.
   - Invite link `/join/<code>` with the system share sheet; new runners sign up and land in the crew after the welcome
-    flow (6 taps). Admins rotate the code, remove members, edit the crew (race countdown, "count only Apple Health runs")
+    flow (9 taps including the passkey prompt; 11 taps and 3 fields until they see their first run in the lanes). Admins rotate the code, remove members, edit the crew (race countdown, "count only Apple Health runs")
     and delete it; everyone can leave.
-  - This week: one lane per runner with planned runs as dots, minutes and a check mark when the week is done.
-  - Fair rankings (week, 4 weeks, since start): streak, minutes, on plan, endurance gain, easy pace at comparable effort.
+  - The crew home answers two questions without scrolling on a phone: who ran this week ("3/4 ran this week", one
+    lane per runner with planned runs as dots, minutes and a check mark) and where do I stand ("You: 1 run to go ·
+    lane 2"). Below it, one fair four-week comparison: streak (weeks in a row on plan), then minutes.
     Minutes count only up to the plan + 10 % per week; weeks before a runner's first run do not count as missed; raw
-    pace and heart rate are never ranked.
-  - Challenges in seconds from templates or custom: together (e.g. 200 km), everyone (e.g. most runs, 4 weeks on plan,
+    pace and heart rate are never ranked. Logic: `src/lib/social/overview.ts`.
+  - Challenges in seconds: three templates up front (1,500 minutes together, 4 weeks on plan, minutes duel), more
+    templates and a custom form one tap away: together (e.g. 200 km), everyone (e.g. most runs, 4 weeks on plan,
     5/10 km test), 1:1 duels with accept/decline, and personal ones (30 minutes without walking, long run +10 %).
     They never reward more than the plan. Results, stickers and a recap when they end.
   - Feed (runs since joining, milestones, finished challenges) with kudos, comments, reporting and admin moderation;

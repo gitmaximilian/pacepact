@@ -1,6 +1,6 @@
 # Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO) – Pacepact
 
-> Stand 2026-11-11, **Entwurf – vom Verantwortlichen zu prüfen und freizugeben.** Internes Dokument; muss nicht veröffentlicht, aber auf Anfrage der Datenschutzbehörde vorgelegt werden. Bei Änderungen aktualisieren. Keine Rechtsberatung.
+> Stand 2026-11-12, **Entwurf – vom Verantwortlichen zu prüfen und freizugeben.** Internes Dokument; muss nicht veröffentlicht, aber auf Anfrage der Datenschutzbehörde vorgelegt werden. Bei Änderungen aktualisieren. Keine Rechtsberatung.
 
 ## Verantwortlicher
 
@@ -37,10 +37,10 @@ Datenschutzbeauftragter: nicht erforderlich (keine Kerntätigkeit in umfangreich
 
 | Punkt | Inhalt |
 | --- | --- |
-| Zweck | Gemeinsames Training: Wochenbahnen, faire Ranglisten, Challenges (Gruppe, Duell, persönlich), Feed mit Kudos und Kommentaren, Hinweise „seit deinem letzten Besuch“ |
+| Zweck | Gemeinsames Training: Wochenbahnen, fairer Vier-Wochen-Vergleich, Challenges (Gruppe, Duell, persönlich), Feed mit Kudos und Kommentaren, Hinweise „seit deinem letzten Besuch“ |
 | Rechtsgrundlage | Art. 6 Abs. 1 lit. b DSGVO (vom Nutzer gewählte Funktion; Beitritt nur aktiv per Code oder Einladungslink; Teilnahme an Challenges nur nach Zusage); Moderation: Art. 6 Abs. 1 lit. f DSGVO |
 | Daten | Crew: Name, Einladungscode, optional Rennen/Renndatum, Einstellung „nur Apple-Health-Läufe“. Mitgliedschaft: Rolle, Beitritt, Sichtbarkeit (Distanz, Pace), freiwillig Rennanmeldung, letzter Besuch. Wochenwerte je Nutzer (`run_weeks`) und Meilensteine. Challenges und Teilnahmen (Zusage, Ergebnis, Platz, Sticker). Kudos, Kommentare (max. 280 Zeichen), Meldungen |
-| Für andere Mitglieder sichtbar | Immer: Name; Datum, Art, Dauer der Läufe seit Beitritt (Feed 21 Tage); Herkunft (Apple Health/selbst eingetragen); Gehpausen; Anzahl Läufe; Wochenplan-Fortschritt; Ranglistenplätze (Serie, Minuten, Plantreue, Ausdauer-Zuwachs, Veränderung lockere Pace in %); Meilensteine; Challenges und Sticker; Kudos und Kommentare. Nur bei Opt-in je Crew: Distanz, Pace, Rennanmeldung |
+| Für andere Mitglieder sichtbar | Immer: Name; Datum, Art, Dauer der Läufe seit Beitritt (Feed 21 Tage); Herkunft (Apple Health/selbst eingetragen); Gehpausen; Anzahl Läufe; Wochenplan-Fortschritt; Platz im Vier-Wochen-Vergleich (Serie in Wochen, Minuten gedeckelt bei Plan + 10 %); Meilensteine; Challenges und Sticker; Kudos und Kommentare. Nur bei Opt-in je Crew: Distanz, Pace, Rennanmeldung |
 | Nicht sichtbar | Notizen, Puls, Ziele, Zielzeit, Trainingseinstellungen (Renndatum und Läufe pro Woche werden nur intern für Wochenziele genutzt) |
 | Ausgeschlossen | unplausible Läufe (< 2:30 min/km) |
 | Löschung | Austritt oder Entfernen beendet die Sichtbarkeit sofort; leere Crews werden gelöscht; Löschen einer Crew löscht Challenges, Kudos, Kommentare und Meldungen; Löschen eines Laufs löscht Kudos und Kommentare darauf; Kontolöschung löscht eigene Kommentare, Kudos, Teilnahmen und Wochenwerte, die Crew-Leitung geht an das am längsten dabei befindliche Mitglied (auch bei automatischer Löschung nach 2 Jahren) |

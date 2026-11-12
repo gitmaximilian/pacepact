@@ -10,7 +10,7 @@ Pacepact verarbeitet Pulswerte (Gesundheitsdaten nach Art. 9 DSGVO) – aber nur
 
 | Kriterium | Bewertung |
 | --- | --- |
-| Art. 35 Abs. 3 lit. a – systematische, umfassende Bewertung mit Rechtswirkung | Nein. Kennzahlen dienen der eigenen Trainingsübersicht und freiwilligen Crew-Ranglisten ohne rechtliche oder ähnlich erhebliche Wirkung. Ranglisten nutzen keine Gesundheitsdaten (kein Puls), nur Minuten, Läufe, Planfortschritt und selbst angegebene Anstrengung. |
+| Art. 35 Abs. 3 lit. a – systematische, umfassende Bewertung mit Rechtswirkung | Nein. Kennzahlen dienen der eigenen Trainingsübersicht und freiwilligen Crew-Ranglisten ohne rechtliche oder ähnlich erhebliche Wirkung. Ranglisten nutzen keine Gesundheitsdaten (kein Puls), nur Minuten, Läufe und Planfortschritt. |
 | Art. 35 Abs. 3 lit. b – umfangreiche Verarbeitung besonderer Kategorien | Derzeit nein: privates Hobbyprojekt mit kleinem Nutzerkreis; zwei Pulswerte je Lauf, nur mit Einwilligung. |
 | Art. 35 Abs. 3 lit. c – systematische Überwachung öffentlicher Bereiche | Nein. Keine GPS-Strecken. |
 | DSFA-V (Österreich, BGBl. II 278/2018) – Liste | Prüfen; insbesondere Ziffern zu Gesundheitsdaten und zur Zusammenführung von Datenbeständen. Nach Einschätzung: nicht erfüllt, solange Verarbeitung nicht umfangreich ist und keine Datenbestände Dritter zusammengeführt werden. |
