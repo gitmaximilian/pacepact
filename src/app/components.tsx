@@ -63,7 +63,6 @@ export function Shell({
             ))}
           </nav>
           <div className="tools">
-            <LangSwitch locale={locale} back={active} />
             <Link href="/settings" className="icon-btn mobile-only" aria-label={t.nav.settings}><Icon name="gear" /></Link>
             <form action={signOut} className="desktop-only">
               <button className="btn ghost small">{t.nav.signOut}</button>

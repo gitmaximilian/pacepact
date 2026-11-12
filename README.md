@@ -28,8 +28,10 @@ Planned address: `https://pacepact.maximilianauer.at`
   - Files: GPX, TCX, FIT and CSV. The CSV import understands English and German headers, including the old team spreadsheet.
   - **Apple Health** (iPhone, Apple Watch, and every app that writes workouts to Health, such as Garmin Connect, Polar
     Flow, COROS, Suunto and Strava): the iOS app "Health Auto Export" posts workouts to `/api/ingest/apple-health`
-    (one-tap setup via deep link, or by hand). Only running workouts are kept. Runs from Apple Health count in crews.
-  - **Strava** (OAuth and push webhook): visible only to the runner (Strava API terms). Disconnecting revokes access at
+    (one-tap setup via deep link, or by hand). Past runs: "Export Existing Data" in the app with Batch Requests on.
+    Only running workouts are kept. Runs from Apple Health count in crews.
+  - **Strava** (OAuth and push webhook): the last 4 weeks on connect, older runs via "Import past runs" (one page of
+    50 activities per request, driven by the browser), new runs by webhook. Visible only to the runner (Strava API terms). Disconnecting revokes access at
     Strava and deletes Strava runs by default. Strava can write to Apple Health; then the run counts in crews.
   - The same run from two sources (Strava + Apple Health, or typed in + synced) is merged (`src/lib/dedupe.ts`): the copy
     that may count in crews wins, and effort, notes and run type typed by the runner are kept.

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, count, eq, max } from "drizzle-orm";
+import { and, count, eq, max, min } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
@@ -10,6 +10,7 @@ import { APPLE_HEALTH } from "@/lib/social/sources";
 import { disconnect, syncNow } from "../actions";
 import { Flash, Shell } from "../components";
 import { AppleSetup } from "./apple-setup";
+import { StravaHistory } from "./strava-history";
 
 export const metadata = { title: "Connections" };
 
@@ -23,7 +24,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
   const [[conn], [apple], appleTokens] = await Promise.all([
     db.select().from(schema.connections).where(and(eq(schema.connections.userId, user.id), eq(schema.connections.provider, "strava"))).limit(1),
     db
-      .select({ n: count(), last: max(schema.runs.createdAt) })
+      .select({ n: count(), last: max(schema.runs.createdAt), first: min(schema.runs.startedAt) })
       .from(schema.runs)
       .where(and(eq(schema.runs.userId, user.id), eq(schema.runs.source, APPLE_HEALTH))),
     db
@@ -32,6 +33,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
       .where(and(eq(schema.apiTokens.userId, user.id), eq(schema.apiTokens.label, "Apple Health"))),
   ]);
   const dateFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Vienna" });
+  const dayFmt = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Vienna" });
   const lastApple = appleTokens.map((x) => x.lastUsedAt?.getTime() ?? 0).reduce((a, b) => Math.max(a, b), 0);
   const ok = param(sp, "ok");
   const err = param(sp, "error");
@@ -52,7 +54,10 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
         </div>
         <p>{c.appleText}</p>
         {lastApple ? (
-          <p className="small muted">{fmt(c.appleStatus, { n: apple?.n ?? 0, when: dateFmt.format(new Date(lastApple)) })}</p>
+          <p className="small muted">
+            {fmt(c.appleStatus, { n: apple?.n ?? 0, when: dateFmt.format(new Date(lastApple)) })}
+            {apple?.first ? ` · ${fmt(c.since, { date: dayFmt.format(apple.first) })}` : ""}
+          </p>
         ) : null}
         <AppleSetup
           url={`${appUrl()}/api/ingest/apple-health`}
@@ -76,6 +81,12 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
             copied: c.copied,
           }}
         />
+        <details className="history">
+          <summary><strong>{c.appleHistoryTitle}</strong></summary>
+          <ol className="steps small" style={{ marginTop: 8 }}>
+            {c.appleHistorySteps.map((s) => <li key={s}>{s}</li>)}
+          </ol>
+        </details>
         <p className="small muted">{c.appleNote}</p>
       </section>
 
@@ -92,6 +103,7 @@ export default async function ConnectionsPage({ searchParams }: { searchParams: 
             <div className="row">
               <form action={syncNow}><input type="hidden" name="provider" value="strava" /><button className="btn small">{c.sync}</button></form>
             </div>
+            <StravaHistory labels={c.stravaHistory} />
             <form action={disconnect} className="stack" style={{ gap: 8 }}>
               <input type="hidden" name="provider" value="strava" />
               <label className="check small"><input type="checkbox" name="deleteRuns" defaultChecked /> {c.deleteStravaRuns}</label>

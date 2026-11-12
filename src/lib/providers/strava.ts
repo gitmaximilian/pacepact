@@ -37,22 +37,25 @@ export const strava: OAuthProvider = {
   }),
   async fetchRuns(tokens, since) {
     const out: NormalizedRun[] = [];
-    const after = Math.floor(since.getTime() / 1000);
-    for (let page = 1; page <= 10; page++) {
-      const list = await getJson(
-        `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100&page=${page}`,
-        tokens.accessToken,
-      );
-      if (!Array.isArray(list) || list.length === 0) break;
-      for (const a of list) {
-        const r = mapStravaActivity(a);
-        if (r) out.push(r);
-      }
-      if (list.length < 100) break;
+    for (let page = 1; page <= 3; page++) {
+      const { runs, more } = await fetchStravaPage(tokens.accessToken, since, page);
+      out.push(...runs);
+      if (!more) break;
     }
     return out;
   },
 };
+
+/**
+ * One page (up to 100 activities) since `since`, oldest first. Used page by page for the
+ * history import so each request stays small enough for the Workers free plan.
+ */
+export async function fetchStravaPage(accessToken: string, since: Date, page: number, perPage = 100) {
+  const after = Math.floor(since.getTime() / 1000);
+  const list = await getJson(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=${perPage}&page=${page}`, accessToken);
+  const items = Array.isArray(list) ? list : [];
+  return { runs: items.map(mapStravaActivity).filter((r): r is NormalizedRun => !!r), activities: items.length, more: items.length === perPage };
+}
 
 /** Revokes Pacepact's access at Strava (used when the runner disconnects). */
 export async function deauthorizeStrava(accessToken: string) {

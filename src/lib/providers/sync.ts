@@ -7,7 +7,8 @@ import { storeRuns } from "../runs-store";
 import { clientCredentials, getOAuthProvider, redirectUri } from "./registry";
 import { defaultParseToken, type OAuthProvider, type TokenSet } from "./types";
 
-const INITIAL_DAYS = 120;
+/** Right after connecting: the last weeks only. Older runs come through the history import, page by page. */
+const INITIAL_DAYS = 28;
 
 async function tokenRequest(p: OAuthProvider, params: Record<string, string>): Promise<TokenSet> {
   const creds = clientCredentials(p);
@@ -106,3 +107,21 @@ export async function syncConnection(userId: string, providerId: string): Promis
 }
 
 export { freshTokens };
+
+/** Imports one page of Strava history for the history import on the Connections page. */
+export async function importStravaPage(userId: string, since: Date, page: number) {
+  const p = getOAuthProvider("strava");
+  if (!p) throw new Error("Unknown provider");
+  const db = await getDb();
+  const [conn] = await db
+    .select()
+    .from(schema.connections)
+    .where(and(eq(schema.connections.userId, userId), eq(schema.connections.provider, "strava")))
+    .limit(1);
+  if (!conn) throw new Error("Not connected");
+  const tokens = await freshTokens(conn, p);
+  const { fetchStravaPage } = await import("./strava");
+  const { runs, activities, more } = await fetchStravaPage(tokens.accessToken, since, page, 50);
+  const { inserted } = runs.length ? await storeRuns(userId, "strava", runs) : { inserted: 0 };
+  return { runs: runs.length, activities, inserted, more };
+}

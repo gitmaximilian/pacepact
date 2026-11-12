@@ -13,7 +13,7 @@ import { ImportError, parseActivityFile } from "@/lib/import";
 import { HALF_MARATHON_KM, MARATHON_KM, parseDuration } from "@/lib/pace";
 import { isPlausibleRun, safeLocalPath } from "@/lib/plausibility";
 import { getOAuthProvider } from "@/lib/providers/registry";
-import { freshTokens, syncConnection } from "@/lib/providers/sync";
+import { freshTokens, importStravaPage, syncConnection } from "@/lib/providers/sync";
 import { deauthorizeStrava } from "@/lib/providers/strava";
 import { storeRuns } from "@/lib/runs-store";
 import { joinByCode } from "@/lib/social/join";
@@ -274,6 +274,22 @@ export async function disconnect(fd: FormData) {
     await db.delete(schema.runs).where(and(eq(schema.runs.userId, user.id), eq(schema.runs.source, provider)));
   }
   redirect("/connections?disconnected=1");
+}
+
+/**
+ * History import from Strava, one page per call (the browser calls it in a loop and shows
+ * progress). `since` is YYYY-MM-DD; pages hold up to 50 activities.
+ */
+export async function importStravaHistory(since: string, page: number): Promise<{ ok: boolean; runs: number; inserted: number; more: boolean; error?: string }> {
+  const user = await requireUser();
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(since) ? new Date(`${since}T00:00:00Z`) : new Date(0);
+  if (!Number.isInteger(page) || page < 1 || page > 200) return { ok: false, runs: 0, inserted: 0, more: false, error: "page" };
+  try {
+    const r = await importStravaPage(user.id, from, page);
+    return { ok: true, runs: r.runs, inserted: r.inserted, more: r.more };
+  } catch (err) {
+    return { ok: false, runs: 0, inserted: 0, more: false, error: err instanceof Error ? err.message.slice(0, 120) : "error" };
+  }
 }
 
 /** Creates the token for the Apple Health sync and returns it once. */
