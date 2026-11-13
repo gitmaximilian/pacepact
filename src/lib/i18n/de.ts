@@ -100,6 +100,8 @@ export const de: Dictionary = {
     errDate: "Wähl einen Renntag in der Zukunft.",
   },
   runs: {
+    showMore: "Ältere Läufe zeigen",
+    deleted: "Lauf gelöscht.",
     today: "Heute",
     yesterday: "Gestern",
     twoDays: "Vorgestern",

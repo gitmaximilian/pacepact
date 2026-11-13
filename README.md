@@ -32,6 +32,11 @@ Screenshots show a sample crew with invented names from a local test instance, n
 - **Navigation:** three places only: Crew (opens the crew you looked at last, remembered in the `pp_crew` cookie; switch
   crews with the arrow next to the crew name, which also leads to starting or joining another crew), Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
+- **Speed:** every tap answers at once: the tab bar, crew tabs, statistics periods and sort columns mark the tapped
+  item immediately and dim the old content until the server answers (`src/app/instant.tsx`); kudos count up
+  optimistically (`useOptimistic`, reducer in `src/lib/social/kudos.ts`). Lists stay light: the runs list shows 30 rows
+  (one link each, editing on `/runs/[id]`), the crew feed 15 items, both with "show more" (`src/lib/paging.ts`).
+  The crew page loads its data in parallel waves and writes "last seen" after the response (`after()`).
 - **App chrome:** on phones there is no header (tab bar only; settings on Me; sub-pages have a back link); header and tab bar live in the shared layout of the `src/app/(app)` route group, so they stay put
   between pages and the tapped tab lights up at once; `(app)/loading.tsx` shows a skeleton while a page renders.
   Which tab is active comes from `sectionOf` in `src/lib/nav.ts`.

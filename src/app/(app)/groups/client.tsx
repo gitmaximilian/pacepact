@@ -32,10 +32,11 @@ export function ShareInvite({ url, text, labels, compact }: { url: string; text:
 }
 
 /** A submit button that asks for confirmation first. */
-export function ConfirmButton({ message, className, children }: { message: string; className?: string; children: ReactNode }) {
+export function ConfirmButton({ message, className, children, formAction }: { message: string; className?: string; children: ReactNode; formAction?: (fd: FormData) => void }) {
   return (
     <button
       className={className}
+      formAction={formAction}
       onClick={(e) => {
         if (!window.confirm(message)) e.preventDefault();
       }}

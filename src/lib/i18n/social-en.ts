@@ -56,6 +56,8 @@ export const socialEn = {
   taper: "taper",
   raceWeek: "race week",
   minutes: "min",
+  feedMore: "Show more",
+  invitedCount: "{n} invited",
   feedTitle: "Feed",
   feedEmpty: "No runs yet. The first one starts the feed.",
   manual: "self-reported",

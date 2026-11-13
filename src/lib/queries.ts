@@ -7,6 +7,13 @@ export async function userRuns(userId: string) {
   return db.select().from(schema.runs).where(eq(schema.runs.userId, userId)).orderBy(desc(schema.runs.startedAt));
 }
 
+/** The latest runs of a user, newest first; one extra row tells whether there are more. */
+export async function recentRuns(userId: string, limit: number) {
+  const db = await getDb();
+  const rows = await db.select().from(schema.runs).where(eq(schema.runs.userId, userId)).orderBy(desc(schema.runs.startedAt)).limit(limit + 1);
+  return { runs: rows.slice(0, limit), more: rows.length > limit };
+}
+
 export async function activeGoal(userId: string) {
   const db = await getDb();
   const [goal] = await db

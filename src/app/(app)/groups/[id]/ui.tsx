@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { REACTIONS, type Contest, type Reaction, type TargetType } from "@/db/schema";
 import { fmt, type Dictionary } from "@/lib/i18n";
 import { contestEnd, template, type Outcome } from "@/lib/social/contests";
-import { addComment, deleteComment, reportComment, respondContest, toggleReaction } from "@/app/(app)/groups/actions";
+import { addComment, deleteComment, reportComment, respondContest } from "@/app/(app)/groups/actions";
+import { kudoState } from "@/lib/social/kudos";
+import { KudosBar } from "./kudos";
 
 export const EMOJI: Record<Reaction, string> = { clap: "👏", fire: "🔥", strong: "💪", party: "🎉" };
 export const STICKER: Record<string, string> = { team: "🤝", gold: "🥇", finisher: "🏁", duel: "⚔️", draw: "🤜🤛", personal: "⭐" };
@@ -39,21 +41,13 @@ export function Interactions({ t, groupId, type, id, s, timeFmt }: { t: Dictiona
   const base = { groupId, targetType: type, targetId: id };
   return (
     <div className="interact">
-      <div className="kudos">
-        {REACTIONS.map((e) => {
-          const who = rs.filter((r) => r.emoji === e);
-          const mine = who.some((r) => r.userId === s.me);
-          return (
-            <form key={e} action={toggleReaction}>
-              <Hidden v={{ ...base, emoji: e }} />
-              <button className={`kudo${mine ? " on" : ""}`} aria-pressed={mine} title={`${t.social.reactions[e]}${who.length ? `: ${who.map((r) => s.names.get(r.userId) ?? "?").join(", ")}` : ""}`}>
-                <span aria-hidden="true">{EMOJI[e]}</span>
-                {who.length ? <span className="n">{who.length}</span> : <span className="sr-only">{t.social.reactions[e]}</span>}
-              </button>
-            </form>
-          );
-        })}
-      </div>
+      <KudosBar
+        base={base}
+        state={kudoState(REACTIONS, rs, s.me)}
+        emojis={REACTIONS.map((e) => ({ key: e, icon: EMOJI[e] }))}
+        labels={t.social.reactions}
+        who={Object.fromEntries(REACTIONS.map((e) => [e, rs.filter((r) => r.emoji === e).map((r) => s.names.get(r.userId) ?? "?").join(", ")]))}
+      />
       {cs.length ? (
         <ul className="comments">
           {cs.map((c) => (
@@ -163,8 +157,11 @@ export function ContestCard({
       </ol>
       {entries.some((e) => e.status !== "accepted") ? (
         <p className="small muted">
-          {entries.filter((e) => e.status === "invited").map((e) => s.names.get(e.userId)).filter(Boolean).join(", ")}
-          {entries.some((e) => e.status === "invited") ? ` · ${t.social.pending}` : ""}
+          {(() => {
+            const invited = entries.filter((e) => e.status === "invited").map((e) => s.names.get(e.userId)).filter(Boolean);
+            return invited.length > 3 ? fmt(t.social.invitedCount, { n: invited.length }) : invited.join(", ");
+          })()}
+          {entries.filter((e) => e.status === "invited").length > 3 ? "" : entries.some((e) => e.status === "invited") ? ` · ${t.social.pending}` : ""}
           {entries.some((e) => e.status === "declined") ? `  ${entries.filter((e) => e.status === "declined").map((e) => s.names.get(e.userId)).join(", ")} · ${t.social.declined}` : ""}
         </p>
       ) : null}

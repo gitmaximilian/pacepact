@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { Contest, Reaction } from "@/db/schema";
@@ -16,8 +17,10 @@ import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
 import { LEGAL } from "@/lib/legal";
 import { hrVisibleToCrew } from "@/lib/hr";
+import { listSize } from "@/lib/paging";
 import {Flash, Seg} from "@/app/components";
 import { Icon } from "@/app/icons";
+import { InstantGroup, InstantLink } from "@/app/instant";
 import {
   deleteContest, deleteGroup, dismissReports, deleteComment, leaveGroup, removeMember, rotateInviteCode, saveGroupSettings, saveSharing,
 } from "@/app/(app)/groups/actions";
@@ -37,18 +40,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const user = await requireUser();
   const { t, locale } = await getT();
   const s_ = t.social;
-  const m = await membership(id, user.id);
-  if (!m) notFound();
-  const { group, me } = m;
-  const isOwner = group.ownerId === user.id;
-  const tabParam = param(sp, "tab");
-  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "") ? (tabParam as Tab) : "overview";
   const db = await getDb();
-  const lc = locale === "de" ? "de-AT" : "en-GB";
-  const dateFmt = new Intl.DateTimeFormat(lc, { day: "numeric", month: "short", timeZone: "UTC" });
-  const timeFmt = new Intl.DateTimeFormat(lc, { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Vienna" });
-
-  const [members, myCrews] = await Promise.all([
+  // Wave 1, in parallel: membership (the access check), members and the runner's crews.
+  // Nothing from the other two is rendered unless the membership check passes.
+  const [m, members, myCrews] = await Promise.all([
+    membership(id, user.id),
     groupMembers(id),
     db
       .select({ id: schema.groups.id, name: schema.groups.name })
@@ -57,6 +53,15 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
       .where(eq(schema.groupMembers.userId, user.id))
       .orderBy(schema.groupMembers.joinedAt),
   ]);
+  if (!m) notFound();
+  const { group, me } = m;
+  const isOwner = group.ownerId === user.id;
+  const tabParam = param(sp, "tab");
+  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? "") ? (tabParam as Tab) : "overview";
+  const lc = locale === "de" ? "de-AT" : "en-GB";
+  const dateFmt = new Intl.DateTimeFormat(lc, { day: "numeric", month: "short", timeZone: "UTC" });
+  const timeFmt = new Intl.DateTimeFormat(lc, { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/Vienna" });
+
   const names = new Map(members.map((x) => [x.id, x.name]));
   const memberIds = members.map((x) => x.id);
   const cw = currentWeek();
@@ -65,15 +70,38 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const statKey: StatKey = (STAT_KEYS as readonly string[]).includes(param(sp, "s") ?? "") ? (param(sp, "s") as StatKey) : "runs";
   // Statistics may need older weeks; everything else reads at most half a year.
   const fromWeek = tab === "stats" && statPeriod === "all" ? "2000-01-03" : [prepStart, addWeeks(cw, tab === "stats" ? -51 : -26)].sort()[0];
-  const data = await memberData(members, group.onlyImported ? "device" : "all", fromWeek);
+  // Wave 2, in parallel: weekly totals, this crew's challenges with their entries, and (week tab) the feed's raw rows.
+  const loadContests = async () => {
+    const cs = await db.select().from(schema.contests).where(eq(schema.contests.groupId, id)).orderBy(desc(schema.contests.createdAt)).limit(40);
+    const es = cs.length ? await db.select().from(schema.contestEntries).where(inArray(schema.contestEntries.contestId, cs.map((c) => c.id))) : [];
+    return { cs, es };
+  };
+  const memberIdsEarly = members.map((x) => x.id);
+  const [data, loaded, feedRaw] = await Promise.all([
+    memberData(members, group.onlyImported ? "device" : "all", fromWeek),
+    loadContests(),
+    tab === "overview"
+      ? Promise.all([
+          feedRuns(members),
+          feedMilestones(members),
+          db
+            .select({ c: schema.contests, e: schema.contestEntries })
+            .from(schema.contests)
+            .innerJoin(schema.contestEntries, eq(schema.contestEntries.contestId, schema.contests.id))
+            .where(and(isNull(schema.contests.groupId), eq(schema.contests.status, "done"), inArray(schema.contests.createdBy, memberIdsEarly)))
+            .limit(40),
+        ])
+      : null,
+  ]);
   const dataOf = new Map(data.map((d) => [d.userId, d]));
-
-  // Challenges of this crew (plus finished personal ones of members, for the feed).
-  const contests = await db.select().from(schema.contests).where(eq(schema.contests.groupId, id)).orderBy(desc(schema.contests.createdAt)).limit(40);
-  await finalizeDue(contests, async (ids) => data.filter((d) => ids.includes(d.userId)));
-  const entries = contests.length
-    ? await db.select().from(schema.contestEntries).where(inArray(schema.contestEntries.contestId, contests.map((c) => c.id)))
-    : [];
+  const contests = loaded.cs;
+  let entries = loaded.es;
+  // Rare: a challenge just ended. Finish it, then read its stored results.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  if (contests.some((c) => c.status === "active" && contestEnd(c) < todayKey)) {
+    await finalizeDue(contests, async (ids) => data.filter((d) => ids.includes(d.userId)));
+    entries = await db.select().from(schema.contestEntries).where(inArray(schema.contestEntries.contestId, contests.map((c) => c.id)));
+  }
   const entriesOf = (c: Contest) => entries.filter((e) => e.contestId === c.id && memberIds.includes(e.userId));
   const outcomeOf = (c: Contest) =>
     c.status === "active" ? evaluate(c, entriesOf(c).filter((e) => e.status === "accepted").map((e) => dataOf.get(e.userId)!).filter(Boolean)) : null;
@@ -82,20 +110,13 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
   // Feed, kudos and comments (overview only, to keep the page light).
   let feed: { at: Date; key: string; node: React.ReactNode }[] = [];
+  const feedSize = listSize(param(sp, "feed"), 15, 60);
+  let feedMore = false;
   let since: { runs: number; kudos: number; comments: number } | null = null;
   let social: Social | null = null;
   let reported: { id: string; body: string; userId: string; reports: number }[] = [];
-  if (tab === "overview") {
-    const [runs, allMs, personal] = await Promise.all([
-      feedRuns(members),
-      feedMilestones(members),
-      db
-        .select({ c: schema.contests, e: schema.contestEntries })
-        .from(schema.contests)
-        .innerJoin(schema.contestEntries, eq(schema.contestEntries.contestId, schema.contests.id))
-        .where(and(isNull(schema.contests.groupId), eq(schema.contests.status, "done"), inArray(schema.contests.createdBy, memberIds)))
-        .limit(40),
-    ]);
+  if (tab === "overview" && feedRaw) {
+    const [runs, allMs, personal] = feedRaw;
     const ms = topMilestones(allMs);
     const recentDone = contests.filter((c) => c.status === "done" && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
     const personalDone = personal.filter(({ c, e }) => e.badge && e.userId === c.createdBy && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
@@ -191,14 +212,18 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         };
       }),
     ]
-      .sort((a, b) => b.at.getTime() - a.at.getTime())
-      .slice(0, 30);
+      .sort((a, b) => b.at.getTime() - a.at.getTime());
+    feedMore = feed.length > feedSize;
+    feed = feed.slice(0, feedSize);
 
     if (!me.lastSeenAt || Date.now() - me.lastSeenAt.getTime() > 10 * 60_000) {
-      await db
-        .update(schema.groupMembers)
-        .set({ lastSeenAt: new Date() })
-        .where(and(eq(schema.groupMembers.groupId, id), eq(schema.groupMembers.userId, user.id)));
+      // Written after the response is sent: it never delays the page.
+      after(() =>
+        db
+          .update(schema.groupMembers)
+          .set({ lastSeenAt: new Date() })
+          .where(and(eq(schema.groupMembers.groupId, id), eq(schema.groupMembers.userId, user.id))),
+      );
     }
   }
   if (tab === "crew" && isOwner) {
@@ -251,14 +276,14 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
       <Flash ok={flash} />
 
-      <nav className="tabs" aria-label={s_.eyebrow}>
+      <InstantGroup className="tabs" label={s_.eyebrow}>
         {TABS.map((v) => (
-          <Link key={v} href={tabHref(v)} aria-current={tab === v ? "page" : undefined} scroll={false}>
+          <InstantLink key={v} href={tabHref(v)} active={tab === v}>
             {s_.tabs[v]}
             {v === "challenges" && myInvites.length ? <span className="dot">{myInvites.length}</span> : null}
-          </Link>
+          </InstantLink>
         ))}
-      </nav>
+      </InstantGroup>
 
       {tab === "overview" ? (
         <>
@@ -348,6 +373,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             ) : (
               <p className="panel muted">{s_.feedEmpty}</p>
             )}
+            {feedMore ? <Link className="btn ghost" href={`/groups/${id}?feed=${feedSize + 15}`} scroll={false}>{s_.feedMore}</Link> : null}
           </section>
         </>
       ) : null}
@@ -374,13 +400,14 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     };
     return (
       <section className="stack" style={{ gap: 14 }}>
-        <div className="seg" role="tablist" aria-label={s_.statPeriod}>
+        <InstantGroup className="seg" label={s_.statPeriod}>
           {STAT_PERIODS.map((p) => (
-            <Link key={p} href={href(p, statKey)} role="tab" aria-selected={p === statPeriod} className={`chip${p === statPeriod ? " on" : ""}`} scroll={false} replace>
+            <InstantLink key={p} href={href(p, statKey)} active={p === statPeriod} className="chip" activeClass="on">
               {s_.statPeriods[p]}
-            </Link>
+            </InstantLink>
           ))}
-        </div>
+        </InstantGroup>
+        <InstantGroup bare>
         <div className="table-wrap stats-wrap">
           <table className="stats">
             <thead>
@@ -388,9 +415,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 <th scope="col" className="who">{s_.runnerCol}</th>
                 {STAT_KEYS.map((k) => (
                   <th key={k} scope="col" className="r" aria-sort={k === statKey ? "descending" : undefined}>
-                    <Link href={href(statPeriod, k)} scroll={false} replace className={k === statKey ? "on" : undefined}>
-                      {s_.statCols[k]}<span className="unit-h">{s_.statUnits[k]}</span>{k === statKey ? <span aria-hidden="true"> ↓</span> : null}
-                    </Link>
+                    <InstantLink href={href(statPeriod, k)} active={k === statKey} activeClass="on" current="true">
+                      {s_.statCols[k]}<span className="unit-h">{s_.statUnits[k]}</span><span aria-hidden="true" className="sort-arrow"> ↓</span>
+                    </InstantLink>
                   </th>
                 ))}
               </tr>
@@ -405,6 +432,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             </tbody>
           </table>
         </div>
+        </InstantGroup>
         <p className="small muted">{s_.statsHint}{group.onlyImported ? ` ${s_.onlyImportedNote}` : ""}</p>
       </section>
     );

@@ -99,6 +99,8 @@ export const en = {
     errDate: "Pick a race day in the future.",
   },
   runs: {
+    showMore: "Show older runs",
+    deleted: "Run deleted.",
     today: "Today",
     yesterday: "Yesterday",
     twoDays: "2 days ago",

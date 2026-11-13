@@ -409,13 +409,9 @@ details.more > summary { color: var(--muted); font-size: 0.92rem; min-height: 32
 .import-hint a { font-weight: 600; }
 
 /* Runs list */
-.run-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.run-cards .panel { padding: 12px 14px; gap: 6px; }
-.run-top { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
 .big-min { font-size: 2rem; line-height: 1; min-width: 64px; }
 .big-min small { font-family: var(--f-body); font-size: 0.75rem; font-weight: 500; color: var(--muted); }
 .run-meta { display: flex; flex-direction: column; min-width: 0; }
-@media (max-width: 420px) { .run-top .src { grid-column: 2; justify-self: start; } }
 .saved-tag { display: inline-block; margin-right: 8px; padding: 2px 10px; animation: pop 0.25s var(--ease) both; border-radius: 99px; background: color-mix(in srgb, var(--good) 16%, var(--surface)); color: var(--good); font-weight: 700; font-size: 0.85rem; }
 @media (max-width: 760px) {
   main { padding-top: 16px; }
@@ -501,12 +497,10 @@ table.stats .who { position: sticky; left: 0; z-index: 1; background: var(--surf
 table.stats tr.me td { background: color-mix(in srgb, var(--signal) 18%, var(--surface)); }
 
 /* Motion: new content rises in gently; menus pop. Off for people who prefer less motion. */
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* New content is visible at once: only a short, partial fade, so arriving pages never look delayed. */
+@keyframes rise { from { opacity: 0.6; } to { opacity: 1; } }
 @keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
-main > .wrap > * { animation: rise 0.32s var(--ease) both; }
-main > .wrap > *:nth-child(2) { animation-delay: 0.03s; }
-main > .wrap > *:nth-child(3) { animation-delay: 0.06s; }
-main > .wrap > *:nth-child(n + 4) { animation-delay: 0.09s; }
+main > .wrap > * { animation: rise 0.16s ease-out; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 .wizard legend h2, .auth h2 { font-size: 1.4rem; letter-spacing: -0.015em; }
 .hero h1 { font-size: clamp(2.4rem, 8vw, 4rem); }
@@ -535,3 +529,22 @@ main > .wrap > *:nth-child(n + 4) { animation-delay: 0.09s; }
   .back-link:active { background: var(--surface-2); }
 }
 @media (max-width: 760px) and (prefers-color-scheme: dark) { .back-link { color: #9dbaff; } }
+
+/* Runs: one light row per run, the edit form lives on its own page. */
+.run-rows { list-style: none; margin: 0; padding: 4px 0; gap: 0; }
+.run-rows li + li { border-top: 1px solid var(--line); }
+.run-rows a { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px 16px; text-decoration: none; color: inherit; min-height: 60px; }
+.run-rows a:active { background: var(--surface-2); }
+
+/* While a tap waits for the server: the old content dims a little, the tapped control is already marked. */
+main > .wrap > * { transition: opacity 0.15s ease; }
+html[data-busy] main > .wrap > :not(.crew-head):not(.tabs):not(.back-link) { opacity: 0.55; }
+html[data-busy] .stats-wrap { opacity: 0.55; }
+table.stats th a .sort-arrow { visibility: hidden; }
+table.stats th a.on .sort-arrow { visibility: visible; }
+@media (max-width: 420px) {
+  table.stats th, table.stats td { padding: 9px 3px; }
+  table.stats td.num { font-size: 1rem; }
+  table.stats th { font-size: 0.62rem; letter-spacing: 0.02em; }
+  table.stats .who { max-width: 72px; }
+}

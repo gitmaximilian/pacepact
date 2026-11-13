@@ -58,6 +58,8 @@ export const socialDe: typeof socialEn = {
   taper: "Tapering",
   raceWeek: "Rennwoche",
   minutes: "Min.",
+  feedMore: "Mehr anzeigen",
+  invitedCount: "{n} eingeladen",
   feedTitle: "Feed",
   feedEmpty: "Noch keine Läufe. Der erste startet den Feed.",
   manual: "selbst eingetragen",

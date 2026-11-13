@@ -210,7 +210,7 @@ export async function deleteRun(fd: FormData) {
       .where(and(eq(schema.milestones.userId, user.id), eq(schema.milestones.achievedAt, run.startedAt)));
     await refreshWeeks(user.id, weeksOf([run.startedAt]));
   }
-  redirect("/runs");
+  redirect("/runs?deleted=1");
 }
 
 export async function updateRunType(fd: FormData) {
@@ -227,7 +227,7 @@ export async function updateRunType(fd: FormData) {
     .where(and(eq(schema.runs.id, str(fd, "id")), eq(schema.runs.userId, user.id)))
     .returning({ startedAt: schema.runs.startedAt });
   if (run) await refreshWeeks(user.id, weeksOf([run.startedAt]));
-  redirect("/runs");
+  redirect("/runs?saved=1");
 }
 
 export async function deleteAccount(fd: FormData) {

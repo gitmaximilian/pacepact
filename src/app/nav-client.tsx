@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SECTIONS, sectionOf, type Section } from "@/lib/nav";
 import { Icon } from "./icons";
+import { markBusy } from "./instant";
 
 const ICON = { crew: "crew", log: "plus", me: "user" } as const;
 
@@ -15,8 +16,15 @@ const ICON = { crew: "crew", log: "plus", me: "user" } as const;
 function useActive(): [Section | null, (s: Section) => void] {
   const path = usePathname();
   const [pending, setPending] = useState<Section | null>(null);
-  useEffect(() => setPending(null), [path]);
-  return [pending ?? sectionOf(path), setPending];
+  useEffect(() => {
+    setPending(null);
+    markBusy(false);
+  }, [path]);
+  const tap = (s: Section) => {
+    if (s !== sectionOf(path)) markBusy(true);
+    setPending(s);
+  };
+  return [pending ?? sectionOf(path), tap];
 }
 
 export function TabBar({ labels }: { labels: Record<"crew" | "log" | "me", string> }) {
