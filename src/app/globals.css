@@ -521,3 +521,17 @@ main > .wrap > *:nth-child(n + 4) { animation-delay: 0.09s; }
 }
 /* The crew header (with its switcher menu) stays above the content that follows it. */
 .crew-head { position: relative; z-index: 12; }
+
+/* Phones: no header. Navigation lives in the tab bar, settings on "Me", sub-pages get a back link. */
+.back-link { display: none; }
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.round-btn { display: inline-grid; place-items: center; width: 42px; height: 42px; flex: none; border-radius: 999px; background: var(--surface-2); color: var(--fg); transition: transform 0.12s var(--ease), background-color 0.15s; }
+.round-btn:active { transform: scale(0.92); }
+@media (min-width: 761px) { .page-head .round-btn { display: none; } }
+@media (max-width: 760px) {
+  .topbar { display: none; }
+  main { padding-top: calc(14px + env(safe-area-inset-top, 0px)); }
+  .back-link { display: inline-flex; align-items: center; gap: 2px; align-self: flex-start; min-height: 36px; margin: 0 0 -8px -6px; padding: 4px 10px 4px 4px; border-radius: 999px; color: var(--track); font-weight: 600; font-size: 0.92rem; text-decoration: none; }
+  .back-link:active { background: var(--surface-2); }
+}
+@media (max-width: 760px) and (prefers-color-scheme: dark) { .back-link { color: #9dbaff; } }

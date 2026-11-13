@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/server";
 import { formatDuration, formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
 import { param, userRuns, type SearchParams } from "@/lib/queries";
 import { deleteRun, updateRunType } from "@/app/actions";
-import {Flash, Seg} from "@/app/components";
+import {Flash, Seg, BackLink } from "@/app/components";
 
 export const metadata = { title: "Runs" };
 
@@ -22,6 +22,7 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
 
   return (
     <>
+      <BackLink href="/dashboard" label={t.nav.dashboard} />
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.runs.title}</h1>
         <Link className="btn signal" href="/runs/new">{t.runs.add}</Link>

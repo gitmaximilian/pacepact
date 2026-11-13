@@ -4,7 +4,7 @@
 
 ## Ausgangslage
 
-Pacepact verarbeitet Pulswerte (Gesundheitsdaten nach Art. 9 DSGVO) – aber nur mit ausdrücklicher Einwilligung, nur als zwei Summenwerte je Lauf, ohne Weitergabe und ohne Profiling mit rechtlicher oder ähnlich erheblicher Wirkung.
+Pacepact verarbeitet Pulswerte (Gesundheitsdaten nach Art. 9 DSGVO) – aber nur mit ausdrücklicher Einwilligung, nur als zwei Summenwerte je Lauf; der Durchschnittspuls wird nur den Mitgliedern der eigenen Crews angezeigt (von der Einwilligung umfasst, keine Weitergabe an Dritte), ohne Profiling mit rechtlicher oder ähnlich erheblicher Wirkung.
 
 ## Prüfung
 

@@ -18,7 +18,7 @@ Planned address: `https://pacepact.maximilianauer.at`
 - **Navigation:** three places only: Crew (opens the crew you looked at last, remembered in the `pp_crew` cookie; switch
   crews with the arrow next to the crew name, which also leads to starting or joining another crew), Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
-- **App chrome:** header and tab bar live in the shared layout of the `src/app/(app)` route group, so they stay put
+- **App chrome:** on phones there is no header (tab bar only; settings on Me; sub-pages have a back link); header and tab bar live in the shared layout of the `src/app/(app)` route group, so they stay put
   between pages and the tapped tab lights up at once; `(app)/loading.tsx` shows a skeleton while a page renders.
   Which tab is active comes from `sectionOf` in `src/lib/nav.ts`.
 - **No dropdowns:** choices are tap chips (run type, date, walk breaks, race registration, language, distance,
@@ -65,8 +65,9 @@ Planned address: `https://pacepact.maximilianauer.at`
     They never reward more than the plan. Results, stickers and a recap when they end.
   - Feed (runs since joining, milestones, finished challenges) with kudos, comments, reporting and admin moderation;
     "since your last visit" hints. Crew rules at `/rules`.
-  - Privacy per member and crew: minutes, run type and plan progress are visible; distance and pace only after opt-in.
-    Average heart rate only after a separate opt-in per crew (and only with heart-rate consent). Never notes or goals. Apple Health runs are marked as such; manual entries as self-reported.
+  - Visibility in a crew: minutes, run type, distance, pace and plan progress are always visible. Average heart rate is
+    visible for runners whose heart-rate consent covers crews (`src/lib/hr.ts`; consents from before 2026-11-13 are
+    asked to confirm the new wording). Never notes, goals or maximum heart rate. Apple Health runs are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
   Condensed caps only for page titles and numbers; section titles in Inter, sentence case. Soft cards (18 px radius,
   light shadows), tinted secondary buttons, tap chips, gentle fade-in of new content (off with reduced motion).

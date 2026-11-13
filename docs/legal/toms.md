@@ -7,7 +7,7 @@
 - Anmeldung ausschließlich per Passkey (WebAuthn): keine E-Mail, kein Passwort. Name ist frei wählbar (Spitzname möglich); keine Telefonnummer, keine Adresse, kein Geburtsdatum.
 - Puls nur mit ausdrücklicher Einwilligung; ohne Einwilligung verwirft `src/lib/runs-store.ts` Pulswerte vor dem Speichern.
 - Keine GPS-Strecken. Der Apple-Health-Export wird nur im Browser des Nutzers gelesen; an den Server gehen nur Lauf-Summenwerte (Start, Dauer, Distanz, Puls nur mit Einwilligung).
-- Crews sehen standardmäßig nur Minuten, Laufart, Anzahl, Planfortschritt und Meilensteine; Distanz, Pace und Durchschnittspuls nur nach Opt-in je Crew (Puls zusätzlich nur mit Einwilligung; Widerruf schaltet die Freigabe überall ab). Nie Notizen, Maximalpuls, Ziele.
+- Crews sehen Minuten, Laufart, Anzahl, Distanz, Pace, Planfortschritt und Meilensteine; den Durchschnittspuls nur mit einer Einwilligung, die die Anzeige in Crews ausdrücklich umfasst (`src/lib/hr.ts`, ältere Einwilligungen erst nach Bestätigung; Widerruf beendet die Anzeige sofort). Nie Notizen, Maximalpuls, Ziele.
 - Feed zeigt Läufe erst ab dem Beitritt und nur 21 Tage; Ranglisten arbeiten mit vorberechneten Wochensummen statt Einzelläufen.
 - Kein Tracking, keine Analyse-Tools, keine Werbung, Schriften selbst gehostet. Cloudflare Web Analytics ist für die Zone maximilianauer.at automatisch aktiv; Pacepact setzt auf allen HTML-Seiten `Cache-Control: no-transform` (`worker.ts`), damit Cloudflare dort kein Messskript einbaut.
 

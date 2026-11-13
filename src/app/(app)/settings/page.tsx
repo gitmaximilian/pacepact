@@ -1,3 +1,4 @@
+import { hrNeedsRenewal } from "@/lib/hr";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { InstallRow } from "@/app/install-prompt";
 import { installLabels } from "@/app/install-labels";
 import Link from "next/link";
 import { passkeyLabels } from "@/app/passkey-labels";
-import {Flash, Seg} from "@/app/components";
+import {Flash, Seg, BackLink } from "@/app/components";
 import { fmt } from "@/lib/i18n";
 import { param, type SearchParams } from "@/lib/queries";
 
@@ -24,6 +25,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
   const keys = await db.select().from(schema.passkeys).where(eq(schema.passkeys.userId, user.id));
   return (
     <>
+      <BackLink href="/dashboard" label={t.nav.dashboard} />
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.settings.title}</h1>
         <div className="row" style={{ gap: 8 }}>
@@ -69,6 +71,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <section className="panel" id="hr">
         <h3>{t.settings.privacy}</h3>
         <strong>{t.settings.hrTitle}</strong>
+        {hrNeedsRenewal(user.hrConsentAt) ? (
+          <form action={setHrConsent} className="stack hr-consent" style={{ gap: 10 }}>
+            <p className="small">{t.settings.hrRenewText}</p>
+            <label className="check" style={{ alignItems: "flex-start" }}>
+              <input type="checkbox" name="confirm" required />
+              <span className="small">{t.settings.hrGrantText}</span>
+            </label>
+            <input type="hidden" name="consent" value="grant" />
+            <div><button className="btn small">{t.settings.hrRenewButton}</button></div>
+          </form>
+        ) : null}
         {user.hrConsentAt ? (
           <form action={setHrConsent} className="stack" style={{ gap: 10 }}>
             <p className="small">{fmt(t.settings.hrOn, { date: dateFmt.format(user.hrConsentAt) })}</p>

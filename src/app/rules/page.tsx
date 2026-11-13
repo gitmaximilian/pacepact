@@ -3,7 +3,7 @@ import { currentUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { LEGAL } from "@/lib/legal";
-import { LegalFooter, Logo, Shell } from "../components";
+import { BackLink, LegalFooter, Logo, Shell } from "../components";
 
 export const metadata = { title: "Crew rules" };
 
@@ -19,7 +19,7 @@ export default async function RulesPage() {
       <p className="small muted">{fmt(t.social.rulesContact, { email: LEGAL.email })} <Link href="/privacy">{t.legal.privacy}</Link></p>
     </>
   );
-  if (user) return <Shell t={t} locale={locale} active="/groups">{body}</Shell>;
+  if (user) return <Shell t={t} locale={locale} active="/groups"><BackLink href="/groups" label={t.nav.groups} />{body}</Shell>;
   return (
     <>
       <div className="track gutter" style={{ paddingBlock: 18 }}>

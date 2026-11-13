@@ -15,6 +15,7 @@ import { crewStats, fourWeeks, sortStats, STAT_KEYS, STAT_PERIODS, statWeeks, to
 import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
 import { LEGAL } from "@/lib/legal";
+import { hrVisibleToCrew } from "@/lib/hr";
 import {Flash, Seg} from "@/app/components";
 import { Icon } from "@/app/icons";
 import {
@@ -66,7 +67,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const fromWeek = tab === "stats" && statPeriod === "all" ? "2000-01-03" : [prepStart, addWeeks(cw, tab === "stats" ? -51 : -26)].sort()[0];
   const data = await memberData(members, group.onlyImported ? "device" : "all", fromWeek);
   const dataOf = new Map(data.map((d) => [d.userId, d]));
-  const shareDistance = new Map(members.map((x) => [x.id, x.shareDistance]));
 
   // Challenges of this crew (plus finished personal ones of members, for the feed).
   const contests = await db.select().from(schema.contests).where(eq(schema.contests.groupId, id)).orderBy(desc(schema.contests.createdAt)).limit(40);
@@ -129,9 +129,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     const S = social;
     feed = [
       ...runs.map((r) => {
-        const showKm = r.userId === user.id || shareDistance.get(r.userId);
-        const showPace = r.userId === user.id || members.find((x) => x.id === r.userId)?.sharePace;
-        const showHr = (r.userId === user.id || members.find((x) => x.id === r.userId)?.shareHr) && r.avgHr != null;
+        // Distance and pace are always visible in a crew; average heart rate only with a consent that covers crews.
+        const showHr = r.avgHr != null && (r.userId === user.id || hrVisibleToCrew(members.find((x) => x.id === r.userId)?.hrConsentAt));
         const kind = sourceKind(r.source);
         return {
           at: r.startedAt,
@@ -145,8 +144,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                   <div className="run-line">
                     {r.runType !== "other" ? <span className="lane-chip">{t.runTypes[r.runType]}</span> : null}
                     <span className="num">{Math.round(r.durationSec / 60)} {s_.minutes}</span>
-                    {showKm && r.distanceKm > 0 ? <span className="num">{formatKm(r.distanceKm, locale, 1)} km</span> : null}
-                    {showPace && r.distanceKm > 0 ? <span className="num">{formatPace(paceSecPerKm(r.durationSec, r.distanceKm))} /km</span> : null}
+                    {r.distanceKm > 0 ? <span className="num">{formatKm(r.distanceKm, locale, 1)} km</span> : null}
+                    {r.distanceKm > 0 ? <span className="num">{formatPace(paceSecPerKm(r.durationSec, r.distanceKm))} /km</span> : null}
                     {showHr ? <span className="num hr" title={s_.avgHrTitle}><span aria-hidden="true">❤️</span> {r.avgHr}<small> bpm</small></span> : null}
                     {r.walkBreaks ? <span className="small muted">{s_.walk}</span> : null}
                     <span className={`src ${kind}`} title={kind === "device" ? s_.deviceTitle : s_.manualTitle}>{kind === "device" ? "⌚ Apple Health" : `✍️ ${s_.manual}`}</span>
@@ -313,7 +312,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           ) : null}
 
           {myInvites.map((c) => (
-            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} />
+            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={() => true} />
           ))}
 
           {members.length > 1 ? (
@@ -339,7 +338,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           ) : null}
 
           {myActive.slice(0, 1).map((c) => (
-            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} />
+            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={() => true} />
           ))}
 
           <section className="stack" style={{ gap: 12 }}>
@@ -364,7 +363,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     // Longer periods start no earlier than the crew itself: nobody's older history is shown to a crew.
     const weeks = statWeeks(statPeriod, cw, [first, prepStart].sort().reverse()[0]).filter((w) => statPeriod === "week" || statPeriod === "month" || w >= prepStart);
     // Streaks look back from the crew's first logged week (an open-ended range would be cut off).
-    const rows = sortStats(crewStats(data, weeks, cw, weekRange([first, fromWeek].sort().reverse()[0], cw), (u) => u === user.id || !!shareDistance.get(u)), statKey);
+    const rows = sortStats(crewStats(data, weeks, cw, weekRange([first, fromWeek].sort().reverse()[0], cw), () => true), statKey);
     const short = (n: string) => { const [a, b] = n.trim().split(/\s+/); return b ? `${a} ${b[0]}.` : a; };
     const href = (p: StatPeriod, k: StatKey) => `/groups/${id}?tab=stats&p=${p}&s=${k}`;
     const fmtKm = (v: number) => v.toLocaleString(lc, { maximumFractionDigits: 1 });
@@ -429,7 +428,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         </div>
         {active.length ? (
           active.map((c) => (
-            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} footer={del(c)} />
+            <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={outcomeOf(c)} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={() => true} footer={del(c)} />
           ))
         ) : (
           <p className="panel muted">{s_.noChallenges}</p>
@@ -438,7 +437,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           <>
             <h2>{s_.finished} · {s_.recap}</h2>
             {done.map((c) => (
-              <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={null} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={(u) => !!shareDistance.get(u) || u === user.id} footer={del(c)} />
+              <ContestCard key={c.id} t={t} locale={locale} c={c} outcome={null} entries={entriesOf(c)} s={{ names, me: user.id }} dateFmt={dateFmt} showKm={() => true} footer={del(c)} />
             ))}
           </>
         ) : null}
@@ -495,18 +494,15 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
           <Hidden v={{ groupId: id }} />
           <h3>{s_.sharingTitle}</h3>
           <p className="small muted">{s_.sharingHint}</p>
-          <label className="check"><input type="checkbox" name="shareDistance" defaultChecked={me.shareDistance} /> {s_.shareDistance}</label>
-          <label className="check"><input type="checkbox" name="sharePace" defaultChecked={me.sharePace} /> {s_.sharePace}</label>
-          {user.hrConsentAt ? (
-            <label className="check" style={{ alignItems: "flex-start" }}>
-              <input type="checkbox" name="shareHr" defaultChecked={me.shareHr} />
-              <span>{s_.shareHr} <span className="small muted">{s_.shareHrHint}</span></span>
-            </label>
+          {user.hrConsentAt && !hrVisibleToCrew(user.hrConsentAt) ? (
+            <p className="small"><Link href="/settings#hr">{s_.hrRenew} →</Link></p>
           ) : null}
           {group.raceName ? (
-            <Seg name="raceRegistered" label={`${s_.raceRegQ} (${group.raceName})`} value={me.raceRegistered == null ? "" : me.raceRegistered ? "yes" : "no"} options={[{ value: "yes", label: s_.yes }, { value: "no", label: s_.notYet }, { value: "", label: s_.raceRegUnset }]} />
+            <>
+              <Seg name="raceRegistered" label={`${s_.raceRegQ} (${group.raceName})`} value={me.raceRegistered == null ? "" : me.raceRegistered ? "yes" : "no"} options={[{ value: "yes", label: s_.yes }, { value: "no", label: s_.notYet }, { value: "", label: s_.raceRegUnset }]} />
+              <div><button className="btn">{s_.save}</button></div>
+            </>
           ) : null}
-          <div><button className="btn">{s_.save}</button></div>
         </form>
 
         {isOwner ? (

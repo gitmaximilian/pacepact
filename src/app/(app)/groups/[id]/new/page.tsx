@@ -1,3 +1,4 @@
+import { BackLink } from "@/app/components";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
@@ -18,7 +19,7 @@ export default async function NewCrewChallenge({ params, searchParams }: { param
   const members = await groupMembers(id);
   return (
     <>
-      <Link href={`/groups/${id}?tab=challenges`} className="small">← {m.group.name}</Link>
+      <BackLink href={`/groups/${id}?tab=challenges`} label={m.group.name} />
       <h1>{t.social.newChallenge}</h1>
       <Flash err={contestError(t, param(await searchParams, "error"))} />
       <NewContest t={t} groupId={id} opponents={members.filter((x) => x.id !== user.id).map((x) => ({ id: x.id, name: x.name }))} />

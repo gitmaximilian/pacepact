@@ -51,7 +51,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Zweck und Rechtsgrundlage",
       <ul key="s">
         <li>Konto, Ziele, Läufe, Plan, Gruppen und Importe: Bereitstellung des Dienstes, den du nutzt (Art. 6 Abs. 1 lit. b DSGVO).</li>
-        <li>Puls: deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO). Du gibst sie mit einem eigenen, nicht vorausgewählten Häkchen bei der Registrierung, beim Eintragen eines Laufs oder in den Einstellungen. Freiwillig; ohne Einwilligung funktioniert alles andere genauso. Der Puls dient nur deiner eigenen Auswertung („Pace bei gleichem Puls“) und ist für deine Crews nie sichtbar. Widerruf jederzeit in den Einstellungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
+        <li>Puls: deine ausdrückliche Einwilligung (Art. 9 Abs. 2 lit. a DSGVO). Du gibst sie mit einem eigenen, nicht vorausgewählten Häkchen bei der Registrierung, beim Eintragen eines Laufs oder in den Einstellungen. Freiwillig; ohne Einwilligung funktioniert alles andere genauso. Der Puls dient deiner eigenen Auswertung („Pace bei gleichem Puls“); den Durchschnittspuls je Lauf sehen die Mitglieder deiner Crews. Den Maximalpuls sieht nur du. Widerruf jederzeit in den Einstellungen mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
         <li>Crews, Wochenvergleich, Challenges, Kudos und Kommentare: Bereitstellung der Gemeinschaftsfunktionen, die du nutzt, wenn du einer Crew beitrittst (Art. 6 Abs. 1 lit. b DSGVO).</li>
         <li>Schutz vor Missbrauch, z. B. Begrenzung von Anmelde- und Beitrittsversuchen, sowie Moderation gemeldeter Inhalte: berechtigtes Interesse am sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Für Zähler speichern wir nur eine Prüfsumme (SHA-256) aus IP-Adresse bzw. Konto-ID und Zweck, höchstens 24 Stunden lang, nie die IP-Adresse selbst.</li>
       </ul>,
@@ -60,7 +60,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Was andere in deinen Crews sehen",
       <ul key="s">
         <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus Apple Health stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deinen Platz im Vier-Wochen-Vergleich (Serie in Wochen und Minuten, gedeckelt beim Plan + 10 %), deine Statistik je Zeitraum (Anzahl Läufe, Minuten, längster Lauf, Serie, Anteil erledigter Planwochen; für „Jahr“ und „Gesamt“ erst ab Gründung der Crew), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
-        <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; den Durchschnittspuls deiner Läufe (Gesundheitsdaten: setzt deine Puls-Einwilligung voraus, gilt nur für diese Crew und endet, sobald du es ausschaltest oder die Einwilligung widerrufst); ob du fürs Rennen angemeldet bist.</li>
+        <li><b>Immer, ab sofort für alle:</b> Distanz und Pace deiner Läufe. <b>Mit deiner Puls-Einwilligung:</b> den Durchschnittspuls je Lauf (die Einwilligung umfasst ausdrücklich die Anzeige in deinen Crews; ältere Einwilligungen ohne diesen Zusatz gelten erst nach deiner Bestätigung). <b>Freiwillig:</b> ob du fürs Rennen angemeldet bist.</li>
         <li><b>Nie:</b> Maximalpuls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan im Vergleich nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
         <li><b>Gar nicht in Crews:</b> unplausible Läufe (schneller als 2:30 min/km).</li>
         <li>Wenn du eine Crew verlässt oder entfernt wirst, sieht sie deine Läufe nicht mehr. Deine Kommentare dort bleiben, bis du sie löschst oder dein Konto löschst.</li>
@@ -173,7 +173,7 @@ const en: typeof de = {
       "Purpose and legal basis",
       <ul key="s">
         <li>Account, goals, runs, plan, groups and imports: providing the service you use (Art. 6(1)(b) GDPR).</li>
-        <li>Heart rate: your explicit consent (Art. 9(2)(a) GDPR). You give it with a separate, unticked checkbox at sign-up, when logging a run, or in Settings. Voluntary; everything else works the same without it. Heart rate is only used for your own analysis ("pace at the same heart rate") and is never visible to your crews. Withdraw at any time in Settings, with effect for the future (Art. 7(3) GDPR).</li>
+        <li>Heart rate: your explicit consent (Art. 9(2)(a) GDPR). You give it with a separate, unticked checkbox at sign-up, when logging a run, or in Settings. Voluntary; everything else works the same without it. Heart rate is used for your own analysis ("pace at the same heart rate"); members of your crews see the average heart rate per run. Only you see the maximum heart rate. Withdraw at any time in Settings, with effect for the future (Art. 7(3) GDPR).</li>
         <li>Crews, weekly comparison, challenges, kudos and comments: providing the community features you use when you join a crew (Art. 6(1)(b) GDPR).</li>
         <li>Abuse protection such as limiting sign-in and join attempts, and moderating reported content: legitimate interest in secure operation (Art. 6(1)(f) GDPR). Counters store only a checksum (SHA-256) of IP address or account ID and purpose, for at most 24 hours, never the IP address itself.</li>
       </ul>,
@@ -182,7 +182,7 @@ const en: typeof de = {
       "What others in your crews see",
       <ul key="s">
         <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from Apple Health or was entered by you; walk breaks; number of runs; your weekly plan progress; your place in the four-week comparison (streak in weeks and minutes, capped at the plan + 10 %); your statistics per period (number of runs, minutes, longest run, streak, share of plan weeks done; for "Year" and "All time" only from the crew's start); milestones; challenge participation and stickers; your kudos and comments.</li>
-        <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; the average heart rate of your runs (health data: requires your heart-rate consent, applies to that crew only and ends as soon as you switch it off or withdraw consent); whether you are registered for the race.</li>
+        <li><b>Always:</b> distance and pace of your runs. <b>With your heart-rate consent:</b> the average heart rate per run (the consent explicitly covers showing it in your crews; older consents without that wording only apply once you confirm). <b>Voluntary:</b> whether you are registered for the race.</li>
         <li><b>Never:</b> maximum heart rate, notes, goals, target time, training settings. To compute your weekly plan in the comparison we use your race date and runs per week internally, but never show them.</li>
         <li><b>Not in crews at all:</b> implausible runs (faster than 2:30 min/km).</li>
         <li>When you leave a crew or are removed, it no longer sees your runs. Your comments there stay until you delete them or your account.</li>

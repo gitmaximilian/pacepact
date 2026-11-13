@@ -6,6 +6,7 @@ export interface HrLabels {
   avgHr: string;
   optional: string;
   private: string;
+  privateOnly: string;
   consentTitle: string;
   consentText: string;
 }
@@ -15,7 +16,7 @@ export interface HrLabels {
  * here: a separate, unticked checkbox with the full consent text (Art. 9(2)(a) GDPR). The field
  * only appears once it is ticked, so no heart rate is sent without consent.
  */
-export function HrField({ consented, labels: l }: { consented: boolean; labels: HrLabels }) {
+export function HrField({ consented, shared, labels: l }: { consented: boolean; shared: boolean; labels: HrLabels }) {
   const [on, setOn] = useState(consented);
   return (
     <div className="field hr-field">
@@ -32,7 +33,7 @@ export function HrField({ consented, labels: l }: { consented: boolean; labels: 
         <>
           <label htmlFor="avgHr">{l.avgHr} <span className="muted">({l.optional})</span></label>
           <input id="avgHr" name="avgHr" type="number" min={25} max={250} inputMode="numeric" placeholder="148" className="big-input" />
-          <span className="hint">{l.private}</span>
+          <span className="hint">{shared || !consented ? l.private : l.privateOnly}</span>
         </>
       ) : null}
     </div>

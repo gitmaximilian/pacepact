@@ -3,7 +3,7 @@ import { getT } from "@/lib/i18n/server";
 import { formatDuration, HALF_MARATHON_KM, MARATHON_KM } from "@/lib/pace";
 import { activeGoal, param, type SearchParams } from "@/lib/queries";
 import { saveGoal } from "@/app/actions";
-import {Flash} from "@/app/components";
+import {Flash, BackLink } from "@/app/components";
 import { PaceCalc } from "@/app/(app)/goal/pace-calc";
 
 export const metadata = { title: "Goal" };
@@ -23,6 +23,7 @@ export default async function GoalPage({ searchParams }: { searchParams: SearchP
   const error = param(sp, "error");
   return (
     <>
+      <BackLink href="/dashboard" label={t.nav.dashboard} />
       <h1>{t.goal.title}</h1>
       <Flash err={error === "date" ? t.goal.errDate : error ? t.auth.errInput : null} />
       <form action={saveGoal} className="panel form">

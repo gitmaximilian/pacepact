@@ -1,3 +1,4 @@
+import { BackLink } from "@/app/components";
 import Link from "next/link";
 import { and, count, eq, min, max } from "drizzle-orm";
 import { getDb, schema } from "@/db";
@@ -22,6 +23,7 @@ export default async function ImportPage() {
   const day = new Intl.DateTimeFormat(locale === "de" ? "de-AT" : "en-GB", { dateStyle: "medium", timeZone: "Europe/Vienna" });
   return (
     <>
+      <BackLink href="/runs/new" label={t.nav.log} />
       <h1>{c.title}</h1>
       <p className="muted">{c.intro}</p>
 

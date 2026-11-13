@@ -1,3 +1,4 @@
+import { BackLink } from "@/app/components";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
@@ -12,7 +13,7 @@ export default async function NewPersonalChallenge({ searchParams }: { searchPar
   const { t, locale } = await getT();
   return (
     <>
-      <Link href="/challenges" className="small">← {t.social.personalTitle}</Link>
+      <BackLink href="/challenges" label={t.social.personalTitle} />
       <h1>{t.social.personalCta}</h1>
       <Flash err={contestError(t, param(await searchParams, "error"))} />
       <NewContest t={t} groupId={null} opponents={[]} />

@@ -1,3 +1,4 @@
+import { BackLink } from "@/app/components";
 import { requireUser } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { currentPhase, PHASES, run2Prescription, tempoUnlock, weeklyLanes } from "@/lib/plan";
@@ -25,6 +26,7 @@ export default async function PlanPage() {
   const now = goal ? currentPhase(goal.raceDate) : null;
   return (
     <>
+      <BackLink href="/dashboard" label={t.nav.dashboard} />
       <h1>{t.plan.title}</h1>
       <p className="muted">{t.plan.intro}</p>
       <p className="row" style={{ gap: 8 }}>

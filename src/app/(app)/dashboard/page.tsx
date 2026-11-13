@@ -1,3 +1,4 @@
+import { Icon } from "@/app/icons";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
@@ -44,7 +45,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
 
   return (
     <>
-      <h1>{fmt(d.hello, { name: firstName })}</h1>
+      <div className="page-head">
+        <h1>{fmt(d.hello, { name: firstName })}</h1>
+        <Link href="/settings" className="round-btn" aria-label={t.nav.settings}><Icon name="gear" size={20} /></Link>
+      </div>
       <Flash ok={param(sp, "saved") === "goal" ? t.goal.saved : null} />
 
       <section className="panel track me-week">

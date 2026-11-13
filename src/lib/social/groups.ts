@@ -59,6 +59,7 @@ export async function groupMembers(groupId: string) {
       shareDistance: schema.groupMembers.shareDistance,
       sharePace: schema.groupMembers.sharePace,
       shareHr: schema.groupMembers.shareHr,
+      hrConsentAt: schema.users.hrConsentAt,
       raceRegistered: schema.groupMembers.raceRegistered,
     })
     .from(schema.groupMembers)

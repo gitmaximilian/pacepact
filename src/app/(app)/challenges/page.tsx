@@ -1,3 +1,4 @@
+import { BackLink } from "@/app/components";
 import Link from "next/link";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
@@ -32,6 +33,7 @@ export default async function PersonalChallenges() {
   const names = new Map([[user.id, user.name]]);
   return (
     <>
+      <BackLink href="/dashboard" label={t.nav.dashboard} />
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.social.personalTitle}</h1>
         <Link href="/challenges/new" className="btn signal"><Icon name="plus" size={18} /> {t.social.newChallenge}</Link>

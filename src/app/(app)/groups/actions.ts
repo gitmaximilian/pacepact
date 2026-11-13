@@ -119,9 +119,6 @@ export async function saveSharing(fd: FormData) {
   await db
     .update(schema.groupMembers)
     .set({
-      shareDistance: fd.get("shareDistance") === "on",
-      sharePace: fd.get("sharePace") === "on",
-      shareHr: fd.get("shareHr") === "on",
       raceRegistered: reg === "yes" ? true : reg === "no" ? false : null,
     })
     .where(and(eq(schema.groupMembers.groupId, group.id), eq(schema.groupMembers.userId, user.id)));

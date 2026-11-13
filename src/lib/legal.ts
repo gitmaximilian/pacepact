@@ -8,7 +8,7 @@ export const LEGAL = {
   email: "contact@maximilianauer.at",
   legalUrl: "https://maximilianauer.at/legal/",
   authority: "https://www.dsb.gv.at",
-  updated: "2026-11-12",
+  updated: "2026-11-13",
   hosting: {
     provider: "Cloudflare, Inc.",
     services: "Cloudflare Workers und D1",

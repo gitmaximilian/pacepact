@@ -1,3 +1,4 @@
+import { hrVisibleToCrew } from "@/lib/hr";
 import Link from "next/link";
 import { RUN_TYPES } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
@@ -50,7 +51,8 @@ export default async function NewRunPage({ searchParams }: { searchParams: Searc
         </div>
         <HrField
           consented={!!user.hrConsentAt}
-          labels={{ avgHr: t.runs.avgHr, optional: t.runs.bpmOptional, private: t.runs.hrPrivate, consentTitle: t.runs.hrConsentTitle, consentText: t.settings.hrGrantText }}
+          shared={hrVisibleToCrew(user.hrConsentAt)}
+          labels={{ avgHr: t.runs.avgHr, optional: t.runs.bpmOptional, private: t.runs.hrPrivate, privateOnly: t.runs.hrOnlyYou, consentTitle: t.runs.hrConsentTitle, consentText: t.settings.hrGrantText }}
         />
         <fieldset className="field type-pick">
           <legend>{t.runs.type}</legend>

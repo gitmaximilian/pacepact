@@ -9,7 +9,7 @@ import { param, type SearchParams } from "@/lib/queries";
 import { redirect } from "next/navigation";
 import { homeCrew } from "@/lib/social/groups";
 import { createGroup, joinGroup } from "@/app/(app)/groups/actions";
-import {Flash} from "@/app/components";
+import {Flash, BackLink } from "@/app/components";
 import { Icon } from "@/app/icons";
 
 export const metadata = { title: "Crews" };
@@ -40,6 +40,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Searc
   const n = new Map(counts.map((c) => [c.g, c.n]));
   return (
     <>
+      <BackLink href="/groups" label={t.nav.groups} />
       <h1>{t.social.crews}</h1>
       <Flash
         ok={param(sp, "left") ? t.social.left : param(sp, "deleted") ? t.social.deleted : null}
