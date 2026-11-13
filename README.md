@@ -68,6 +68,9 @@ Planned address: `https://pacepact.maximilianauer.at`
   - Privacy per member and crew: minutes, run type and plan progress are visible; distance and pace only after opt-in.
     Average heart rate only after a separate opt-in per crew (and only with heart-rate consent). Never notes or goals. Apple Health runs are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
+  Condensed caps only for page titles and numbers; section titles in Inter, sentence case. Soft cards (18 px radius,
+  light shadows), tinted secondary buttons, tap chips, gentle fade-in of new content (off with reduced motion).
+  Text contrast is WCAG AA in light and dark.
 
 Strava, the personal API, Health Auto Export, Apple Shortcuts and GPX/TCX/FIT/CSV files were removed on 2026-11-12:
 Apple Health covers every watch and app, and the web cannot read Apple Health directly (see `docs/legal/drittanbieter.md`).
