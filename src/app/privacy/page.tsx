@@ -60,8 +60,8 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Was andere in deinen Crews sehen",
       <ul key="s">
         <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus Apple Health stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deinen Platz im Vier-Wochen-Vergleich (Serie in Wochen und Minuten, gedeckelt beim Plan + 10 %), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
-        <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; ob du fürs Rennen angemeldet bist.</li>
-        <li><b>Nie:</b> Puls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan im Vergleich nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
+        <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; den Durchschnittspuls deiner Läufe (Gesundheitsdaten: setzt deine Puls-Einwilligung voraus, gilt nur für diese Crew und endet, sobald du es ausschaltest oder die Einwilligung widerrufst); ob du fürs Rennen angemeldet bist.</li>
+        <li><b>Nie:</b> Maximalpuls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan im Vergleich nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
         <li><b>Gar nicht in Crews:</b> unplausible Läufe (schneller als 2:30 min/km).</li>
         <li>Wenn du eine Crew verlässt oder entfernt wirst, sieht sie deine Läufe nicht mehr. Deine Kommentare dort bleiben, bis du sie löschst oder dein Konto löschst.</li>
       </ul>,
@@ -88,7 +88,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
       "Cookies",
       <p key="s">
         Nur technisch notwendige Cookies, keine Analyse- oder Werbe-Cookies (§ 165 Abs. 3 TKG 2021): <code>pp_session</code>{" "}
-        (Anmeldung, 30 Tage), <code>pp_locale</code> (deine Sprachwahl, 1 Jahr), <code>pp_challenge</code> (nur während der
+        (Anmeldung, 30 Tage), <code>pp_locale</code> (deine Sprachwahl, 1 Jahr), <code>pp_crew</code> (welche deiner Crews zuletzt offen war, 1 Jahr), <code>pp_challenge</code> (nur während der
         Anmeldung, 5 Minuten). Im Speicher deines
         Browsers merken wir uns nur, wenn du „Nicht jetzt“ bei der App-Installation wählst, damit wir 30 Tage nicht erneut fragen.
         Passkeys verwaltet dein Betriebssystem (z. B. iCloud-Schlüsselbund); dafür gelten die Bedingungen des Anbieters.
@@ -182,8 +182,8 @@ const en: typeof de = {
       "What others in your crews see",
       <ul key="s">
         <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from Apple Health or was entered by you; walk breaks; number of runs; your weekly plan progress; your place in the four-week comparison (streak in weeks and minutes, capped at the plan + 10 %); milestones; challenge participation and stickers; your kudos and comments.</li>
-        <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; whether you are registered for the race.</li>
-        <li><b>Never:</b> heart rate, notes, goals, target time, training settings. To compute your weekly plan in the comparison we use your race date and runs per week internally, but never show them.</li>
+        <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; the average heart rate of your runs (health data: requires your heart-rate consent, applies to that crew only and ends as soon as you switch it off or withdraw consent); whether you are registered for the race.</li>
+        <li><b>Never:</b> maximum heart rate, notes, goals, target time, training settings. To compute your weekly plan in the comparison we use your race date and runs per week internally, but never show them.</li>
         <li><b>Not in crews at all:</b> implausible runs (faster than 2:30 min/km).</li>
         <li>When you leave a crew or are removed, it no longer sees your runs. Your comments there stay until you delete them or your account.</li>
       </ul>,
@@ -209,7 +209,7 @@ const en: typeof de = {
       "Cookies",
       <p key="s">
         Only strictly necessary cookies, no analytics or advertising cookies: <code>pp_session</code> (sign-in, 30 days),{" "}
-        <code>pp_locale</code> (your language choice, 1 year) and <code>pp_challenge</code> (only during sign-in, 5 minutes). In your browser&apos;s storage we only remember
+        <code>pp_locale</code> (your language choice, 1 year), <code>pp_crew</code> (which of your crews was open last, 1 year) and <code>pp_challenge</code> (only during sign-in, 5 minutes). In your browser&apos;s storage we only remember
         when you choose “Not now” for installing the app, so we do not ask again for 30 days. Passkeys are managed by your
         operating system (e.g. iCloud Keychain); the provider&apos;s terms apply.
       </p>,

@@ -58,6 +58,7 @@ export async function groupMembers(groupId: string) {
       joinedAt: schema.groupMembers.joinedAt,
       shareDistance: schema.groupMembers.shareDistance,
       sharePace: schema.groupMembers.sharePace,
+      shareHr: schema.groupMembers.shareHr,
       raceRegistered: schema.groupMembers.raceRegistered,
     })
     .from(schema.groupMembers)
@@ -141,6 +142,7 @@ export async function feedRuns(members: Member[]) {
       runType: schema.runs.runType,
       source: schema.runs.source,
       walkBreaks: schema.runs.walkBreaks,
+      avgHr: schema.runs.avgHr,
     })
     .from(schema.runs)
     .where(
@@ -202,13 +204,17 @@ export async function targetVisible(group: Group, type: string, id: string): Pro
 
 export const currentWeek = () => weekKey(new Date());
 
-/** The crew a runner lands in: the one they looked at last, else the first they joined. */
-export async function homeCrew(userId: string): Promise<string | null> {
+/**
+ * The crew a runner lands in: the one remembered on this device (if still a member), else the one
+ * they looked at last, else the first they joined.
+ */
+export async function homeCrew(userId: string, remembered?: string | null): Promise<string | null> {
   const db = await getDb();
   const rows = await db
     .select({ id: schema.groupMembers.groupId, seen: schema.groupMembers.lastSeenAt, joined: schema.groupMembers.joinedAt })
     .from(schema.groupMembers)
     .where(eq(schema.groupMembers.userId, userId));
+  if (remembered && rows.some((r) => r.id === remembered)) return remembered;
   rows.sort((a, b) => (b.seen?.getTime() ?? 0) - (a.seen?.getTime() ?? 0) || a.joined.getTime() - b.joined.getTime());
   return rows[0]?.id ?? null;
 }

@@ -154,6 +154,8 @@ export const groupMembers = sqliteTable(
     /** Privacy per membership. By default the group sees minutes, run counts and plan progress only. */
     shareDistance: integer("share_distance", { mode: "boolean" }).notNull().default(false),
     sharePace: integer("share_pace", { mode: "boolean" }).notNull().default(false),
+    /** Average heart rate of runs (health data): shown to this group only after an explicit opt-in per group. */
+    shareHr: integer("share_hr", { mode: "boolean" }).notNull().default(false),
     /** Voluntary: registered for the group race (null = not said). */
     raceRegistered: integer("race_registered", { mode: "boolean" }),
     /** For "since your last visit" hints. */

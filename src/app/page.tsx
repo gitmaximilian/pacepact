@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { homeCrew } from "@/lib/social/groups";
@@ -8,7 +9,7 @@ import { LangSwitch, LegalFooter, Logo } from "./components";
 export default async function Landing() {
   const user = await currentUser();
   if (user) {
-    const home = user.onboardedAt ? await homeCrew(user.id) : null;
+    const home = user.onboardedAt ? await homeCrew(user.id, (await cookies()).get("pp_crew")?.value) : null;
     redirect(!user.onboardedAt ? "/welcome" : home ? `/groups/${home}` : "/dashboard");
   }
   const { t, locale } = await getT();

@@ -15,9 +15,12 @@ Planned address: `https://pacepact.maximilianauer.at`
   It can be repeated from Settings.
 - **Install as app:** web app manifest and icons; Android/Chrome gets a real install button, iPhone/iPad a short
   "Share → Add to Home Screen" guide (as in Rookie).
-- **Navigation:** three places only: Crew (opens the crew you looked at last; the list of crews, joining and starting
-  one are under "Other crews" in the Crew tab), Log a run (+) and Me (my week against the plan, recent runs, links to
+- **Navigation:** three places only: Crew (opens the crew you looked at last, remembered in the `pp_crew` cookie; switch
+  crews with the arrow next to the crew name, which also leads to starting or joining another crew), Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
+- **App chrome:** header and tab bar live in the shared layout of the `src/app/(app)` route group, so they stay put
+  between pages and the tapped tab lights up at once; `(app)/loading.tsx` shows a skeleton while a page renders.
+  Which tab is active comes from `sectionOf` in `src/lib/nav.ts`.
 - **No dropdowns:** choices are tap chips (run type, date, walk breaks, race registration, language, distance,
   challenge opponent). The date is Today / Yesterday / 2 days ago in the device's own calendar, or any other date.
 - **Log a run:** minutes and km are the only required fields; average heart rate is a standard field for runners who
@@ -60,7 +63,7 @@ Planned address: `https://pacepact.maximilianauer.at`
   - Feed (runs since joining, milestones, finished challenges) with kudos, comments, reporting and admin moderation;
     "since your last visit" hints. Crew rules at `/rules`.
   - Privacy per member and crew: minutes, run type and plan progress are visible; distance and pace only after opt-in.
-    Never heart rate, notes or goals. Apple Health runs are marked as such; manual entries as self-reported.
+    Average heart rate only after a separate opt-in per crew (and only with heart-rate consent). Never notes or goals. Apple Health runs are marked as such; manual entries as self-reported.
 - **Design:** "Bahn" (blue tartan track, lane numbers, condensed race numerals), light and dark mode, works on phones.
 
 Strava, the personal API, Health Auto Export, Apple Shortcuts and GPX/TCX/FIT/CSV files were removed on 2026-11-12:

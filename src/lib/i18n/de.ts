@@ -107,7 +107,7 @@ export const de: Dictionary = {
     walkBreaksQ: "Gehpausen",
     hrConsentTitle: "Auch meinen Durchschnittspuls tracken",
     bpmOptional: "Schläge/Min., optional",
-    hrPrivate: "Nur du siehst ihn. Nie für deine Crew sichtbar.",
+    hrPrivate: "Deine Crew sieht ihn nur, wenn du das im Crew-Tab einschaltest.",
     minutesLabel: "Minuten",
     durationHint: "z. B. 45 oder 1:05:00",
     more: "Mehr Angaben",

@@ -6,7 +6,7 @@ import { LEGAL } from "@/lib/legal";
 import { InstallPrompt } from "./install-prompt";
 import { installLabels } from "./install-labels";
 import { Logo } from "./logo";
-import { Icon } from "./icons";
+import { GearLink, TabBar, TopNav } from "./nav-client";
 
 export { Logo } from "./logo";
 
@@ -20,47 +20,19 @@ export function LangSwitch({ locale, back }: { locale: Locale; back: string }) {
   );
 }
 
-/** Three places only: the crew, logging a run, and me (my week, runs and plan). */
-const NAV = [
-  ["/groups", "groups"],
-  ["/runs/new", "log"],
-  ["/dashboard", "dashboard"],
-  ["/settings", "settings"],
-] as const;
-
-const TABS = [
-  ["/groups", "groups", "crew"],
-  ["/runs/new", "log", "plus"],
-  ["/dashboard", "dashboard", "user"],
-] as const;
-
-export function Shell({
-  t,
-  locale,
-  active,
-  children,
-}: {
-  t: Dictionary;
-  locale: Locale;
-  active: string;
-  children: ReactNode;
-}) {
+/** Header, content column, footer and tab bar of the signed-in app. Used by the (app) layout and by /rules. */
+export function AppChrome({ t, children }: { t: Dictionary; children: ReactNode }) {
+  const labels = { crew: t.nav.groups, log: t.nav.log, me: t.nav.dashboard, settings: t.nav.settings };
   return (
     <>
       <header className="topbar gutter">
         <div className="wrap">
-          <Link href="/dashboard" className="brand">
+          <Link href="/groups" className="brand">
             <Logo size={30} /> Pacepact
           </Link>
-          <nav className="nav" aria-label="Main">
-            {NAV.map(([href, key]) => (
-              <Link key={href} href={href} aria-current={active === href ? "page" : undefined}>
-                {t.nav[key]}
-              </Link>
-            ))}
-          </nav>
+          <TopNav labels={labels} />
           <div className="tools">
-            <Link href="/settings" className="icon-btn mobile-only" aria-label={t.nav.settings}><Icon name="gear" /></Link>
+            <GearLink label={t.nav.settings} />
             <form action={signOut} className="desktop-only">
               <button className="btn ghost small">{t.nav.signOut}</button>
             </form>
@@ -71,17 +43,15 @@ export function Shell({
         <div className="wrap stack">{children}</div>
       </main>
       <LegalFooter t={t} />
-      <nav className="tabbar" aria-label="Main">
-        {TABS.map(([href, key, icon]) => (
-          <Link key={href} href={href} className={key === "log" ? "tab-log" : undefined} aria-current={active === href ? "page" : undefined}>
-            <Icon name={icon} size={key === "log" ? 26 : 22} />
-            <span>{t.nav[key]}</span>
-          </Link>
-        ))}
-      </nav>
+      <TabBar labels={labels} />
       <InstallPrompt labels={installLabels(t)} />
     </>
   );
+}
+
+/** Pages outside the (app) group that still show the app chrome when signed in (e.g. /rules). */
+export function Shell({ t, children }: { t: Dictionary; locale?: Locale; active?: string; children: ReactNode }) {
+  return <AppChrome t={t}>{children}</AppChrome>;
 }
 
 export function LegalFooter({ t }: { t: Dictionary }) {

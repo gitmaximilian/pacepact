@@ -7,7 +7,7 @@ import { currentUser, rateLimit } from "@/lib/auth";
 import { fmt } from "@/lib/i18n";
 import { getT } from "@/lib/i18n/server";
 import { MAX_MEMBERS, normalizeCode } from "@/lib/social/join";
-import { joinGroup } from "../../groups/actions";
+import { joinGroup } from "@/app/(app)/groups/actions";
 import { LangSwitch, LegalFooter, Logo } from "../../components";
 import { Icon } from "../../icons";
 

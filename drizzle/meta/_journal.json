@@ -22,6 +22,13 @@
       "when": 1794509779275,
       "tag": "0002_import_only",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794559777040,
+      "tag": "0003_share_hr",
+      "breakpoints": true
     }
   ]
 }

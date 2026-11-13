@@ -1,0 +1,1 @@
+ALTER TABLE `group_members` ADD `share_hr` integer DEFAULT false NOT NULL;

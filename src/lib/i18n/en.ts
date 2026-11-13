@@ -106,7 +106,7 @@ export const en = {
     walkBreaksQ: "Walk breaks",
     hrConsentTitle: "Also track my average heart rate",
     bpmOptional: "bpm, optional",
-    hrPrivate: "Only you see it. Never shown to your crew.",
+    hrPrivate: "Your crew sees it only if you turn that on in the crew's Crew tab.",
     minutesLabel: "Minutes",
     durationHint: "e.g. 45 or 1:05:00",
     more: "More details",

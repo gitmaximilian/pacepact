@@ -65,6 +65,7 @@ export async function setHrConsent(fd: FormData) {
   }
   await db.update(schema.users).set({ hrConsentAt: null }).where(eq(schema.users.id, user.id));
   await db.update(schema.runs).set({ avgHr: null, maxHr: null }).where(eq(schema.runs.userId, user.id));
+  await db.update(schema.groupMembers).set({ shareHr: false }).where(eq(schema.groupMembers.userId, user.id));
   redirect("/settings?hr=withdrawn");
 }
 
@@ -161,6 +162,8 @@ export async function addRun(fd: FormData) {
     redirect("/runs/new?error=input");
   }
   if (!isPlausibleRun({ distanceKm, durationSec: durationSec! })) redirect("/runs/new?error=pace");
+  // Without a time the run is placed at noon; a run logged in the morning must not end up in the future.
+  if (!str(fd, "time") && startedAt.getTime() > Date.now()) startedAt.setTime(Date.now() - durationSec! * 1000);
   // Heart-rate consent given right in the form: a separate, unticked checkbox with the full text
   // (Art. 9 Abs. 2 lit. a DSGVO). Stored before the run, so the run keeps its heart rate.
   if (!user.hrConsentAt && fd.get("hrConsent") === "on") {
@@ -187,7 +190,7 @@ export async function addRun(fd: FormData) {
 /** After logging, show the runner where they stand: back to the crew they came from, or their first crew. */
 async function afterRun(userId: string, back: string): Promise<string> {
   if (back.startsWith("/groups/") && safeLocalPath(back, "") === back && !back.includes("?")) return `${back}?saved=1`;
-  const home = await homeCrew(userId);
+  const home = await homeCrew(userId, (await cookies()).get("pp_crew")?.value);
   return home ? `/groups/${home}?saved=1` : "/dashboard";
 }
 
