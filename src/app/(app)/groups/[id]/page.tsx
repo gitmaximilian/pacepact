@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { after } from "next/server";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { Contest, Reaction } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
@@ -11,7 +11,7 @@ import { formatKm, formatPace, paceSecPerKm } from "@/lib/pace";
 import { appUrl } from "@/lib/app-url";
 import { param, type SearchParams } from "@/lib/queries";
 import { contestEnd, evaluate } from "@/lib/social/contests";
-import { currentWeek, feedMilestones, feedRuns, finalizeDue, groupMembers, memberData, membership, milestoneId } from "@/lib/social/groups";
+import { currentWeek, FEED_DAYS, feedMilestones, feedRuns, finalizeDue, groupMembers, memberData, membership, milestoneId } from "@/lib/social/groups";
 import { crewStats, fourWeeks, sortStats, STAT_KEYS, STAT_PERIODS, statWeeks, topMilestones, weekLanes, weekSummary, type StatKey, type StatPeriod } from "@/lib/social/overview";
 import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
@@ -71,11 +71,19 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   // Statistics may need older weeks; everything else reads at most half a year.
   const fromWeek = tab === "stats" && statPeriod === "all" ? "2000-01-03" : [prepStart, addWeeks(cw, tab === "stats" ? -51 : -26)].sort()[0];
   // Wave 2, in parallel: weekly totals, this crew's challenges with their entries, and (week tab) the feed's raw rows.
+  // Challenges and their entries in one round trip (entries via a subquery on this crew's challenges).
   const loadContests = async () => {
-    const cs = await db.select().from(schema.contests).where(eq(schema.contests.groupId, id)).orderBy(desc(schema.contests.createdAt)).limit(40);
-    const es = cs.length ? await db.select().from(schema.contestEntries).where(inArray(schema.contestEntries.contestId, cs.map((c) => c.id))) : [];
+    const [cs, es] = await Promise.all([
+      db.select().from(schema.contests).where(eq(schema.contests.groupId, id)).orderBy(desc(schema.contests.createdAt)).limit(40),
+      db
+        .select()
+        .from(schema.contestEntries)
+        .where(inArray(schema.contestEntries.contestId, db.select({ id: schema.contests.id }).from(schema.contests).where(eq(schema.contests.groupId, id)))),
+    ]);
     return { cs, es };
   };
+  // Kudos and comments of the feed window in the same round trip: anything on a feed item is newer than the window.
+  const feedSince = new Date(Date.now() - (FEED_DAYS + 1) * DAY);
   const memberIdsEarly = members.map((x) => x.id);
   const [data, loaded, feedRaw] = await Promise.all([
     memberData(members, group.onlyImported ? "device" : "all", fromWeek),
@@ -90,6 +98,9 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             .innerJoin(schema.contestEntries, eq(schema.contestEntries.contestId, schema.contests.id))
             .where(and(isNull(schema.contests.groupId), eq(schema.contests.status, "done"), inArray(schema.contests.createdBy, memberIdsEarly)))
             .limit(40),
+          db.select().from(schema.reactions).where(and(eq(schema.reactions.groupId, id), gte(schema.reactions.createdAt, feedSince))),
+          db.select().from(schema.comments).where(and(eq(schema.comments.groupId, id), gte(schema.comments.createdAt, feedSince))).orderBy(schema.comments.createdAt),
+          db.select({ c: schema.reports.commentId }).from(schema.reports).where(eq(schema.reports.reporterId, user.id)),
         ])
       : null,
   ]);
@@ -116,18 +127,14 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   let social: Social | null = null;
   let reported: { id: string; body: string; userId: string; reports: number }[] = [];
   if (tab === "overview" && feedRaw) {
-    const [runs, allMs, personal] = feedRaw;
+    const [runs, allMs, personal, groupReacts, groupComms, myReports] = feedRaw;
     const ms = topMilestones(allMs);
     const recentDone = contests.filter((c) => c.status === "done" && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
     const personalDone = personal.filter(({ c, e }) => e.badge && e.userId === c.createdBy && contestEnd(c) >= new Date(Date.now() - 21 * DAY).toISOString().slice(0, 10));
     const targetIds = [...runs.map((r) => r.id), ...ms.map(milestoneId), ...recentDone.map((c) => c.id), ...personalDone.map(({ c }) => c.id)];
-    const [reacts, comms, myReports] = targetIds.length
-      ? await Promise.all([
-          db.select().from(schema.reactions).where(and(eq(schema.reactions.groupId, id), inArray(schema.reactions.targetId, targetIds))),
-          db.select().from(schema.comments).where(and(eq(schema.comments.groupId, id), inArray(schema.comments.targetId, targetIds))).orderBy(schema.comments.createdAt),
-          db.select({ c: schema.reports.commentId }).from(schema.reports).where(eq(schema.reports.reporterId, user.id)),
-        ])
-      : [[], [], []];
+    const targets = new Set(targetIds);
+    const reacts = groupReacts.filter((r) => targets.has(r.targetId));
+    const comms = groupComms.filter((c) => targets.has(c.targetId));
     social = {
       reactions: new Map(),
       comments: new Map(),

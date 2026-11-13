@@ -6,6 +6,8 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": false },
+  // Free on every plan: run the Worker near D1 when that is faster (pages make several sequential queries).
+  "placement": { "mode": "smart" },
 "vars": { "APP_URL": "https://pacepact.maximilianauer.at" },
   "d1_databases": [
     {

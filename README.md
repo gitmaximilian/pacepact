@@ -36,7 +36,11 @@ Screenshots show a sample crew with invented names from a local test instance, n
   item immediately and dim the old content until the server answers (`src/app/instant.tsx`); kudos count up
   optimistically (`useOptimistic`, reducer in `src/lib/social/kudos.ts`). Lists stay light: the runs list shows 30 rows
   (one link each, editing on `/runs/[id]`), the crew feed 15 items, both with "show more" (`src/lib/paging.ts`).
-  The crew page loads its data in parallel waves and writes "last seen" after the response (`after()`).
+  The crew page needs three database round trips (session, membership, everything else in parallel: weekly totals,
+  challenges with entries via a subquery, feed rows, kudos and comments of the feed window) and writes "last seen"
+  after the response (`after()`). Round trips matter more than page size: each one waits for D1. `wrangler.jsonc`
+  enables Smart Placement (free), so Cloudflare can run the Worker near D1. Most of the 7 MB Worker is the Next.js
+  runtime itself, which sets the cold-start cost.
 - **App chrome:** on phones there is no header (tab bar only; settings on Me; sub-pages have a back link); header and tab bar live in the shared layout of the `src/app/(app)` route group, so they stay put
   between pages and the tapped tab lights up at once; `(app)/loading.tsx` shows a skeleton while a page renders.
   Which tab is active comes from `sectionOf` in `src/lib/nav.ts`.
