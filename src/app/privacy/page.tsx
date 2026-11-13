@@ -59,7 +59,7 @@ const de: { title: string; intro: string; sections: [string, ReactNode][] } = {
     [
       "Was andere in deinen Crews sehen",
       <ul key="s">
-        <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus Apple Health stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deinen Platz im Vier-Wochen-Vergleich (Serie in Wochen und Minuten, gedeckelt beim Plan + 10 %), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
+        <li><b>Immer:</b> deinen Namen, Datum, Art und Dauer deiner Läufe seit deinem Beitritt (letzte 21 Tage im Feed), ob ein Lauf aus Apple Health stammt oder selbst eingetragen wurde, Gehpausen, Anzahl der Läufe, deinen Wochenplan-Fortschritt, deinen Platz im Vier-Wochen-Vergleich (Serie in Wochen und Minuten, gedeckelt beim Plan + 10 %), deine Statistik je Zeitraum (Anzahl Läufe, Minuten, längster Lauf, Serie, Anteil erledigter Planwochen; für „Jahr“ und „Gesamt“ erst ab Gründung der Crew), Meilensteine, Challenge-Teilnahmen und Sticker, deine Kudos und Kommentare.</li>
         <li><b>Nur wenn du es pro Crew einschaltest:</b> Distanzen und Pace deiner Läufe; den Durchschnittspuls deiner Läufe (Gesundheitsdaten: setzt deine Puls-Einwilligung voraus, gilt nur für diese Crew und endet, sobald du es ausschaltest oder die Einwilligung widerrufst); ob du fürs Rennen angemeldet bist.</li>
         <li><b>Nie:</b> Maximalpuls, Notizen, Ziele, Zielzeit, Trainingseinstellungen. Für deinen Wochenplan im Vergleich nutzen wir intern dein Renndatum und deine Läufe pro Woche, zeigen sie aber nicht an.</li>
         <li><b>Gar nicht in Crews:</b> unplausible Läufe (schneller als 2:30 min/km).</li>
@@ -181,7 +181,7 @@ const en: typeof de = {
     [
       "What others in your crews see",
       <ul key="s">
-        <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from Apple Health or was entered by you; walk breaks; number of runs; your weekly plan progress; your place in the four-week comparison (streak in weeks and minutes, capped at the plan + 10 %); milestones; challenge participation and stickers; your kudos and comments.</li>
+        <li><b>Always:</b> your name; date, type and duration of your runs since you joined (last 21 days in the feed); whether a run came from Apple Health or was entered by you; walk breaks; number of runs; your weekly plan progress; your place in the four-week comparison (streak in weeks and minutes, capped at the plan + 10 %); your statistics per period (number of runs, minutes, longest run, streak, share of plan weeks done; for "Year" and "All time" only from the crew's start); milestones; challenge participation and stickers; your kudos and comments.</li>
         <li><b>Only if you switch it on per crew:</b> distances and pace of your runs; the average heart rate of your runs (health data: requires your heart-rate consent, applies to that crew only and ends as soon as you switch it off or withdraw consent); whether you are registered for the race.</li>
         <li><b>Never:</b> maximum heart rate, notes, goals, target time, training settings. To compute your weekly plan in the comparison we use your race date and runs per week internally, but never show them.</li>
         <li><b>Not in crews at all:</b> implausible runs (faster than 2:30 min/km).</li>

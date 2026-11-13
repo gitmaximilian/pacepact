@@ -11,7 +11,7 @@ import { appUrl } from "@/lib/app-url";
 import { param, type SearchParams } from "@/lib/queries";
 import { contestEnd, evaluate } from "@/lib/social/contests";
 import { currentWeek, feedMilestones, feedRuns, finalizeDue, groupMembers, memberData, membership, milestoneId } from "@/lib/social/groups";
-import { fourWeeks, topMilestones, weekLanes, weekSummary } from "@/lib/social/overview";
+import { crewStats, fourWeeks, sortStats, STAT_KEYS, STAT_PERIODS, statWeeks, topMilestones, weekLanes, weekSummary, type StatKey, type StatPeriod } from "@/lib/social/overview";
 import { sourceKind } from "@/lib/social/sources";
 import { addWeeks, weekKey, weekRange } from "@/lib/social/weeks";
 import { LEGAL } from "@/lib/legal";
@@ -26,7 +26,7 @@ import { Avatar, ContestCard, contestTitle, Hidden, Interactions, STICKER, stick
 
 export const metadata = { title: "Crew" };
 
-const TABS = ["overview", "challenges", "crew"] as const;
+const TABS = ["overview", "stats", "challenges", "crew"] as const;
 type Tab = (typeof TABS)[number];
 const DAY = 86400_000;
 
@@ -60,7 +60,10 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const memberIds = members.map((x) => x.id);
   const cw = currentWeek();
   const prepStart = weekKey(group.createdAt);
-  const fromWeek = [prepStart, addWeeks(cw, -26)].sort()[0];
+  const statPeriod: StatPeriod = (STAT_PERIODS as readonly string[]).includes(param(sp, "p") ?? "") ? (param(sp, "p") as StatPeriod) : "month";
+  const statKey: StatKey = (STAT_KEYS as readonly string[]).includes(param(sp, "s") ?? "") ? (param(sp, "s") as StatKey) : "runs";
+  // Statistics may need older weeks; everything else reads at most half a year.
+  const fromWeek = tab === "stats" && statPeriod === "all" ? "2000-01-03" : [prepStart, addWeeks(cw, tab === "stats" ? -51 : -26)].sort()[0];
   const data = await memberData(members, group.onlyImported ? "device" : "all", fromWeek);
   const dataOf = new Map(data.map((d) => [d.userId, d]));
   const shareDistance = new Map(members.map((x) => [x.id, x.shareDistance]));
@@ -350,10 +353,63 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         </>
       ) : null}
 
+      {tab === "stats" ? <StatsTab /> : null}
       {tab === "challenges" ? <ChallengesTab /> : null}
       {tab === "crew" ? <CrewTab /> : null}
     </>
   );
+
+  function StatsTab() {
+    const first = data.flatMap((d) => [...d.weeks.keys()].filter((w) => (d.weeks.get(w)?.runs ?? 0) > 0)).sort()[0] ?? cw;
+    // Longer periods start no earlier than the crew itself: nobody's older history is shown to a crew.
+    const weeks = statWeeks(statPeriod, cw, [first, prepStart].sort().reverse()[0]).filter((w) => statPeriod === "week" || statPeriod === "month" || w >= prepStart);
+    // Streaks look back from the crew's first logged week (an open-ended range would be cut off).
+    const rows = sortStats(crewStats(data, weeks, cw, weekRange([first, fromWeek].sort().reverse()[0], cw), (u) => u === user.id || !!shareDistance.get(u)), statKey);
+    const short = (n: string) => { const [a, b] = n.trim().split(/\s+/); return b ? `${a} ${b[0]}.` : a; };
+    const href = (p: StatPeriod, k: StatKey) => `/groups/${id}?tab=stats&p=${p}&s=${k}`;
+    const fmtKm = (v: number) => v.toLocaleString(lc, { maximumFractionDigits: 1 });
+    const cell = (r: (typeof rows)[number], k: StatKey) => {
+      const v = r[k];
+      if (v == null) return <span className="muted">–</span>;
+      return k === "km" ? fmtKm(v) : v;
+    };
+    return (
+      <section className="stack" style={{ gap: 14 }}>
+        <div className="seg" role="tablist" aria-label={s_.statPeriod}>
+          {STAT_PERIODS.map((p) => (
+            <Link key={p} href={href(p, statKey)} role="tab" aria-selected={p === statPeriod} className={`chip${p === statPeriod ? " on" : ""}`} scroll={false} replace>
+              {s_.statPeriods[p]}
+            </Link>
+          ))}
+        </div>
+        <div className="table-wrap stats-wrap">
+          <table className="stats">
+            <thead>
+              <tr>
+                <th scope="col" className="who">{s_.runnerCol}</th>
+                {STAT_KEYS.map((k) => (
+                  <th key={k} scope="col" className="r" aria-sort={k === statKey ? "descending" : undefined}>
+                    <Link href={href(statPeriod, k)} scroll={false} replace className={k === statKey ? "on" : undefined}>
+                      {s_.statCols[k]}<span className="unit-h">{s_.statUnits[k]}</span>{k === statKey ? <span aria-hidden="true"> ↓</span> : null}
+                    </Link>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.userId} className={r.userId === user.id ? "me" : undefined}>
+                  <td className="who">{r.userId === user.id ? s_.youLabel : short(names.get(r.userId) ?? "–")}</td>
+                  {STAT_KEYS.map((k) => <td key={k} className={`r num${k === statKey ? " on" : ""}`}>{cell(r, k)}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="small muted">{s_.statsHint}{group.onlyImported ? ` ${s_.onlyImportedNote}` : ""}</p>
+      </section>
+    );
+  }
 
   function ChallengesTab() {
     const active = contests.filter((c) => c.status === "active");

@@ -77,3 +77,68 @@ export function topMilestones<T extends { userId: string; kind: string; value: n
   }
   return [...best.values()];
 }
+
+export const STAT_PERIODS = ["week", "month", "year", "all"] as const;
+export type StatPeriod = (typeof STAT_PERIODS)[number];
+export const STAT_KEYS = ["runs", "minutes", "km", "longest", "streak", "onPlan"] as const;
+export type StatKey = (typeof STAT_KEYS)[number];
+
+/** Weeks covered by a statistics period: this week, the last 4 weeks, the last 52 weeks, or everything. */
+export function statWeeks(period: StatPeriod, currentWeek: string, firstWeek: string): string[] {
+  const from = period === "week" ? currentWeek : period === "month" ? addWeeks(currentWeek, -3) : period === "year" ? addWeeks(currentWeek, -51) : firstWeek;
+  return weekRange(from, currentWeek);
+}
+
+export interface StatRow {
+  userId: string;
+  runs: number;
+  minutes: number;
+  /** Null when the runner does not share distances with this crew. */
+  km: number | null;
+  /** Longest single run in minutes. */
+  longest: number;
+  streak: number;
+  /** Share of finished weeks (plus the current one once done) with the plan done, in %; null without data. */
+  onPlan: number | null;
+}
+
+/**
+ * Real totals per runner for a period, from the precomputed weekly totals. Hidden distances stay
+ * hidden: when sorting by km they always go last, so their order reveals nothing.
+ */
+export function crewStats(
+  data: MemberData[],
+  weeks: string[],
+  currentWeek: string,
+  prepWeeks: string[],
+  showKm: (userId: string) => boolean,
+): StatRow[] {
+  const streaks = new Map(board("consistency", data, weeks, currentWeek, prepWeeks).map((r) => [r.userId, r.value ?? 0]));
+  return data.map((m) => {
+    const ws = weeks.map((w) => m.weeks.get(w)).filter((w): w is NonNullable<typeof w> => !!w);
+    const sum = (f: (w: (typeof ws)[number]) => number) => ws.reduce((a, w) => a + f(w), 0);
+    const first = [...m.weeks.keys()].filter((w) => (m.weeks.get(w)?.runs ?? 0) > 0).sort()[0];
+    const judged = first ? weeks.filter((w) => w >= first && (w < currentWeek || countedWeek(m, w, m.weeks.get(w)).met)) : [];
+    const met = judged.filter((w) => countedWeek(m, w, m.weeks.get(w)).met).length;
+    return {
+      userId: m.userId,
+      runs: sum((w) => w.runs),
+      minutes: Math.round(sum((w) => w.sec) / 60),
+      km: showKm(m.userId) ? Math.round(sum((w) => w.km) * 10) / 10 : null,
+      longest: Math.round(Math.max(0, ...ws.map((w) => w.longestSec)) / 60),
+      streak: streaks.get(m.userId) ?? 0,
+      onPlan: judged.length ? Math.round((met / judged.length) * 100) : null,
+    };
+  });
+}
+
+export function sortStats(rows: StatRow[], key: StatKey): StatRow[] {
+  const v = (r: StatRow) => r[key];
+  return [...rows].sort((a, b) => {
+    const x = v(a), y = v(b);
+    if (x == null && y == null) return a.userId.localeCompare(b.userId);
+    if (x == null) return 1;
+    if (y == null) return -1;
+    return y - x || b.runs - a.runs || a.userId.localeCompare(b.userId);
+  });
+}

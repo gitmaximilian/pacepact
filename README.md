@@ -56,6 +56,9 @@ Planned address: `https://pacepact.maximilianauer.at`
     lane 2"). Below it, one fair four-week comparison: streak (weeks in a row on plan), then minutes.
     Minutes count only up to the plan + 10 % per week; weeks before a runner's first run do not count as missed; raw
     pace and heart rate are never ranked. Logic: `src/lib/social/overview.ts`.
+  - Stats tab: real totals per runner for Week / 4 weeks / Year / All time (Year and All time count from the crew's
+    start), sortable by runs, minutes, distance, longest run, streak and share of plan weeks done. Distance only for
+    runners who share it (hidden values always sort last); never pace. Logic: `crewStats` in `src/lib/social/overview.ts`.
   - Challenges in seconds: three templates up front (1,500 minutes together, 4 weeks on plan, minutes duel), more
     templates and a custom form one tap away: together (e.g. 200 km), everyone (e.g. most runs, 4 weeks on plan,
     5/10 km test), 1:1 duels with accept/decline, and personal ones (30 minutes without walking, long run +10 %).

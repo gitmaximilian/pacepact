@@ -54,3 +54,27 @@ test("milestones: only the highest per runner and kind", () => {
   ]);
   assert.deepEqual(ms.map((m) => `${m.userId}:${m.kind}:${m.value}`).sort(), ["a:continuous:30", "a:distance:5", "b:continuous:10"]);
 });
+
+test("crew stats: real totals per period, sortable, hidden km always last", async () => {
+  const { crewStats, sortStats, statWeeks } = await import("../src/lib/social/overview.ts");
+  assert.deepEqual(statWeeks("week", CW, "2026-01-05"), [CW]);
+  assert.equal(statWeeks("month", CW, "2026-01-05").length, 4);
+  assert.equal(statWeeks("year", CW, "2026-01-05").length, 52);
+  assert.equal(statWeeks("all", CW, "2026-10-26")[0], "2026-10-26");
+  const a = member("a", [run("2026-10-27", 30), run("2026-11-03", 30), run("2026-11-04", 30), run("2026-11-05", 30), run("2026-11-10", 90)]);
+  const b = member("b", [run("2026-11-02", 40), run("2026-11-09", 40), run("2026-11-10", 40), run("2026-11-11", 40)]);
+  const weeks = statWeeks("all", CW, "2026-10-26");
+  const rows = crewStats([a, b], weeks, CW, weeks, (u) => u === "a");
+  const ra = rows.find((r) => r.userId === "a")!, rb = rows.find((r) => r.userId === "b")!;
+  assert.equal(ra.runs, 5);
+  assert.equal(ra.minutes, 210); // real minutes, not capped
+  assert.equal(ra.longest, 90);
+  assert.equal(ra.km, 35);
+  assert.equal(rb.km, null);
+  assert.equal(rb.onPlan, 50); // week of Nov 2: 1 of 3 runs (missed); this week: done → 1 of 2
+  assert.deepEqual(sortStats(rows, "runs").map((r) => r.userId), ["a", "b"]);
+  assert.deepEqual(sortStats(rows, "km").map((r) => r.userId), ["a", "b"]);
+  const flipped = crewStats([a, b], weeks, CW, weeks, (u) => u === "b");
+  assert.deepEqual(sortStats(flipped, "km").map((r) => r.userId), ["b", "a"]); // hidden goes last even if larger
+  assert.equal(sortStats(rows, "onPlan")[0].userId, "a");
+});
