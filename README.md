@@ -4,7 +4,21 @@ A running tracker for race goals, a simple repeating plan, and groups.
 Set a race and target time, log runs by hand or import them automatically,
 and train together with friends.
 
-Planned address: `https://pacepact.maximilianauer.at`
+**Live:** https://pacepact.maximilianauer.at · **Version:** 0.2.0
+
+| Crew | Crew stats | Me | Log a run |
+| ---- | ---------- | -- | --------- |
+| <img src="docs/screenshots/crew-light.png" width="200" alt="Crew page: countdown to the race and this week's lanes for four runners"> | <img src="docs/screenshots/stats-light.png" width="200" alt="Crew stats: runs, time, distance, longest run, streak and plan adherence per runner"> | <img src="docs/screenshots/me-light.png" width="200" alt="Me: this week against the plan and the plan's three runs"> | <img src="docs/screenshots/log-light.png" width="200" alt="Log a run: minutes and kilometres, optional heart rate with consent"> |
+| <img src="docs/screenshots/crew-dark.png" width="200" alt="Crew page in dark mode"> | <img src="docs/screenshots/stats-dark.png" width="200" alt="Crew stats in dark mode"> | <img src="docs/screenshots/me-dark.png" width="200" alt="Me in dark mode"> | <img src="docs/screenshots/log-dark.png" width="200" alt="Log a run in dark mode"> |
+
+**Desktop**
+
+| Light | Dark |
+| ----- | ---- |
+| <img src="docs/screenshots/desktop-crew-light.png" width="420" alt="Crew page on desktop in light mode"> | <img src="docs/screenshots/desktop-crew-dark.png" width="420" alt="Crew page on desktop in dark mode"> |
+| <img src="docs/screenshots/desktop-me-light.png" width="420" alt="Me page on desktop in light mode"> | <img src="docs/screenshots/desktop-me-dark.png" width="420" alt="Me page on desktop in dark mode"> |
+
+Screenshots show a sample crew with invented names from a local test instance, not real runners.
 
 ## Features
 
