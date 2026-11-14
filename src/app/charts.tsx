@@ -29,9 +29,11 @@ function xOf(n: number, slots: boolean) {
 }
 
 /** Up to four x labels (first, last and evenly in between), so they never collide. */
-function xTicks(n: number): number[] {
+function xTicks(n: number, width = INNER): number[] {
   if (n <= 1) return [0];
-  const k = Math.min(n, 4);
+  // Labels need room (anchored at both ends): never more than four.
+  const k = Math.max(1, Math.min(n, 4, Math.floor(width / 70) + 1));
+  if (k === 1) return [n - 1];
   return [...new Set(Array.from({ length: k }, (_, i) => Math.round((i * (n - 1)) / (k - 1))))];
 }
 
@@ -237,7 +239,7 @@ export function Grid({ rows, me, xLabels, when, label, hint, kind, tpl }: { kind
   const [sel, setSel] = useState<[number, number] | null>(null);
   const focus = useContext(BoardCtx)?.focus ?? me;
   const n = xLabels.length;
-  const pitch = Math.min(18, (W - NAME_W - 2) / Math.max(1, n));
+  const pitch = Math.min(24, (W - NAME_W - 2) / Math.max(1, n));
   const size = f1(Math.max(4, pitch - 2));
   const rowH = Math.max(size + 4, 14);
   const h = rows.length * rowH + BOTTOM + 2;
@@ -285,7 +287,7 @@ export function Grid({ rows, me, xLabels, when, label, hint, kind, tpl }: { kind
         })}
         {sel ? <rect className="sel" x={cx(sel[1])} y={y0(sel[0])} width={size} height={size} /> : null}
         <g className="xlabels">
-          {xTicks(n).map((i) => <text key={i} x={f1(cx(i) + size / 2)} y={h - 4} textAnchor={n > 1 && i === 0 ? "start" : n > 1 && i === n - 1 ? "end" : "middle"}>{xLabels[i]}</text>)}
+          {xTicks(n, n * pitch).map((i) => <text key={i} x={f1(cx(i) + size / 2)} y={h - 4} textAnchor={n > 1 && i === 0 ? "start" : n > 1 && i === n - 1 ? "end" : "middle"}>{xLabels[i]}</text>)}
         </g>
       </svg>
     </div>
