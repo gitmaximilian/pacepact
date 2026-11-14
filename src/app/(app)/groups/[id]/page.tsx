@@ -21,6 +21,9 @@ import { listSize } from "@/lib/paging";
 import {Flash, Seg} from "@/app/components";
 import { Icon } from "@/app/icons";
 import { InstantGroup, InstantLink } from "@/app/instant";
+import { BarsWithLine, ChartDefs, Grid, Lines, Sparkline, type PackedCell } from "@/app/charts";
+import { ChartBoard, FocusName, FocusPanel, ModeSwitch, PeopleChips } from "@/app/chart-client";
+import { buckets, CELL_STATES, chartWeeks, crewSeries, heatmap, personSeries, personTrend, smooth } from "@/lib/social/charts";
 import {
   deleteContest, deleteGroup, dismissReports, deleteComment, leaveGroup, removeMember, rotateInviteCode, saveGroupSettings, saveSharing,
 } from "@/app/(app)/groups/actions";
@@ -398,15 +401,50 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     // Streaks look back from the crew's first logged week (an open-ended range would be cut off).
     const rows = sortStats(crewStats(data, weeks, cw, weekRange([first, fromWeek].sort().reverse()[0], cw), () => true), statKey);
     const short = (n: string) => { const [a, b] = n.trim().split(/\s+/); return b ? `${a} ${b[0]}.` : a; };
+    const nameOf = (uid: string) => (uid === user.id ? s_.youLabel : short(names.get(uid) ?? "–"));
     const href = (p: StatPeriod, k: StatKey) => `/groups/${id}?tab=stats&p=${p}&s=${k}`;
     const fmtKm = (v: number) => v.toLocaleString(lc, { maximumFractionDigits: 1 });
+    const fmtN = (v: number) => v.toLocaleString(lc);
     const cell = (r: (typeof rows)[number], k: StatKey) => {
       const v = r[k];
       if (v == null) return <span className="muted">–</span>;
       return k === "km" ? fmtKm(v) : v;
     };
+    const c_ = s_.charts;
+
+    // Charts: the period, but at least eight weeks; past half a year one point per month.
+    const bs = buckets(chartWeeks(statPeriod, cw, prepStart, first));
+    const kind = bs[0]?.kind ?? "week";
+    const monthFmt = new Intl.DateTimeFormat(lc, { month: "short", year: "2-digit", timeZone: "UTC" });
+    const xl = bs.map((b) => (b.kind === "week" ? dateFmt.format(new Date(b.start)) : monthFmt.format(new Date(b.start))));
+    const when = bs.map((b, i) => (b.kind === "week" ? fmt(c_.weekOf, { date: xl[i] }) : xl[i]));
+    const crew = crewSeries(data, bs, cw);
+    const total = crewSeries(data, [{ start: weeks[0] ?? cw, weeks, kind: "month" }], cw)[0];
+    // Runners with at least one run in the window; the viewer first, then by name.
+    const ranIn = new Set(data.filter((d) => bs.some((b) => b.weeks.some((w) => (d.weeks.get(w)?.runs ?? 0) > 0))).map((d) => d.userId));
+    const order = [...members].sort((a, b) => Number(b.id === user.id) - Number(a.id === user.id) || a.name.localeCompare(b.name, lc)).map((x) => x.id);
+    const shown = order.filter((uid) => ranIn.has(uid));
+    const people = personSeries(data, bs);
+    const peopleOf = new Map(people.map((p) => [p.userId, p]));
+    const grid = new Map(heatmap(data, bs, cw).map((r) => [r.userId, r.cells]));
+    const trends = Object.fromEntries(shown.map((uid) => {
+      const t = personTrend(dataOf.get(uid)!, bs);
+      return [uid, { pace: t.map((p) => p.pace), longest: t.map((p) => p.longest) }];
+    }));
+    const per = kind === "week" ? c_.perWeek : c_.perMonth;
+    const kpis = [
+      { k: "minutes", label: c_.kpiMinutes, value: fmtN(total.minutes), spark: crew.map((p) => p.minutes) },
+      { k: "runs", label: c_.kpiRuns, value: fmtN(total.runs), spark: crew.map((p) => p.runs) },
+      { k: "done", label: c_.kpiDone, value: total.done == null ? "–" : `${total.done} %`, spark: crew.map((p) => p.done) },
+    ];
+    // Per week, lines show a three-week average (calmer, same totals); months and running totals as they are.
+    const lineSeries = (key: "minutes" | "cumulative") => shown.map((uid) => {
+      const v = peopleOf.get(uid)?.[key] ?? [];
+      return { id: uid, name: nameOf(uid), values: key === "minutes" && kind === "week" ? smooth(v) : v };
+    });
+
     return (
-      <section className="stack" style={{ gap: 14 }}>
+      <section className="stack stats-tab" style={{ gap: 14 }}>
         <InstantGroup className="seg" label={s_.statPeriod}>
           {STAT_PERIODS.map((p) => (
             <InstantLink key={p} href={href(p, statKey)} active={p === statPeriod} className="chip" activeClass="on">
@@ -414,33 +452,134 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             </InstantLink>
           ))}
         </InstantGroup>
-        <InstantGroup bare>
-        <div className="table-wrap stats-wrap">
-          <table className="stats">
-            <thead>
-              <tr>
-                <th scope="col" className="who">{s_.runnerCol}</th>
-                {STAT_KEYS.map((k) => (
-                  <th key={k} scope="col" className="r" aria-sort={k === statKey ? "descending" : undefined}>
-                    <InstantLink href={href(statPeriod, k)} active={k === statKey} activeClass="on" current="true">
-                      {s_.statCols[k]}<span className="unit-h">{s_.statUnits[k]}</span><span aria-hidden="true" className="sort-arrow"> ↓</span>
-                    </InstantLink>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.userId} className={r.userId === user.id ? "me" : undefined}>
-                  <td className="who">{r.userId === user.id ? s_.youLabel : short(names.get(r.userId) ?? "–")}</td>
-                  {STAT_KEYS.map((k) => <td key={k} className={`r num${k === statKey ? " on" : ""}`}>{cell(r, k)}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        <div className="kpis">
+          {kpis.map((k) => (
+            <div key={k.k} className="kpi">
+              <span className="kpi-label">{k.label}</span>
+              <span className="num kpi-value">{k.value}</span>
+              <Sparkline values={k.spark} />
+            </div>
+          ))}
         </div>
-        </InstantGroup>
-        <p className="small muted">{s_.statsHint}{group.onlyImported ? ` ${s_.onlyImportedNote}` : ""}</p>
+
+        <ChartDefs />
+
+        <div className="chart-grid">
+        <section className="panel chart-panel">
+          <div className="chart-head">
+            <h2 className="h-small">{c_.crewTitle} <span className="muted">{per}</span></h2>
+            <ul className="legend">
+              <li><span className="key bar" />{c_.crewLegendBars}</li>
+              <li><span className="key ref" />{c_.crewLegendPlan}</li>
+            </ul>
+          </div>
+          <BarsWithLine
+              hint={c_.tapHint}
+              bars={crew.map((p) => p.minutes)}
+              line={crew.map((p) => p.plan)}
+              xLabels={xl}
+              tips={crew.map((p, i) => `${when[i]}: ${fmtN(p.minutes)} / ${fmtN(p.plan)} ${c_.min} · ${p.runs} ${c_.kpiRuns}`)}
+              label={`${c_.crewTitle}, ${per}`}
+            />
+          <p className="small muted">{c_.crewHint}</p>
+          <details className="chart-table">
+            <summary>{c_.showTable}</summary>
+            <table className="compare">
+              <thead><tr><th scope="col" /><th scope="col" className="r">{c_.crewLegendBars}</th><th scope="col" className="r">{c_.crewLegendPlan}</th><th scope="col" className="r">{c_.kpiRuns}</th></tr></thead>
+              <tbody>{crew.map((p, i) => <tr key={i}><td>{xl[i]}</td><td className="r num">{fmtN(p.minutes)}</td><td className="r num">{fmtN(p.plan)}</td><td className="r num">{p.runs}</td></tr>)}</tbody>
+            </table>
+          </details>
+        </section>
+
+        {shown.length ? (
+          <ChartBoard me={user.id} mode="minutes">
+            <section className="panel chart-panel">
+              <div className="chart-head">
+                <h2 className="h-small">{c_.consistTitle}</h2>
+                <ul className="legend">
+                  <li><span className="key cell done" />{c_.legendDone}</li>
+                  <li><span className="key cell part" />{c_.legendPart}</li>
+                  <li><span className="key cell miss" />{c_.legendMiss}</li>
+                </ul>
+              </div>
+              <Grid
+                kind={kind}
+                me={user.id}
+                rows={shown.map((uid) => ({ id: uid, name: nameOf(uid), cells: (grid.get(uid) ?? []).map((c): PackedCell => [CELL_STATES.indexOf(c.state), c.runs, c.of, c.met]) }))}
+                xLabels={xl}
+                when={when}
+                hint={c_.tapHint}
+                tpl={kind === "week" ? c_.runsOf : c_.weeksOf}
+                label={c_.consistTitle}
+              />
+              <p className="small muted">{kind === "week" ? c_.consistHint : c_.consistMonthHint}</p>
+            </section>
+
+            <section className="panel chart-panel">
+              <div className="chart-head">
+                <h2 className="h-small">{c_.peopleTitle}</h2>
+                <ModeSwitch label={c_.peopleTitle} modes={[{ id: "minutes", label: c_.weekly }, { id: "cumulative", label: c_.cumulative }]} />
+              </div>
+              <ul className="legend">
+                <li><span className="key line me" />{s_.youLabel}</li>
+                <FocusName names={Object.fromEntries(shown.map((uid) => [uid, nameOf(uid)]))} />
+                <li><span className="key line other" />{c_.others}</li>
+              </ul>
+              <Lines
+                views={{ minutes: lineSeries("minutes"), cumulative: lineSeries("cumulative") }}
+                labels={{ minutes: `${c_.peopleTitle}: ${c_.weekly}`, cumulative: `${c_.peopleTitle}: ${c_.cumulative}` }}
+                me={user.id}
+                xLabels={xl}
+                when={when}
+                hint={c_.tapHint}
+                unit={c_.min}
+              />
+              <PeopleChips label={c_.peopleTitle} people={shown.map((uid) => ({ id: uid, label: nameOf(uid) }))} />
+              <p className="small muted">{kind === "week" ? `${c_.smoothHint} ` : ""}{c_.peopleHint}</p>
+            </section>
+
+            <FocusPanel
+              trends={trends}
+              names={Object.fromEntries(shown.map((uid) => [uid, short(names.get(uid) ?? "–")]))}
+              xLabels={xl}
+              when={when}
+              text={{ title: c_.focusTitle, titleYou: c_.focusTitleYou, pace: c_.paceTitle, paceHint: c_.paceHint, longest: c_.longestTitle, longestHint: c_.longestHint, noData: c_.noData, min: c_.min }}
+            />
+          </ChartBoard>
+        ) : null}
+        </div>
+
+        <section className="stack" style={{ gap: 10 }}>
+          <h2 className="h-small">{c_.tableTitle}</h2>
+          <InstantGroup bare>
+          <div className="table-wrap stats-wrap">
+            <table className="stats">
+              <thead>
+                <tr>
+                  <th scope="col" className="who">{s_.runnerCol}</th>
+                  {STAT_KEYS.map((k) => (
+                    <th key={k} scope="col" className="r" aria-sort={k === statKey ? "descending" : undefined}>
+                      <InstantLink href={href(statPeriod, k)} active={k === statKey} activeClass="on" current="true">
+                        {s_.statCols[k]}<span className="unit-h">{s_.statUnits[k]}</span><span aria-hidden="true" className="sort-arrow"> ↓</span>
+                      </InstantLink>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.userId} className={r.userId === user.id ? "me" : undefined}>
+                    <td className="who">{nameOf(r.userId)}</td>
+                    {STAT_KEYS.map((k) => <td key={k} className={`r num${k === statKey ? " on" : ""}`}>{cell(r, k)}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          </InstantGroup>
+          <p className="small muted">{s_.statsHint}{group.onlyImported ? ` ${s_.onlyImportedNote}` : ""}</p>
+        </section>
       </section>
     );
   }

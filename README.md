@@ -79,9 +79,19 @@ Screenshots show a sample crew with invented names from a local test instance, n
     lane 2"). Below it, one fair four-week comparison: streak (weeks in a row on plan), then minutes.
     Minutes count only up to the plan + 10 % per week; weeks before a runner's first run do not count as missed; raw
     pace and heart rate are never ranked. Logic: `src/lib/social/overview.ts`.
-  - Stats tab: real totals per runner for Week / 4 weeks / Year / All time (Year and All time count from the crew's
-    start), sortable by runs, minutes, distance, longest run, streak and share of plan weeks done. Distance only for
-    runners who share it (hidden values always sort last); never pace. Logic: `crewStats` in `src/lib/social/overview.ts`.
+  - Stats tab: three key numbers with sparklines (minutes, runs, weeks on plan), then charts, then the sortable table.
+    - Crew minutes per week (or month) as bars against the sum of everyone's plan (dashed step line).
+    - Consistency grid: one square per runner and week; full = plan done, partly filled = started, outline = no run.
+      Past 26 weeks one square per month, filled by the share of weeks done.
+    - Who runs how much: one line per runner, minutes capped at plan + 10 % (per week as a three-week average, or
+      added up). Your line is solid with round markers; tap a name to follow someone (dashed, square markers).
+    - The followed runner's own trend: average pace (runs with a distance only) and longest run. Pace is never shown
+      side by side or ranked.
+    - Charts cover the period but at least eight weeks; Year and All time start at the crew's start (and its first run).
+      Tap a chart for values. No chart library: small SVG components in `src/app/charts.tsx` (client, fed with numbers
+      only, so the page stays small), data from `run_weeks` via pure functions in `src/lib/social/charts.ts`.
+    - Table: real totals per runner for Week / 4 weeks / Year / All time, sortable by runs, minutes, distance, longest
+      run, streak and share of plan weeks done. Logic: `crewStats` in `src/lib/social/overview.ts`.
   - Challenges in seconds: three templates up front (1,500 minutes together, 4 weeks on plan, minutes duel), more
     templates and a custom form one tap away: together (e.g. 200 km), everyone (e.g. most runs, 4 weeks on plan,
     5/10 km test), 1:1 duels with accept/decline, and personal ones (30 minutes without walking, long run +10 %).
@@ -146,7 +156,9 @@ No secrets are needed. `APP_URL` is set in `wrangler.jsonc` (see `.env.example` 
 - Apple Health: the export is processed in the browser; only running workouts (time, duration, distance, heart rate
   with consent) are sent to the server.
 - Crew pages read precomputed weekly totals (`run_weeks`), rebuilt when runs change, to stay within the Workers free
-  plan's CPU limit. Bump `STATS_VERSION` in `src/lib/social/store.ts` when the formulas change.
+  plan's CPU limit. Bump `STATS_VERSION` in `src/lib/social/store.ts` when the formulas change (a bump rebuilds
+  every member on their next crew view, which costs many D1 queries: prefer nullable new columns that fill as runs
+  change, like `dist_sec`, with a fallback for older rows).
 - The in-app privacy notice is at `/privacy` (English and German). Its facts come from `src/lib/legal.ts`.
   It describes the hosting on Cloudflare (Workers and D1, EU). Update that file if the hosting changes.
 - Internal GDPR documents (German) are in `docs/legal/`: record of processing activities, technical and organisational

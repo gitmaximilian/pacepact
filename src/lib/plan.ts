@@ -116,6 +116,19 @@ export interface WeekTarget {
  * doing the lighter plan counts as "done"; extra volume beyond the plan earns nothing.
  */
 export function weekTarget(runsPerWeek: number, raceDate: string | null, week: string): WeekTarget {
+  // Pure and called for every runner and week on crew pages: remember recent answers (bounded).
+  const key = `${runsPerWeek}|${raceDate}|${week}`;
+  const hit = targetCache.get(key);
+  if (hit) return hit;
+  if (targetCache.size > 20000) targetCache.clear();
+  const t = computeWeekTarget(runsPerWeek, raceDate, week);
+  targetCache.set(key, t);
+  return t;
+}
+
+const targetCache = new Map<string, WeekTarget>();
+
+function computeWeekTarget(runsPerWeek: number, raceDate: string | null, week: string): WeekTarget {
   const mid = new Date(new Date(`${week}T00:00:00Z`).getTime() + 3.5 * 86400_000);
   const lanes = weeklyLanes(runsPerWeek);
   let phase: Phase = PHASES[0];

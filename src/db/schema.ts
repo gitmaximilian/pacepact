@@ -186,6 +186,8 @@ export const runWeeks = sqliteTable(
     easySec: integer("easy_sec").notNull().default(0),
     easyKm: real("easy_km").notNull().default(0),
     testKm: real("test_km").notNull().default(0),
+    /** Seconds of runs with a distance: basis for the weekly pace. Null on rows stored before it existed. */
+    distSec: integer("dist_sec"),
   },
   (t) => [primaryKey({ columns: [t.userId, t.week, t.variant] })],
 );

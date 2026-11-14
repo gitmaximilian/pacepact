@@ -27,10 +27,12 @@ export interface WeekAgg {
   easyKm: number;
   /** Longest run logged as a test. */
   testKm: number;
+  /** Seconds of runs with a distance (weekly pace = distSec / km). Null on older stored rows. */
+  distSec?: number | null;
 }
 
 export const EMPTY_WEEK: WeekAgg = {
-  runs: 0, sec: 0, km: 0, longestSec: 0, longestKm: 0, continuousSec: 0, walkRuns: 0, easySec: 0, easyKm: 0, testKm: 0,
+  runs: 0, sec: 0, km: 0, longestSec: 0, longestKm: 0, continuousSec: 0, walkRuns: 0, easySec: 0, easyKm: 0, testKm: 0, distSec: 0,
 };
 
 const DAY = 86400_000;
@@ -59,11 +61,12 @@ export function groupEligible(r: Pick<AggRun, "distanceKm" | "durationSec">): bo
 }
 
 export function aggregate(runs: AggRun[]): WeekAgg {
-  const a = { ...EMPTY_WEEK };
+  const a = { ...EMPTY_WEEK, distSec: 0 };
   for (const r of runs) {
     a.runs += 1;
     a.sec += r.durationSec;
     a.km += r.distanceKm;
+    if (r.distanceKm > 0) a.distSec += r.durationSec;
     a.longestSec = Math.max(a.longestSec, r.durationSec);
     a.longestKm = Math.max(a.longestKm, r.distanceKm);
     if (r.walkKnown && !r.walkBreaks) a.continuousSec = Math.max(a.continuousSec, r.durationSec);

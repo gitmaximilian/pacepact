@@ -1,0 +1,1 @@
+ALTER TABLE `run_weeks` ADD `dist_sec` integer;

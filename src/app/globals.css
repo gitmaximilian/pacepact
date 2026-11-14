@@ -548,3 +548,74 @@ table.stats th a.on .sort-arrow { visibility: visible; }
   table.stats th { font-size: 0.62rem; letter-spacing: 0.02em; }
   table.stats .who { max-width: 72px; }
 }
+
+/* Crew statistics charts. Series colors are checked for color-vision deficiencies in both themes. */
+:root { --c-me: #1d4fa8; --c-focus: #c2410c; --c-on-me: #ffffff; --c-on-focus: #ffffff; }
+@media (prefers-color-scheme: dark) { :root { --c-me: #5b84e6; --c-focus: #d96c33; --c-on-me: #0a1020; --c-on-focus: #1a0d05; } }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow); padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); line-height: 1.2; min-height: 2.4em; }
+.kpi-value { font-size: 1.9rem; line-height: 1; }
+.spark { width: 100%; height: 28px; margin-top: 4px; overflow: visible; }
+.spark path { fill: none; stroke: var(--track); stroke-width: 1.6; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.spark path.area { fill: color-mix(in srgb, var(--track) 12%, transparent); stroke: none; }
+.spark circle { fill: var(--track); }
+@media (prefers-color-scheme: dark) { .spark path { stroke: var(--c-me); } .spark circle { fill: var(--c-me); } }
+.chart-grid { display: flex; flex-direction: column; gap: 14px; }
+.chart-board { display: contents; }
+@media (min-width: 760px) { .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.chart-panel { gap: 10px; }
+.chart-panel[hidden] { display: none; }
+.chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.chart-head h2 .muted, .chart-h .muted { font-weight: 500; font-size: 0.85em; }
+.chart-h { margin: 0 0 2px; font-size: 0.85rem; font-weight: 650; }
+.chart { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+.chart-defs { position: absolute; width: 0; height: 0; }
+.chart text { font-family: var(--f-display); font-size: 12px; font-weight: 600; fill: var(--muted); }
+.chart .grid line { stroke: var(--line); stroke-width: 1; }
+.chart path.bars { fill: var(--track); }
+@media (prefers-color-scheme: dark) { .chart path.bars { fill: var(--c-me); } }
+.chart .ref { fill: none; stroke: var(--fg); stroke-width: 1.6; stroke-dasharray: 4 3; opacity: 0.8; }
+.chart { cursor: pointer; }
+.chart .band { fill: color-mix(in srgb, var(--fg) 8%, transparent); }
+.chart path.line { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; opacity: 0.35; }
+.chart path.line.me { stroke: var(--c-me); stroke-width: 2.6; opacity: 1; marker: url(#mk-me); }
+.chart path.line.focus { stroke: var(--c-focus); stroke-width: 2.6; opacity: 1; stroke-dasharray: 7 4; marker: url(#mk-focus); }
+#mk-me circle { fill: var(--c-me); stroke: var(--surface); stroke-width: 1.5; }
+#mk-focus rect { fill: var(--c-focus); stroke: var(--surface); stroke-width: 1.5; }
+.chart.trend .line-one path { fill: none; stroke-linejoin: round; stroke: var(--c-me); stroke-width: 2.2; opacity: 1; }
+.chart.trend .line-one circle { fill: var(--c-me); stroke: var(--surface); stroke-width: 1.5; }
+.chart-panel.other .chart.trend .line-one path { stroke: var(--c-focus); stroke-dasharray: 7 4; }
+.chart-panel.other .chart.trend .line-one circle { fill: var(--c-focus); }
+.grid-chart .name { font-family: var(--f-body); font-size: 11px; font-weight: 500; fill: var(--fg); }
+.grid-chart .me .name { font-weight: 700; }
+.grid-chart .focus .name { fill: var(--c-focus); font-weight: 700; }
+.grid-chart .box { fill: transparent; stroke: color-mix(in srgb, var(--muted) 55%, transparent); stroke-width: 1; }
+.grid-chart .fill { fill: var(--good); }
+.grid-chart .box.open { stroke-dasharray: 2 2; }
+.grid-chart .sel { fill: none; stroke: var(--fg); stroke-width: 2; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.75rem; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.key { display: inline-block; flex: none; }
+.key.bar { width: 10px; height: 10px; border-radius: 3px; background: var(--track); }
+.key.ref { width: 16px; border-top: 2px dashed var(--fg); opacity: 0.8; }
+.key.cell { width: 10px; height: 10px; border-radius: 2px; border: 1px solid color-mix(in srgb, var(--muted) 55%, transparent); }
+.key.cell.done { background: var(--good); border-color: var(--good); }
+.key.cell.part { background: linear-gradient(to top, var(--good) 40%, transparent 40%); }
+.key.line { width: 18px; height: 0; border-top: 3px solid var(--muted); }
+.key.line.me { border-color: var(--c-me); }
+.key.line.focus { border-top-style: dashed; border-color: var(--c-focus); }
+.key.line.other { border-top-width: 2px; opacity: 0.45; }
+@media (prefers-color-scheme: dark) { .key.bar { background: var(--c-me); } }
+.readout { min-height: 1.5em; margin: 0; color: var(--muted); font-variant-numeric: tabular-nums; max-width: none; }
+.chart-tips { display: flex; flex-direction: column; gap: 4px; }
+.people-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.people-chips .chip, .mini-seg .chip { min-height: 36px; padding: 5px 12px; font-size: 0.82rem; cursor: pointer; font-family: inherit; color: inherit; }
+.people-chips .chip.on { background: var(--c-focus); color: var(--c-on-focus); }
+.people-chips .chip.on.me { background: var(--c-me); color: var(--c-on-me); }
+.mini-seg { gap: 4px; }
+.trend-pair { display: grid; gap: 14px; }
+.chart-table summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); }
+.chart-table table { margin-top: 8px; }
+html[data-busy] .stats-tab .chart-grid, html[data-busy] .stats-tab .kpis { opacity: 0.55; }
+@media (max-width: 420px) { .kpi { padding: 10px 10px 6px; } .kpi-value { font-size: 1.6rem; } }
