@@ -8,7 +8,7 @@ and train together with friends.
 
 | Crew | Crew stats | Me | Log a run |
 | ---- | ---------- | -- | --------- |
-| <img src="docs/screenshots/crew-light.png" width="200" alt="Crew page: countdown to the race and this week's lanes for four runners"> | <img src="docs/screenshots/stats-light.png" width="200" alt="Crew stats: runs, time, distance, longest run, streak and plan adherence per runner"> | <img src="docs/screenshots/me-light.png" width="200" alt="Me: this week against the plan and the plan's three runs"> | <img src="docs/screenshots/log-light.png" width="200" alt="Log a run: minutes and kilometres, optional heart rate with consent"> |
+| <img src="docs/screenshots/crew-light.png" width="200" alt="Crew page: countdown to the race and this week's lanes for three runners"> | <img src="docs/screenshots/stats-light.png" width="200" alt="Crew stats: key numbers with sparklines and crew minutes against the plan"> | <img src="docs/screenshots/me-light.png" width="200" alt="Me: this week against the plan and the plan's three runs"> | <img src="docs/screenshots/log-light.png" width="200" alt="Log a run: minutes and kilometres, optional heart rate with consent"> |
 | <img src="docs/screenshots/crew-dark.png" width="200" alt="Crew page in dark mode"> | <img src="docs/screenshots/stats-dark.png" width="200" alt="Crew stats in dark mode"> | <img src="docs/screenshots/me-dark.png" width="200" alt="Me in dark mode"> | <img src="docs/screenshots/log-dark.png" width="200" alt="Log a run in dark mode"> |
 
 **Desktop**
@@ -29,6 +29,10 @@ Screenshots show a sample crew with invented names from a local test instance, n
   It can be repeated from Settings.
 - **Install as app:** web app manifest and icons; Android/Chrome gets a real install button, iPhone/iPad a short
   "Share → Add to Home Screen" guide (as in Rookie).
+- **One way to each thing:** logging a run lives only in the tab bar (+); the crew page, Me and the runs list have no
+  second "Log a run" button, the import page no "log by hand" panel, and the crew tab no second share button (Invite sits
+  in the crew header; the tab shows the code). Plans show one card per phase (no wide table on phones). Account deletion
+  is folded away in Settings.
 - **Navigation:** three places only: Crew (opens the crew you looked at last, remembered in the `pp_crew` cookie; switch
   crews with the arrow next to the crew name, which also leads to starting or joining another crew), Log a run (+) and Me (my week against the plan, recent runs, links to
   the full plan, all runs, Apple Health import and personal challenges). Settings sit behind the gear icon.
@@ -51,7 +55,7 @@ Screenshots show a sample crew with invented names from a local test instance, n
   (the field appears only once it is ticked). The Me page shows "pace at the same heart rate" (12 weeks, ±5 bpm around
   the typical average heart rate, `hrTrend` in `src/lib/stats.ts`), visible only to the runner. The run type is
   preselected (the next open planned run); time, max heart rate, effort, walk breaks and notes are under "More details". After saving, the runner lands in their crew.
-- **Languages:** English by default, German selectable in the intro (landing, sign-up, invite) and in Settings, saved per account.
+- **Languages:** English by default, German selectable in the intro (landing, sign-up, invite) and in Settings (one tap), saved per account.
 - **Goals:** race, date, distance and optional target time. The required pace and a countdown in weeks are calculated.
 - **Plan:** Run 1 (easy), Run 2 (easy, later tempo) and Run 3 (long run), with no fixed weekdays. Two runs a week drop
   Run 2; four add an easy Run 4. Phases are counted back from race day.
@@ -72,7 +76,7 @@ Screenshots show a sample crew with invented names from a local test instance, n
     run type typed by the runner are kept.
 - **Crews (groups) – the heart of the app:** signed-in runners land in their crew.
   - Invite link `/join/<code>` with the system share sheet; new runners sign up and land in the crew after the welcome
-    flow (9 taps including the passkey prompt; 11 taps and 3 fields until they see their first run in the lanes). Admins rotate the code, remove members, edit the crew (race countdown, "count only Apple Health runs")
+    flow (9 taps including the passkey prompt; 11 taps and 3 fields until they see their first run in the lanes). Admins rotate the code, remove members (behind "Manage" in the Crew tab, so no red buttons by default), edit the crew (race countdown, "count only Apple Health runs")
     and delete it; everyone can leave.
   - The crew home answers two questions without scrolling on a phone: who ran this week ("3/4 ran this week", one
     lane per runner with planned runs as dots, minutes and a check mark) and where do I stand ("You: 1 run to go ·
