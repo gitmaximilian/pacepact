@@ -59,7 +59,7 @@ export function NewContest({ t, groupId, opponents }: { t: Dictionary; groupId: 
           <div><button className="btn">{s.create}</button></div>
         </form>
       </details>
-      <p className="small muted">{s.guard}</p>
+      <p className="small muted">{s.guard} {s.guardLong}</p>
     </>
   );
 }

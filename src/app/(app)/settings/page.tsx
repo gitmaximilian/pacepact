@@ -9,7 +9,7 @@ import { InstallRow } from "@/app/install-prompt";
 import { installLabels } from "@/app/install-labels";
 import Link from "next/link";
 import { passkeyLabels } from "@/app/passkey-labels";
-import {Flash, Seg, BackLink } from "@/app/components";
+import { Flash, BackLink } from "@/app/components";
 import { fmt } from "@/lib/i18n";
 import { param, type SearchParams } from "@/lib/queries";
 
@@ -29,6 +29,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{t.settings.title}</h1>
         <div className="row" style={{ gap: 8 }}>
+          <InstallRow labels={installLabels(t)} />
           <form action={signOut}><button className="btn ghost small">{t.nav.signOut}</button></form>
         </div>
       </div>
@@ -37,10 +38,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <section className="panel">
         <h3>{t.settings.trainingTitle}</h3>
         <p className="small muted">{t.settings.trainingText}</p>
-        <div className="row">
-          <Link className="btn small" href="/welcome">{t.settings.trainingButton}</Link>
-          <InstallRow labels={installLabels(t)} />
-        </div>
+        <div><Link className="btn small" href="/welcome">{t.settings.trainingButton}</Link></div>
       </section>
 
       <section className="panel">
@@ -64,8 +62,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
       <form action={setLocale} className="panel form">
         <h3>{t.settings.language}</h3>
         <input type="hidden" name="back" value="/settings" />
-        <Seg name="locale" label={t.settings.language} hideLabel value={locale} options={[{ value: "en", label: "English" }, { value: "de", label: "Deutsch" }]} />
-        <div><button className="btn">{t.settings.saveLanguage}</button></div>
+        <div className="seg" role="group" aria-label={t.settings.language}>
+          {([["en", "English"], ["de", "Deutsch"]] as const).map(([v, l]) => (
+            <button key={v} name="locale" value={v} className={`chip${locale === v ? " on" : ""}`} aria-pressed={locale === v}>{l}</button>
+          ))}
+        </div>
       </form>
 
       <section className="panel" id="hr">
@@ -105,14 +106,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Sea
         <p className="small"><a href="/privacy">{t.legal.privacy}</a></p>
       </section>
 
-      <form action={deleteAccount} className="panel form">
-        <h3>{t.settings.account}</h3>
+      <details className="panel">
+        <summary><strong>{t.settings.account}</strong></summary>
+        <form action={deleteAccount} className="form">
         <div className="field">
           <label htmlFor="confirm">{t.settings.deleteConfirm}</label>
           <input id="confirm" name="confirm" autoComplete="off" style={{ maxWidth: 260 }} />
         </div>
         <div><button className="btn danger">{t.settings.deleteAccount}</button></div>
-      </form>
+        </form>
+      </details>
     </>
   );
 }

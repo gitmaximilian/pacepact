@@ -101,15 +101,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
         </section>
       ) : null}
 
-      <div className="row">
-        <Link className="btn signal" href="/runs/new">{d.logRun}</Link>
-        <Link className="btn ghost" href="/import">{d.importApple}</Link>
-      </div>
-
       <section className="panel">
         <div className="row" style={{ justifyContent: "space-between" }}>
           <h2 className="h-small">{d.recent}</h2>
-          {runs.length ? <Link className="small" href="/runs">{d.allRuns} →</Link> : null}
+          <span className="row small" style={{ gap: 14 }}>
+            <Link href="/import">{d.importShort}</Link>
+            {runs.length ? <Link href="/runs">{d.allRuns} →</Link> : null}
+          </span>
         </div>
         {runs.length ? (
           <ul className="run-list">

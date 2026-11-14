@@ -269,7 +269,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         ? fmt(s_.raceDay, { race: group.raceName ?? "" })
         : `${daysToRace} ${fmt(daysToRace === 1 ? s_.countdownOne : s_.countdown, { race: group.raceName ?? "" })}`
       : null;
-  const logHref = `/runs/new?back=${encodeURIComponent(`/groups/${id}`)}`;
 
   return (
     <>
@@ -331,7 +330,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 </li>
               ))}
             </ol>
-            {summary.me && !summary.me.met ? <Link href={logHref} className="btn signal block">{s_.logRun}</Link> : null}
           </section>
 
           {since && (since.runs || since.kudos || since.comments || myInvites.length) ? (
@@ -482,7 +480,6 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               tips={crew.map((p, i) => `${when[i]}: ${fmtN(p.minutes)} / ${fmtN(p.plan)} ${c_.min} · ${p.runs} ${c_.kpiRuns}`)}
               label={`${c_.crewTitle}, ${per}`}
             />
-          <p className="small muted">{c_.crewHint}</p>
           <details className="chart-table">
             <summary>{c_.showTable}</summary>
             <table className="compare">
@@ -513,7 +510,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 tpl={kind === "week" ? c_.runsOf : c_.weeksOf}
                 label={c_.consistTitle}
               />
-              <p className="small muted">{kind === "week" ? c_.consistHint : c_.consistMonthHint}</p>
+              {kind === "month" ? <p className="small muted">{c_.consistMonthHint}</p> : null}
             </section>
 
             <section className="panel chart-panel">
@@ -626,22 +623,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
       <section className="stack" style={{ gap: 16 }}>
         <Flash err={err} />
         <div className="panel">
-          <h3>{s_.inviteTitle}</h3>
-          <div className="row">
-            <span className="invite">{group.inviteCode}</span>
-            <ShareInvite url={inviteUrl} text={fmt(s_.inviteText, { name: group.name })} labels={{ share: s_.share, copy: s_.copy, copied: s_.copied }} />
+          {isOwner && members.length > 1 ? <input type="checkbox" id="manage" className="manage-toggle sr-only" /> : null}
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <h3>{s_.membersTitle}</h3>
+            {isOwner && members.length > 1 ? <label htmlFor="manage" className="linkish small manage-label">{s_.manage}</label> : null}
           </div>
-          <p className="small muted">{s_.inviteHint}</p>
-          {isOwner ? (
-            <form action={rotateInviteCode} className="row">
-              <Hidden v={{ groupId: id }} />
-              <ConfirmButton message={s_.rotateHint} className="btn ghost small">{s_.rotate}</ConfirmButton>
-            </form>
-          ) : null}
-        </div>
-
-        <div className="panel">
-          <h3>{s_.membersTitle}</h3>
           <ul className="members">
             {members.map((x) => (
               <li key={x.id}>
@@ -654,7 +640,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                   </div>
                 </div>
                 {isOwner && x.id !== user.id ? (
-                  <form action={removeMember}>
+                  <form action={removeMember} className="rm">
                     <Hidden v={{ groupId: id, userId: x.id }} />
                     <ConfirmButton message={s_.removeConfirm} className="btn danger small">{s_.remove}</ConfirmButton>
                   </form>
@@ -662,6 +648,17 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               </li>
             ))}
           </ul>
+          <div className="code-row">
+            <span className="small muted">{s_.inviteTitle}</span>
+            <span className="invite">{group.inviteCode}</span>
+            {isOwner ? (
+              <form action={rotateInviteCode}>
+                <Hidden v={{ groupId: id }} />
+                <ConfirmButton message={s_.rotateHint} className="linkish small">{s_.rotate}</ConfirmButton>
+              </form>
+            ) : null}
+          </div>
+          <p className="small muted">{s_.inviteHint}</p>
         </div>
 
         <form action={saveSharing} className="panel form">
@@ -721,7 +718,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
 
         <form action={leaveGroup}>
           <Hidden v={{ groupId: id }} />
-          <ConfirmButton message={s_.leaveConfirm} className="btn danger">{s_.leave}</ConfirmButton>
+          <ConfirmButton message={s_.leaveConfirm} className="btn danger small">{s_.leave}</ConfirmButton>
         </form>
         <p className="small muted"><Link href="/rules">{s_.rulesLink}</Link> · {fmt(s_.rulesContact, { email: LEGAL.email })}</p>
       </section>

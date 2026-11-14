@@ -26,10 +26,7 @@ export default async function RunsPage({ searchParams }: { searchParams: SearchP
   return (
     <>
       <BackLink href="/dashboard" label={t.nav.dashboard} />
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <h1>{t.runs.title}</h1>
-        <Link className="btn signal" href="/runs/new">{t.runs.add}</Link>
-      </div>
+      <h1>{t.runs.title}</h1>
       <Flash ok={ok} err={importError ? fmt(t.runs.importFailed, { msg: importError }) : null} />
 
       {runs.length === 0 ? (

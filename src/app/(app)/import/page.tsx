@@ -1,5 +1,4 @@
 import { BackLink } from "@/app/components";
-import Link from "next/link";
 import { and, count, eq, min, max } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireUser } from "@/lib/auth";
@@ -25,7 +24,6 @@ export default async function ImportPage() {
     <>
       <BackLink href="/runs/new" label={t.nav.log} />
       <h1>{c.title}</h1>
-      <p className="muted">{c.intro}</p>
 
       <section className="panel source-card apple">
         <h2>{c.appleTitle}</h2>
@@ -53,15 +51,9 @@ export default async function ImportPage() {
             toRuns: c.toRuns,
           }}
         />
-        <p className="small muted">{c.repeat}</p>
-        <p className="small muted">{c.privacy}</p>
+        <p className="small muted">{c.repeat} {c.privacy}</p>
       </section>
 
-      <section className="panel">
-        <h3>{c.manualTitle}</h3>
-        <p className="small muted">{c.manualText}</p>
-        <div><Link className="btn" href="/runs/new">{t.dashboard.logRun}</Link></div>
-      </section>
     </>
   );
 }
